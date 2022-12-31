@@ -1,0 +1,20 @@
+world serde-deserializer-client {
+    import deserializer: serde-deserializer
+    export deserialize: serde-deserialize
+}
+
+interface serde-deserialize {
+    resource deserialize {
+        
+    }
+
+    resource deserialize-seed {
+
+    }
+}
+
+interface serde-deserializer {
+    resource deserializer {
+
+    }
+}
