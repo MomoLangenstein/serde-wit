@@ -5,7 +5,7 @@ use serde::{
     serde_if_integer128,
 };
 
-// wit_bindgen_guest_rust::generate!("src/ser/client.wit");
+// wit_bindgen_guest_rust::generate!("wit/serialize.wit");
 
 pub struct GuestsideSerializerClient {
     _handle: (),

@@ -12,6 +12,12 @@ repository = "https://github.com/MomoLangenstein/serde-wit"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+default = []
+wasm-guest = ["wit-bindgen-guest-rust"]
+wasmtime-host = ["wasmtime-component-macro"]
+
 [dependencies]
 serde = { version = "1.0" }
-wit-bindgen-guest-rust = { version = "0.3.0", git = "https://github.com/bytecodealliance/wit-bindgen", rev = "04da8c2" }
+wit-bindgen-guest-rust = { version = "0.3.0", git = "https://github.com/bytecodealliance/wit-bindgen", rev = "04da8c2", optional = true }
+wasmtime-component-macro = { version = "5.0.0", git = "https://github.com/bytecodealliance/wasmtime", rev = "0c61536", optional = true }

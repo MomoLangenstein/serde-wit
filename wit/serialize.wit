@@ -3,6 +3,11 @@ world serde-serializer-client {
     export serialize: serde-serialize
 }
 
+world serde-serializer-provider {
+    import serialize: serde-serialize
+    export serializer: serde-serializer
+}
+
 interface serde-serialize {
     use { serializer, ser-ok, ser-error } from serde-serializer
 
