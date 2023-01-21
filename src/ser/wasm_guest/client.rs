@@ -5,10 +5,17 @@ use serde::{
     serde_if_integer128,
 };
 
-// wit_bindgen_guest_rust::generate!("wit/serialize.wit");
+wit_bindgen_guest_rust::generate!({ world: "serde-serializer-client" });
+export_serde_serializer_client!(GuestsideSerializerClient);
 
 pub struct GuestsideSerializerClient {
     _handle: (),
+}
+
+impl serialize::Serialize for GuestsideSerializerClient {
+    fn test(x: serde_ser::S128) -> serde_ser::U128 {
+        serializer::test(x)
+    }
 }
 
 pub struct SerOk {

@@ -1,0 +1,13 @@
+default world serde-deserializer-client {
+    import deserializer: interface {
+        use pkg.serde-de.{s128, unexpected, usize, u128}
+
+        test: func(x: s128) -> u128
+    }
+    
+    export deserialize: interface {
+        use pkg.serde-de.{s128, unexpected, usize, u128}
+
+        test: func(x: s128) -> u128
+    }
+}

@@ -15,9 +15,11 @@ repository = "https://github.com/juntyr/serde-wit"
 [features]
 default = []
 wasm-guest = ["wit-bindgen-guest-rust"]
-wasmtime-host = ["wasmtime-component-macro"]
+wasmtime-host = ["anyhow", "wasmtime", "wasmtime-component-macro"]
 
 [dependencies]
+anyhow = { version = "1.0", optional = true }
 serde = { version = "1.0" }
-wit-bindgen-guest-rust = { version = "0.3.0", git = "https://github.com/bytecodealliance/wit-bindgen", rev = "04da8c2", optional = true }
-wasmtime-component-macro = { version = "5.0.0", git = "https://github.com/bytecodealliance/wasmtime", rev = "0c61536", optional = true }
+wit-bindgen-guest-rust = { version = "0.3.0", git = "https://github.com/bytecodealliance/wit-bindgen", rev = "d7b8702", optional = true }
+wasmtime = { version = "6.0.0", git = "https://github.com/bytecodealliance/wasmtime", rev = "2478512", default-features = false, features = ["component-model"], optional = true }
+wasmtime-component-macro = { version = "6.0.0", git = "https://github.com/bytecodealliance/wasmtime", rev = "2478512", optional = true }

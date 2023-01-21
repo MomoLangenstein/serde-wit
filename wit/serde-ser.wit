@@ -1,22 +1,10 @@
-world serde-serializer-client {
-    import serializer: serde-serializer
-    export serialize: serde-serialize
-}
+default interface serde-ser {
+    use pkg.serde-types.{s128, usize, u128}
 
-world serde-serializer-provider {
-    import serialize: serde-serialize
-    export serializer: serde-serializer
-}
-
-interface serde-serialize {
-    use { serializer, ser-ok, ser-error } from serde-serializer
-
-    resource serialize {
+    /* resource serialize {
         static serialize: func(self: borrowed<serialize>, serializer: serializer) -> result<ser-ok, ser-error>
     }
-}
-
-interface serde-serializer {
+    
     resource serializer {
         static serialize-bool: func(self: serializer, v: bool) -> result<ser-ok, ser-error>
         static serialize-i8: func(self: serializer, v: s8) -> result<ser-ok, ser-error>
@@ -96,19 +84,5 @@ interface serde-serializer {
 
     resource ser-error {
         static custom: func(msg: string) -> ser-error
-    }
-
-    record s128 {
-        hi: u64,
-        lo: u64,
-    }
-
-    record u128 {
-        hi: u64,
-        lo: u64,
-    }
-
-    record usize {
-        val: u32,
-    }
+    } */
 }

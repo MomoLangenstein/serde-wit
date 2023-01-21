@@ -1,17 +1,7 @@
-world serde-deserializer-client {
-    import deserializer: serde-deserializer
-    export deserialize: serde-deserialize
-}
+default interface serde-de {
+    use pkg.serde-types.{s128, usize, u128}
 
-world serde-deserializer-provider {
-    import deserialize: serde-deserialize
-    export deserializer: serde-deserializer
-}
-
-interface serde-deserialize {
-    use { deserializer, de-error, s128, u128 } from serde-deserializer
-
-    resource deserialize {
+    /* resource deserialize {
         static deserialize: func(deserializer: deserializer) -> result<deserialize, de-error>
     }
 
@@ -52,11 +42,7 @@ interface serde-deserialize {
         static visit-map: func(self: visitor, map: map-access) -> result<de-value, de-error>
         static visit-enum: func(self: visitor, data: enum-access) -> result<de-value, de-error>
     }
-}
-
-interface serde-deserializer {
-    use { deserialize, deserialize-seed, de-value, visitor } from serde-deserialize
-
+    
     resource deserializer {
         static deserialize-any: func(self: deserializer, visitor: visitor) -> result<de-value, de-error>
         static deserialize-bool: func(self: deserializer, visitor: visitor) -> result<de-value, de-error>
@@ -124,7 +110,7 @@ interface serde-deserializer {
         static unknown-field: func(field: string, %expected: list<string>) -> de-error
         static missing-field: func(field: string) -> de-error
         static duplicate-field: func(field: string) -> de-error
-    }
+    } */
 
     variant unexpected {
         %bool(bool),
@@ -145,19 +131,5 @@ interface serde-deserializer {
         tuple-variant,
         struct-variant,
         other(string),
-    }
-
-    record s128 {
-        hi: u64,
-        lo: u64,
-    }
-
-    record u128 {
-        hi: u64,
-        lo: u64,
-    }
-
-    record usize {
-        val: u32,
     }
 }
