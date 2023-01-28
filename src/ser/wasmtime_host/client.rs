@@ -1,6 +1,6 @@
 use std::{cell::RefCell, fmt};
 
-use serde::{ser::Impossible, serde_if_integer128};
+use serde::serde_if_integer128;
 
 wasmtime_component_macro::bindgen!({ world: "serde-serializer-provider" });
 
