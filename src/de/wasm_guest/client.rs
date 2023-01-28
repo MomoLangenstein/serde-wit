@@ -6,7 +6,10 @@ pub struct GuestsideDeserializerClient {
 }
 
 impl deserialize::Deserialize for GuestsideDeserializerClient {
-    fn test(x: serde_de::S128) -> serde_de::U128 {
-        deserializer::test(x)
+    fn test(
+        x: serde_types::S128,
+        y: serde_types::Usize,
+    ) -> (serde_types::U128, serde_types::Usize) {
+        deserializer::test(x, y)
     }
 }

@@ -1,12 +1,12 @@
 default interface serde-types {
     record s128 {
-        hi: u64,
-        lo: u64,
+        le-hi: u64,
+        le-lo: u64,
     }
 
     record u128 {
-        hi: u64,
-        lo: u64,
+        le-hi: u64,
+        le-lo: u64,
     }
 
     record usize {

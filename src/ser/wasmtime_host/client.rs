@@ -7,7 +7,11 @@ pub struct HostsideSerializerClient<S: wasmtime::AsContextMut> {
 }
 
 impl<S: wasmtime::AsContextMut> serialize::Serialize for HostsideSerializerClient<S> {
-    fn test(&mut self, x: serde_ser::S128) -> anyhow::Result<serde_ser::U128> {
-        self.serializer.test(&mut self.store, x)
+    fn test(
+        &mut self,
+        x: serde_types::S128,
+        y: serde_types::Usize,
+    ) -> anyhow::Result<(serde_types::U128, serde_types::Usize)> {
+        self.serializer.test(&mut self.store, x, y)
     }
 }

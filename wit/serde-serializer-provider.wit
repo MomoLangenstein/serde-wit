@@ -2,12 +2,12 @@ default world serde-serializer-provider {
     import serialize: interface {
         use pkg.serde-ser.{s128, usize, u128}
 
-        test: func(x: s128) -> u128
+        test: func(x: s128, y: usize) -> tuple<u128, usize>
     }
     
     export serializer: interface {
         use pkg.serde-ser.{s128, usize, u128}
 
-        test: func(x: s128) -> u128
+        test: func(x: s128, y: usize) -> tuple<u128, usize>
     }
 }

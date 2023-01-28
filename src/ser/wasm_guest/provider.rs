@@ -6,7 +6,10 @@ pub struct GuestsideSerializerProvider {
 }
 
 impl serializer::Serializer for GuestsideSerializerProvider {
-    fn test(x: serde_ser::S128) -> serde_ser::U128 {
-        serialize::test(x)
+    fn test(
+        x: serde_types::S128,
+        y: serde_types::Usize,
+    ) -> (serde_types::U128, serde_types::Usize) {
+        serialize::test(x, y)
     }
 }
