@@ -1,3 +1,5 @@
+use alloc::string::String;
+
 use hash32::{BuildHasherDefault, FnvHasher};
 use simple_interner::{Interned, Interner};
 

@@ -1,6 +1,7 @@
 //! Based on David Tolnay's https://github.com/dtolnay/erased-serde crate
 //! Licensed under either of Apache License, Version 2.0 or MIT license at your option
 
+use alloc::boxed::Box;
 use core::{
     mem::{self, MaybeUninit},
     ptr,

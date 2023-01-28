@@ -1,4 +1,4 @@
-use std::{cell::RefCell, fmt};
+use core::{cell::RefCell, fmt};
 
 use serde::serde_if_integer128;
 

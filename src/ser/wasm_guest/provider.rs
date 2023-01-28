@@ -1,8 +1,12 @@
-use serde::ser::{
-    SerializeMap, SerializeSeq, SerializeStruct, SerializeStructVariant, SerializeTuple,
-    SerializeTupleStruct, SerializeTupleVariant,
+use alloc::{string::String, vec::Vec};
+
+use serde::{
+    ser::{
+        SerializeMap, SerializeSeq, SerializeStruct, SerializeStructVariant, SerializeTuple,
+        SerializeTupleStruct, SerializeTupleVariant,
+    },
+    serde_if_integer128,
 };
-use serde::serde_if_integer128;
 
 wit_bindgen_guest_rust::generate!({ world: "serde-serializer-provider" });
 // export_serde_serializer_provider!(GuestsideSerializerProvider);

@@ -1,4 +1,4 @@
-use std::fmt;
+use core::fmt;
 
 use serde::serde_if_integer128;
 

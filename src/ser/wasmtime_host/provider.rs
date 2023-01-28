@@ -1,10 +1,13 @@
-use std::cell::RefCell;
+use alloc::{string::String, vec::Vec};
+use core::cell::RefCell;
 
-use serde::ser::{
-    SerializeMap, SerializeSeq, SerializeStruct, SerializeStructVariant, SerializeTuple,
-    SerializeTupleStruct, SerializeTupleVariant,
+use serde::{
+    ser::{
+        SerializeMap, SerializeSeq, SerializeStruct, SerializeStructVariant, SerializeTuple,
+        SerializeTupleStruct, SerializeTupleVariant,
+    },
+    serde_if_integer128,
 };
-use serde::serde_if_integer128;
 
 wasmtime_component_macro::bindgen!({ world: "serde-serializer-client" });
 
