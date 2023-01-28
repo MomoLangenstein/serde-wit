@@ -8,7 +8,7 @@ use serde::{
     serde_if_integer128,
 };
 
-wit_bindgen_guest_rust::generate!({ world: "serde-serializer-provider" });
+wit_bindgen_guest_rust::generate!({ world: "serde-serializer-provider", no_std });
 // export_serde_serializer_provider!(GuestsideSerializerProvider);
 
 use crate::{any::Any, intern::intern_string};

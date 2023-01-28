@@ -1,4 +1,4 @@
-wit_bindgen_guest_rust::generate!({ world: "serde-deserializer-client" });
+wit_bindgen_guest_rust::generate!({ world: "serde-deserializer-client", no_std });
 export_serde_deserializer_client!(GuestsideDeserializerClient);
 
 pub struct GuestsideDeserializerClient {

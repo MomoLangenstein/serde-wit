@@ -2,7 +2,7 @@ use core::fmt;
 
 use serde::serde_if_integer128;
 
-wit_bindgen_guest_rust::generate!({ world: "serde-serializer-client" });
+wit_bindgen_guest_rust::generate!({ world: "serde-serializer-client", no_std });
 // export_serde_serializer_client!(GuestsideSerializerClient);
 
 pub struct GuestsideSerializerClient<'a, S: ?Sized + serde::Serialize> {
