@@ -11,8 +11,8 @@ wasmtime_component_macro::bindgen!({ world: "serde-serializer-client" });
 use crate::{any::Any, intern::intern_string};
 
 pub struct HostsideSerializerProvider<S: serde::Serializer, T: wasmtime::AsContextMut> {
-    store: T,
     serializer: S,
+    store: T,
 }
 
 impl<S: serde::Serializer, T: wasmtime::AsContextMut> serializer::Serializer
@@ -128,7 +128,7 @@ impl<S: serde::Serializer, T: wasmtime::AsContextMut> HostsideSerializerProvider
     fn serialize_some(self, value: &serialize::Serialize) -> Result<SerOk, SerError> {
         Self::wrap_result(
             self.serializer
-                .serialize_some(&SerializableSerialize::new(self.store, value)),
+                .serialize_some(&SerializableSerialize::new(value, self.store)),
         )
     }
 
@@ -160,7 +160,7 @@ impl<S: serde::Serializer, T: wasmtime::AsContextMut> HostsideSerializerProvider
     ) -> Result<SerOk, SerError> {
         Self::wrap_result(self.serializer.serialize_newtype_struct(
             intern_string(name),
-            &SerializableSerialize::new(self.store, value),
+            &SerializableSerialize::new(value, self.store),
         ))
     }
 
@@ -175,7 +175,7 @@ impl<S: serde::Serializer, T: wasmtime::AsContextMut> HostsideSerializerProvider
             intern_string(name),
             variant_index,
             intern_string(variant),
-            &SerializableSerialize::new(self.store, value),
+            &SerializableSerialize::new(value, self.store),
         ))
     }
 
@@ -382,7 +382,7 @@ impl<S: serde::Serializer, T: wasmtime::AsContextMut> HostsideSerializeSeqProvid
     fn serialize_element(mut self, value: &serialize::Serialize) -> (Self, Result<(), SerError>) {
         let result = self
             .serialize_seq
-            .serialize_element(&SerializableSerialize::new(&mut self.store, value))
+            .serialize_element(&SerializableSerialize::new(value, &mut self.store))
             .map_err(SerError::wrap);
 
         (self, result)
@@ -400,7 +400,7 @@ impl<S: serde::Serializer, T: wasmtime::AsContextMut> HostsideSerializeTupleProv
     fn serialize_element(mut self, value: &serialize::Serialize) -> (Self, Result<(), SerError>) {
         let result = self
             .serialize_tuple
-            .serialize_element(&SerializableSerialize::new(&mut self.store, value))
+            .serialize_element(&SerializableSerialize::new(value, &mut self.store))
             .map_err(SerError::wrap);
 
         (self, result)
@@ -418,7 +418,7 @@ impl<S: serde::Serializer, T: wasmtime::AsContextMut> HostsideSerializeTupleStru
     fn serialize_field(mut self, value: &serialize::Serialize) -> (Self, Result<(), SerError>) {
         let result = self
             .serialize_tuple_struct
-            .serialize_field(&SerializableSerialize::new(&mut self.store, value))
+            .serialize_field(&SerializableSerialize::new(value, &mut self.store))
             .map_err(SerError::wrap);
 
         (self, result)
@@ -436,7 +436,7 @@ impl<S: serde::Serializer, T: wasmtime::AsContextMut> HostsideSerializeTupleVari
     fn serialize_field(mut self, value: &serialize::Serialize) -> (Self, Result<(), SerError>) {
         let result = self
             .serialize_tuple_variant
-            .serialize_field(&SerializableSerialize::new(&mut self.store, value))
+            .serialize_field(&SerializableSerialize::new(value, &mut self.store))
             .map_err(SerError::wrap);
 
         (self, result)
@@ -454,7 +454,7 @@ impl<S: serde::Serializer, T: wasmtime::AsContextMut> HostsideSerializeMapProvid
     fn serialize_key(mut self, key: &serialize::Serialize) -> (Self, Result<(), SerError>) {
         let result = self
             .serialize_map
-            .serialize_key(&SerializableSerialize::new(&mut self.store, key))
+            .serialize_key(&SerializableSerialize::new(key, &mut self.store))
             .map_err(SerError::wrap);
 
         (self, result)
@@ -463,7 +463,7 @@ impl<S: serde::Serializer, T: wasmtime::AsContextMut> HostsideSerializeMapProvid
     fn serialize_value(mut self, value: &serialize::Serialize) -> (Self, Result<(), SerError>) {
         let result = self
             .serialize_map
-            .serialize_value(&SerializableSerialize::new(&mut self.store, value))
+            .serialize_value(&SerializableSerialize::new(value, &mut self.store))
             .map_err(SerError::wrap);
 
         (self, result)
@@ -487,7 +487,7 @@ impl<S: serde::Serializer, T: wasmtime::AsContextMut> HostsideSerializeStructPro
             .serialize_struct
             .serialize_field(
                 intern_string(key),
-                &SerializableSerialize::new(&mut self.store, value),
+                &SerializableSerialize::new(value, &mut self.store),
             )
             .map_err(SerError::wrap);
 
@@ -521,7 +521,7 @@ impl<S: serde::Serializer, T: wasmtime::AsContextMut> HostsideSerializeStructVar
             .serialize_struct_variant
             .serialize_field(
                 intern_string(key),
-                &SerializableSerialize::new(&mut self.store, value),
+                &SerializableSerialize::new(value, &mut self.store),
             )
             .map_err(SerError::wrap);
 
@@ -546,15 +546,15 @@ impl<S: serde::Serializer, T: wasmtime::AsContextMut> HostsideSerializeStructVar
 }
 
 struct SerializableSerialize<'a, T: wasmtime::AsContextMut> {
+    serialize: &'a serialize::Serialize,
     store: RefCell<T>,
-    inner: &'a serialize::Serialize,
 }
 
 impl<'a, T: wasmtime::AsContextMut> SerializableSerialize<'a, T> {
-    fn new(store: T, inner: &'a serialize::Serialize) -> Self {
+    fn new(serialize: &'a serialize::Serialize, store: T) -> Self {
         Self {
+            serialize,
             store: RefCell::new(store),
-            inner,
         }
     }
 }
@@ -563,13 +563,12 @@ impl<'a, T: wasmtime::AsContextMut> serde::Serialize for SerializableSerialize<'
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         // Try to obtain mutable access to the store
         let Ok(mut store) = self.store.try_borrow_mut() else {
-            return Err(serde::ser::Error::custom("bug: double serialize"));
+            return Err(serde::ser::Error::custom("bug: double Serialize::serialize"));
         };
 
-        let result = self.inner.serialize(HostsideSerializerProvider {
-            store: &mut *store,
-            serializer,
-        });
+        let result = self
+            .serialize
+            .serialize(HostsideSerializerProvider::new(serializer, &mut *store));
 
         match result {
             Ok(value) => {
@@ -594,8 +593,8 @@ impl<'a, T: wasmtime::AsContextMut> serde::Serialize for SerializableSerialize<'
 impl serialize::Serialize {
     fn serialize<S: serde::Serializer, T: wasmtime::AsContextMut>(
         &self,
-        serializer: HostsideSerializerProvider<S, T>,
+        _serializer: HostsideSerializerProvider<S, T>,
     ) -> Result<SerOk, SerError> {
-        todo!()
+        todo!("wit-bindgen")
     }
 }
