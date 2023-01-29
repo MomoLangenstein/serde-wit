@@ -1,15 +1,16 @@
 use core::fmt;
 
+use scoped_reference::{ScopedBorrow, ScopedReference};
 use serde::serde_if_integer128;
 
 wit_bindgen_guest_rust::generate!({ world: "serde-serializer-client", no_std });
-// export_serde_serializer_client!(GuestsideSerializerClient);
+export_serde_serializer_client!(GuestsideSerializerClient);
 
-pub struct GuestsideSerializerClient<'a, S: ?Sized + serde::Serialize> {
-    serialize: &'a S,
+pub struct GuestsideSerializerClient {
+    serialize: ScopedBorrow<dyn erased_serde::Serialize>,
 }
 
-impl<'a, S: ?Sized + serde::Serialize> serialize::Serialize for GuestsideSerializerClient<'a, S> {
+impl serialize::Serialize for GuestsideSerializerClient {
     fn test(
         x: serde_types::S128,
         y: serde_types::Usize,
@@ -18,14 +19,31 @@ impl<'a, S: ?Sized + serde::Serialize> serialize::Serialize for GuestsideSeriali
     }
 }
 
-impl<'a, S: ?Sized + serde::Serialize> GuestsideSerializerClient<'a, S> {
-    pub fn new(serialize: &'a S) -> Self {
-        Self { serialize }
+impl GuestsideSerializerClient {
+    pub fn with_new<'a, S: ?Sized + serde::Serialize, F: FnOnce(&Self) -> Q, Q>(
+        serialize: &'a S,
+        inner: F,
+    ) -> Q {
+        let scoped_serialize: ScopedReference<dyn erased_serde::Serialize + 'a> =
+            ScopedReference::new(&serialize);
+
+        let result = {
+            let serialize: ScopedBorrow<dyn erased_serde::Serialize + 'a> =
+                scoped_serialize.borrow();
+            let serialize: ScopedBorrow<dyn erased_serde::Serialize> =
+                unsafe { core::mem::transmute(serialize) };
+
+            inner(&Self { serialize })
+        };
+
+        // Abort if there are any outstanding, soon dangling, scoped borrows
+        core::mem::drop(scoped_serialize);
+
+        result
     }
 
     fn serialize(&self, serializer: Serializer) -> Result<SerOk, SerError> {
-        self.serialize
-            .serialize(SerializerableSerializer::new(serializer))
+        serde::Serialize::serialize(&*self.serialize, SerializerableSerializer::new(serializer))
     }
 }
 
@@ -147,12 +165,11 @@ impl serde::Serializer for SerializerableSerializer {
         self.serializer.serialize_none()
     }
 
-    fn serialize_some<V: ?Sized + serde::Serialize>(
+    fn serialize_some<'a, V: ?Sized + serde::Serialize>(
         self,
-        value: &V,
+        value: &'a V,
     ) -> Result<Self::Ok, Self::Error> {
-        self.serializer
-            .serialize_some(GuestsideSerializerClient::new(value))
+        GuestsideSerializerClient::with_new(value, |value| self.serializer.serialize_some(value))
     }
 
     fn serialize_unit(self) -> Result<Self::Ok, Self::Error> {
@@ -178,8 +195,9 @@ impl serde::Serializer for SerializerableSerializer {
         name: &'static str,
         value: &V,
     ) -> Result<Self::Ok, Self::Error> {
-        self.serializer
-            .serialize_newtype_struct(name, &GuestsideSerializerClient::new(value))
+        GuestsideSerializerClient::with_new(value, |value| {
+            self.serializer.serialize_newtype_struct(name, value)
+        })
     }
 
     fn serialize_newtype_variant<V: ?Sized + serde::Serialize>(
@@ -189,12 +207,10 @@ impl serde::Serializer for SerializerableSerializer {
         variant: &'static str,
         value: &V,
     ) -> Result<Self::Ok, Self::Error> {
-        self.serializer.serialize_newtype_variant(
-            name,
-            variant_index,
-            variant,
-            &GuestsideSerializerClient::new(value),
-        )
+        GuestsideSerializerClient::with_new(value, |value| {
+            self.serializer
+                .serialize_newtype_variant(name, variant_index, variant, value)
+        })
     }
 
     fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
@@ -364,8 +380,9 @@ impl serde::ser::SerializeSeq for SerializerableSerializeSeq {
             return Err(serde::ser::Error::custom("bug: SerializeSeq::serialize_element after free"));
         };
 
-        let (serialize_seq, result) =
-            serialize_seq.serialize_element(&GuestsideSerializerClient::new(value));
+        let (serialize_seq, result) = GuestsideSerializerClient::with_new(value, |value| {
+            serialize_seq.serialize_element(value)
+        });
         self.serialize_seq = Some(serialize_seq);
 
         result
@@ -396,8 +413,9 @@ impl serde::ser::SerializeTuple for SerializerableSerializeTuple {
             return Err(serde::ser::Error::custom("bug: SerializeTuple::serialize_element after free"));
         };
 
-        let (serialize_tuple, result) =
-            serialize_tuple.serialize_element(&GuestsideSerializerClient::new(value));
+        let (serialize_tuple, result) = GuestsideSerializerClient::with_new(value, |value| {
+            serialize_tuple.serialize_element(value)
+        });
         self.serialize_tuple = Some(serialize_tuple);
 
         result
@@ -429,7 +447,9 @@ impl serde::ser::SerializeTupleStruct for SerializerableSerializeTupleStruct {
         };
 
         let (serialize_tuple_struct, result) =
-            serialize_tuple_struct.serialize_field(&GuestsideSerializerClient::new(value));
+            GuestsideSerializerClient::with_new(value, |value| {
+                serialize_tuple_struct.serialize_field(value)
+            });
         self.serialize_tuple_struct = Some(serialize_tuple_struct);
 
         result
@@ -461,7 +481,9 @@ impl serde::ser::SerializeTupleVariant for SerializerableSerializeTupleVariant {
         };
 
         let (serialize_tuple_variant, result) =
-            serialize_tuple_variant.serialize_field(&GuestsideSerializerClient::new(value));
+            GuestsideSerializerClient::with_new(value, |value| {
+                serialize_tuple_variant.serialize_field(value)
+            });
         self.serialize_tuple_variant = Some(serialize_tuple_variant);
 
         result
@@ -490,7 +512,7 @@ impl serde::ser::SerializeMap for SerializerableSerializeMap {
         };
 
         let (serialize_map, result) =
-            serialize_map.serialize_key(&GuestsideSerializerClient::new(key));
+            GuestsideSerializerClient::with_new(key, |key| serialize_map.serialize_key(key));
         self.serialize_map = Some(serialize_map);
 
         result
@@ -504,8 +526,9 @@ impl serde::ser::SerializeMap for SerializerableSerializeMap {
             return Err(serde::ser::Error::custom("bug: SerializeMap::serialize_value after free"));
         };
 
-        let (serialize_map, result) =
-            serialize_map.serialize_value(&GuestsideSerializerClient::new(value));
+        let (serialize_map, result) = GuestsideSerializerClient::with_new(value, |value| {
+            serialize_map.serialize_value(value)
+        });
         self.serialize_map = Some(serialize_map);
 
         result
@@ -529,15 +552,16 @@ impl serde::ser::SerializeMap for SerializerableSerializeMap {
         };
 
         let (serialize_map, result) =
-            serialize_map.serialize_key(&GuestsideSerializerClient::new(key));
+            GuestsideSerializerClient::with_new(key, |key| serialize_map.serialize_key(key));
 
         if let Err(err) = result {
             self.serialize_map = Some(serialize_map);
             return Err(err);
         }
 
-        let (serialize_map, result) =
-            serialize_map.serialize_value(&GuestsideSerializerClient::new(value));
+        let (serialize_map, result) = GuestsideSerializerClient::with_new(value, |value| {
+            serialize_map.serialize_value(value)
+        });
         self.serialize_map = Some(serialize_map);
 
         result
@@ -561,8 +585,9 @@ impl serde::ser::SerializeStruct for SerializerableSerializeStruct {
             return Err(serde::ser::Error::custom("bug: SerializeStruct::serialize_field after free"));
         };
 
-        let (serialize_struct, result) =
-            serialize_struct.serialize_field(key, &GuestsideSerializerClient::new(value));
+        let (serialize_struct, result) = GuestsideSerializerClient::with_new(value, |value| {
+            serialize_struct.serialize_field(key, value)
+        });
         self.serialize_struct = Some(serialize_struct);
 
         result
@@ -606,7 +631,9 @@ impl serde::ser::SerializeStructVariant for SerializerableSerializeStructVariant
         };
 
         let (serialize_struct_variant, result) =
-            serialize_struct_variant.serialize_field(key, &GuestsideSerializerClient::new(value));
+            GuestsideSerializerClient::with_new(value, |value| {
+                serialize_struct_variant.serialize_field(key, value)
+            });
         self.serialize_struct_variant = Some(serialize_struct_variant);
 
         result
@@ -740,10 +767,7 @@ impl Serializer {
         todo!("wit-bindgen")
     }
 
-    fn serialize_some<'a, S: ?Sized + serde::Serialize>(
-        self,
-        _value: GuestsideSerializerClient<'a, S>,
-    ) -> Result<SerOk, SerError> {
+    fn serialize_some(self, _value: &GuestsideSerializerClient) -> Result<SerOk, SerError> {
         todo!("wit-bindgen")
     }
 
@@ -764,20 +788,20 @@ impl Serializer {
         todo!("wit-bindgen")
     }
 
-    fn serialize_newtype_struct<'a, S: ?Sized + serde::Serialize>(
+    fn serialize_newtype_struct(
         self,
         _name: &str,
-        _value: &GuestsideSerializerClient<'a, S>,
+        _value: &GuestsideSerializerClient,
     ) -> Result<SerOk, SerError> {
         todo!("wit-bindgen")
     }
 
-    fn serialize_newtype_variant<'a, S: ?Sized + serde::Serialize>(
+    fn serialize_newtype_variant(
         self,
         _name: &str,
         _variant_index: u32,
         _variant: &str,
-        _value: &GuestsideSerializerClient<'a, S>,
+        _value: &GuestsideSerializerClient,
     ) -> Result<SerOk, SerError> {
         todo!("wit-bindgen")
     }
@@ -864,10 +888,7 @@ struct SerializeStructVariant {
 }
 
 impl SerializeSeq {
-    fn serialize_element<'a, S: ?Sized + serde::Serialize>(
-        self,
-        _value: &GuestsideSerializerClient<'a, S>,
-    ) -> (Self, Result<(), SerError>) {
+    fn serialize_element(self, _value: &GuestsideSerializerClient) -> (Self, Result<(), SerError>) {
         todo!("wit-bindgen")
     }
 
@@ -877,10 +898,7 @@ impl SerializeSeq {
 }
 
 impl SerializeTuple {
-    fn serialize_element<'a, S: ?Sized + serde::Serialize>(
-        self,
-        _value: &GuestsideSerializerClient<'a, S>,
-    ) -> (Self, Result<(), SerError>) {
+    fn serialize_element(self, _value: &GuestsideSerializerClient) -> (Self, Result<(), SerError>) {
         todo!("wit-bindgen")
     }
 
@@ -890,10 +908,7 @@ impl SerializeTuple {
 }
 
 impl SerializeTupleStruct {
-    fn serialize_field<'a, S: ?Sized + serde::Serialize>(
-        self,
-        _value: &GuestsideSerializerClient<'a, S>,
-    ) -> (Self, Result<(), SerError>) {
+    fn serialize_field(self, _value: &GuestsideSerializerClient) -> (Self, Result<(), SerError>) {
         todo!("wit-bindgen")
     }
 
@@ -903,10 +918,7 @@ impl SerializeTupleStruct {
 }
 
 impl SerializeTupleVariant {
-    fn serialize_field<'a, S: ?Sized + serde::Serialize>(
-        self,
-        _value: &GuestsideSerializerClient<'a, S>,
-    ) -> (Self, Result<(), SerError>) {
+    fn serialize_field(self, _value: &GuestsideSerializerClient) -> (Self, Result<(), SerError>) {
         todo!("wit-bindgen")
     }
 
@@ -916,17 +928,11 @@ impl SerializeTupleVariant {
 }
 
 impl SerializeMap {
-    fn serialize_key<'a, S: ?Sized + serde::Serialize>(
-        self,
-        _key: &GuestsideSerializerClient<'a, S>,
-    ) -> (Self, Result<(), SerError>) {
+    fn serialize_key(self, _key: &GuestsideSerializerClient) -> (Self, Result<(), SerError>) {
         todo!("wit-bindgen")
     }
 
-    fn serialize_value<'a, S: ?Sized + serde::Serialize>(
-        self,
-        _value: &GuestsideSerializerClient<'a, S>,
-    ) -> (Self, Result<(), SerError>) {
+    fn serialize_value(self, _value: &GuestsideSerializerClient) -> (Self, Result<(), SerError>) {
         todo!("wit-bindgen")
     }
 
@@ -936,10 +942,10 @@ impl SerializeMap {
 }
 
 impl SerializeStruct {
-    fn serialize_field<'a, S: ?Sized + serde::Serialize>(
+    fn serialize_field(
         self,
         _key: &str,
-        _value: &GuestsideSerializerClient<'a, S>,
+        _value: &GuestsideSerializerClient,
     ) -> (Self, Result<(), SerError>) {
         todo!("wit-bindgen")
     }
@@ -954,10 +960,10 @@ impl SerializeStruct {
 }
 
 impl SerializeStructVariant {
-    fn serialize_field<'a, S: ?Sized + serde::Serialize>(
+    fn serialize_field(
         self,
         _key: &str,
-        _value: &GuestsideSerializerClient<'a, S>,
+        _value: &GuestsideSerializerClient,
     ) -> (Self, Result<(), SerError>) {
         todo!("wit-bindgen")
     }
