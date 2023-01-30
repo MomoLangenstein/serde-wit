@@ -6,8 +6,12 @@ use serde::serde_if_integer128;
 wit_bindgen_guest_rust::generate!({ world: "serde-serializer-client", no_std });
 export_serde_serializer_client!(GuestsideSerializerClient);
 
+trait ErasedSerialize {
+    fn erased_serialize(&self, serializer: SerializerableSerializer) -> Result<SerOk, SerError>;
+}
+
 pub struct GuestsideSerializerClient {
-    serialize: ScopedBorrow<dyn erased_serde::Serialize>,
+    serialize: ScopedBorrow<dyn ErasedSerialize>,
 }
 
 impl serialize::Serialize for GuestsideSerializerClient {
@@ -24,13 +28,12 @@ impl GuestsideSerializerClient {
         serialize: &'a S,
         inner: F,
     ) -> Q {
-        let scoped_serialize: ScopedReference<dyn erased_serde::Serialize + 'a> =
+        let scoped_serialize: ScopedReference<dyn ErasedSerialize + 'a> =
             ScopedReference::new(&serialize);
 
         let result = {
-            let serialize: ScopedBorrow<dyn erased_serde::Serialize + 'a> =
-                scoped_serialize.borrow();
-            let serialize: ScopedBorrow<dyn erased_serde::Serialize> =
+            let serialize: ScopedBorrow<dyn ErasedSerialize + 'a> = scoped_serialize.borrow();
+            let serialize: ScopedBorrow<dyn ErasedSerialize> =
                 unsafe { core::mem::transmute(serialize) };
 
             inner(&Self { serialize })
@@ -43,7 +46,16 @@ impl GuestsideSerializerClient {
     }
 
     fn serialize(&self, serializer: Serializer) -> Result<SerOk, SerError> {
-        serde::Serialize::serialize(&*self.serialize, SerializerableSerializer::new(serializer))
+        ErasedSerialize::erased_serialize(
+            &*self.serialize,
+            SerializerableSerializer::new(serializer),
+        )
+    }
+}
+
+impl<T: serde::Serialize> ErasedSerialize for T {
+    fn erased_serialize(&self, serializer: SerializerableSerializer) -> Result<SerOk, SerError> {
+        self.serialize(serializer)
     }
 }
 
