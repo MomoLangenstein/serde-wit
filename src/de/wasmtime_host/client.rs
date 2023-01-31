@@ -11,7 +11,7 @@ impl<S: wasmtime::AsContextMut> deserialize::Deserialize for HostsideDeserialize
         &mut self,
         x: serde_types::S128,
         y: serde_types::Usize,
-    ) -> anyhow::Result<(serde_types::U128, serde_types::Usize)> {
+    ) -> anyhow::Result<Result<(serde_types::U128, serde_types::Usize), serde_de::Unexpected>> {
         self.deserializer.test(&mut self.store, x, y)
     }
 }

@@ -9,7 +9,7 @@ impl deserializer::Deserializer for GuestsideDeserializerProvider {
     fn test(
         x: serde_types::S128,
         y: serde_types::Usize,
-    ) -> (serde_types::U128, serde_types::Usize) {
+    ) -> Result<(serde_types::U128, serde_types::Usize), serde_de::Unexpected> {
         deserialize::test(x, y)
     }
 }

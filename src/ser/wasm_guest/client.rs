@@ -690,14 +690,14 @@ impl serde::ser::Error for SerError {
 impl serde::ser::StdError for SerError {}
 
 impl fmt::Debug for SerError {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt.write_str("SerError")
+    fn fmt(&self, _fmt: &mut fmt::Formatter) -> fmt::Result {
+        todo!() // fmt.write_str("SerError")
     }
 }
 
 impl fmt::Display for SerError {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt.write_str("SerError")
+    fn fmt(&self, _fmt: &mut fmt::Formatter) -> fmt::Result {
+        todo!() // fmt.write_str("SerError")
     }
 }
 
