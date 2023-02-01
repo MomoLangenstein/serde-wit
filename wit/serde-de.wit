@@ -1,11 +1,7 @@
 default interface serde-de {
     use pkg.serde-types.{s128, usize, u128}
 
-    /* resource deserialize {
-        static deserialize: func(deserializer: deserializer) -> result<deserialize, de-error>
-    }
-
-    resource deserialize-seed {
+    /* resource deserialize-seed {
         static deserialize: func(self: deserialize-seed, deserializer: deserializer) -> result<de-value, de-error>
     }
 
@@ -14,7 +10,7 @@ default interface serde-de {
     }
 
     resource visitor {
-        static expecting: func(self: borrowed<visitor>) -> option<string>
+        static expecting: func(self: borrowed<visitor>) -> string
         
         static visit-bool: func(self: visitor, v: bool) -> result<de-value, de-error>
         static visit-i8: func(self: visitor, v: s8) -> result<de-value, de-error>
@@ -79,14 +75,14 @@ default interface serde-de {
     }
 
     resource seq-access {
-        static next-element-seed: func(self: borrowed<seq-access>, seed: deserialize-seed) -> result<option<de-value>, de-error>
+        static next-element-seed: func(self: seq-access, seed: deserialize-seed) -> tuple<seq-access, result<option<de-value>, de-error>>
         static size-hint: func(self: borrowed<seq-access>) -> option<usize>
     }
 
     resource map-access {
-        static next-key-seed: func(self: borrowed<map-access>, seed: deserialize-seed) -> result<option<de-value>, de-error>
-        static next-value-seed: func(self: borrowed<map-access>, seed: deserialize-seed) -> result<de-value, de-error>
-        static next-entry-seed: func(self: borrowed<map-access>, kseed: deserialize-seed, vseed: deserialize-seed) -> result<option<tuple<de-value, de-value>>, de-error>
+        static next-key-seed: func(self: map-access, seed: deserialize-seed) -> tuple<map-access, result<option<de-value>, de-error>>
+        static next-value-seed: func(self: map-access, seed: deserialize-seed) -> tuple<map-access, result<de-value, de-error>>
+        static next-entry-seed: func(self: map-access, kseed: deserialize-seed, vseed: deserialize-seed) -> tuple<map-access, result<option<tuple<de-value, de-value>>, de-error>>
         static size-hint: func(self: borrowed<map-access>) -> option<usize>
     }
 

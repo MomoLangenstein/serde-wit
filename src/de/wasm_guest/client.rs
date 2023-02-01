@@ -92,6 +92,13 @@ impl GuestsideDeserializerClient {
 
         result
     }
+
+    fn deserialize(self, deserializer: Deserializer) -> Result<DeValue, DeError> {
+        ErasedDeserializeSeed::erased_deserialize(
+            self.deserialize_seed,
+            DeserializerableDeserializer { deserializer },
+        )
+    }
 }
 
 trait ErasedDeserializeSeed {
@@ -139,7 +146,10 @@ trait ErasedVisitor {
         self: Box<Self>,
         map: DeserializerableMapAccess,
     ) -> Result<DeValue, DeError>;
-    // fn erased_visit_enum(self: Box<Self>, e: &mut dyn EnumAccess<'de>) -> Result<DeValue, Error>;
+    fn erased_visit_enum(
+        self: Box<Self>,
+        data: DeserializerableEnumAccess,
+    ) -> Result<DeValue, DeError>;
 }
 
 impl<'de, T: serde::de::DeserializeSeed<'de>> ErasedDeserializeSeed for T {
@@ -259,47 +269,172 @@ impl<'de, T: serde::de::Visitor<'de>> ErasedVisitor for T {
     ) -> Result<DeValue, DeError> {
         self.visit_map(map).map(DeValue::wrap)
     }
+
+    fn erased_visit_enum(
+        self: Box<Self>,
+        data: DeserializerableEnumAccess,
+    ) -> Result<DeValue, DeError> {
+        self.visit_enum(data).map(DeValue::wrap)
+    }
 }
 
 struct DeserializerableDeserializer {
     deserializer: Deserializer,
 }
 
-fn unwrap_visitor_value<'de, V: serde::de::Visitor<'de>>(
-    result: Result<DeValue, DeError>,
-) -> Result<V::Value, DeError> {
-    match result {
-        Ok(value) => {
-            if let Some(value) = value.take() {
-                return Ok(value);
+impl Visitor {
+    fn with_new<'de, V: serde::de::Visitor<'de>, F: FnOnce(Self) -> Result<DeValue, DeError>>(
+        visitor: V,
+        inner: F,
+    ) -> Result<V::Value, DeError> {
+        #[allow(clippy::let_unit_value)]
+        let mut scope = ();
+        let mut scope = ScopedReference::new_mut(&mut scope);
+
+        let result = {
+            let visitor: Box<dyn ErasedVisitor + '_> = Box::new(visitor);
+            let visitor: Box<dyn ErasedVisitor + 'static> =
+                unsafe { core::mem::transmute(visitor) };
+
+            inner(Self {
+                visitor,
+                scope: scope.borrow_mut(),
+            })
+        };
+
+        // Abort if there are any outstanding, soon dangling, scoped borrows
+        core::mem::drop(scope);
+
+        match result {
+            Ok(value) => {
+                if let Some(value) = value.take() {
+                    return Ok(value);
+                }
+            }
+            Err(err) => return Err(err),
+        };
+
+        Err(serde::de::Error::custom(
+            "bug: type mismatch across the wit boundary",
+        ))
+    }
+
+    fn expecting(&self) -> String {
+        struct Expecting<'a> {
+            visitor: &'a Visitor,
+        }
+
+        impl<'a> fmt::Display for Expecting<'a> {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                self.visitor.visitor.erased_expecting(f)
             }
         }
-        Err(err) => return Err(err),
-    };
 
-    Err(serde::de::Error::custom(
-        "bug: type mismatch across the wit boundary",
-    ))
-}
+        format!("{}", Expecting { visitor: self })
+    }
 
-unsafe fn erase_visitor_lifetime<'a>(
-    visitor: Box<dyn ErasedVisitor + 'a>,
-) -> Box<dyn ErasedVisitor + 'static> {
-    core::mem::transmute(visitor)
-}
+    fn visit_bool(self, v: bool) -> Result<DeValue, DeError> {
+        self.visitor.erased_visit_bool(v)
+    }
 
-fn with_wrapped_visitor<
-    'de,
-    V: serde::de::Visitor<'de>,
-    F: FnOnce(Visitor) -> Result<DeValue, DeError>,
->(
-    visitor: V,
-    inner: F,
-) -> Result<V::Value, DeError> {
-    let visitor: Box<dyn ErasedVisitor + '_> = Box::new(visitor);
-    let visitor: Box<dyn ErasedVisitor + 'static> = unsafe { erase_visitor_lifetime(visitor) };
+    fn visit_i8(self, v: i8) -> Result<DeValue, DeError> {
+        self.visitor.erased_visit_i8(v)
+    }
 
-    unwrap_visitor_value::<'de, V>(inner(Visitor { visitor }))
+    fn visit_i16(self, v: i16) -> Result<DeValue, DeError> {
+        self.visitor.erased_visit_i16(v)
+    }
+
+    fn visit_i32(self, v: i32) -> Result<DeValue, DeError> {
+        self.visitor.erased_visit_i32(v)
+    }
+
+    fn visit_i64(self, v: i64) -> Result<DeValue, DeError> {
+        self.visitor.erased_visit_i64(v)
+    }
+
+    serde_if_integer128! {
+        fn visit_i128(self, v: i128) -> Result<DeValue, DeError> {
+            self.visitor.erased_visit_i128(v)
+        }
+    }
+
+    fn visit_u8(self, v: u8) -> Result<DeValue, DeError> {
+        self.visitor.erased_visit_u8(v)
+    }
+
+    fn visit_u16(self, v: u16) -> Result<DeValue, DeError> {
+        self.visitor.erased_visit_u16(v)
+    }
+
+    fn visit_u32(self, v: u32) -> Result<DeValue, DeError> {
+        self.visitor.erased_visit_u32(v)
+    }
+
+    fn visit_u64(self, v: u64) -> Result<DeValue, DeError> {
+        self.visitor.erased_visit_u64(v)
+    }
+
+    serde_if_integer128! {
+        fn visit_u128(self, v: u128) -> Result<DeValue, DeError> {
+            self.visitor.erased_visit_u128(v)
+        }
+    }
+
+    fn visit_f32(self, v: f32) -> Result<DeValue, DeError> {
+        self.visitor.erased_visit_f32(v)
+    }
+
+    fn visit_f64(self, v: f64) -> Result<DeValue, DeError> {
+        self.visitor.erased_visit_f64(v)
+    }
+
+    fn visit_char(self, v: char) -> Result<DeValue, DeError> {
+        self.visitor.erased_visit_char(v)
+    }
+
+    fn visit_string(self, v: String) -> Result<DeValue, DeError> {
+        self.visitor.erased_visit_string(v)
+    }
+
+    fn visit_byte_buf(self, v: Vec<u8>) -> Result<DeValue, DeError> {
+        self.visitor.erased_visit_byte_buf(v)
+    }
+
+    fn visit_none(self) -> Result<DeValue, DeError> {
+        self.visitor.erased_visit_none()
+    }
+
+    fn visit_some(self, deserializer: Deserializer) -> Result<DeValue, DeError> {
+        self.visitor
+            .erased_visit_some(DeserializerableDeserializer { deserializer })
+    }
+
+    fn visit_unit(self) -> Result<DeValue, DeError> {
+        self.visitor.erased_visit_unit()
+    }
+
+    fn visit_newtype_struct(self, deserializer: Deserializer) -> Result<DeValue, DeError> {
+        self.visitor
+            .erased_visit_newtype_struct(DeserializerableDeserializer { deserializer })
+    }
+
+    fn visit_seq(self, seq: SeqAccess) -> Result<DeValue, DeError> {
+        self.visitor.erased_visit_seq(DeserializerableSeqAccess {
+            seq_access: Some(seq),
+        })
+    }
+
+    fn visit_map(self, map: MapAccess) -> Result<DeValue, DeError> {
+        self.visitor.erased_visit_map(DeserializerableMapAccess {
+            map_access: Some(map),
+        })
+    }
+
+    fn visit_enum(self, data: EnumAccess) -> Result<DeValue, DeError> {
+        self.visitor
+            .erased_visit_enum(DeserializerableEnumAccess { enum_access: data })
+    }
 }
 
 impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
@@ -309,7 +444,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| {
+        Visitor::with_new(visitor, |visitor| {
             self.deserializer.deserialize_any(visitor)
         })
     }
@@ -318,7 +453,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| {
+        Visitor::with_new(visitor, |visitor| {
             self.deserializer.deserialize_bool(visitor)
         })
     }
@@ -327,14 +462,14 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| self.deserializer.deserialize_i8(visitor))
+        Visitor::with_new(visitor, |visitor| self.deserializer.deserialize_i8(visitor))
     }
 
     fn deserialize_i16<V: serde::de::Visitor<'de>>(
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| {
+        Visitor::with_new(visitor, |visitor| {
             self.deserializer.deserialize_i16(visitor)
         })
     }
@@ -343,7 +478,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| {
+        Visitor::with_new(visitor, |visitor| {
             self.deserializer.deserialize_i32(visitor)
         })
     }
@@ -352,7 +487,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| {
+        Visitor::with_new(visitor, |visitor| {
             self.deserializer.deserialize_i64(visitor)
         })
     }
@@ -362,7 +497,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
             self,
             visitor: V,
         ) -> Result<V::Value, Self::Error> {
-            with_wrapped_visitor(visitor, |visitor| self.deserializer.deserialize_i128(visitor))
+            Visitor::with_new(visitor, |visitor| self.deserializer.deserialize_i128(visitor))
         }
     }
 
@@ -370,14 +505,14 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| self.deserializer.deserialize_u8(visitor))
+        Visitor::with_new(visitor, |visitor| self.deserializer.deserialize_u8(visitor))
     }
 
     fn deserialize_u16<V: serde::de::Visitor<'de>>(
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| {
+        Visitor::with_new(visitor, |visitor| {
             self.deserializer.deserialize_u16(visitor)
         })
     }
@@ -386,7 +521,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| {
+        Visitor::with_new(visitor, |visitor| {
             self.deserializer.deserialize_u32(visitor)
         })
     }
@@ -395,7 +530,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| {
+        Visitor::with_new(visitor, |visitor| {
             self.deserializer.deserialize_u64(visitor)
         })
     }
@@ -405,7 +540,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
             self,
             visitor: V,
         ) -> Result<V::Value, Self::Error> {
-            with_wrapped_visitor(visitor, |visitor| self.deserializer.deserialize_u128(visitor))
+            Visitor::with_new(visitor, |visitor| self.deserializer.deserialize_u128(visitor))
         }
     }
 
@@ -413,7 +548,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| {
+        Visitor::with_new(visitor, |visitor| {
             self.deserializer.deserialize_f32(visitor)
         })
     }
@@ -422,7 +557,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| {
+        Visitor::with_new(visitor, |visitor| {
             self.deserializer.deserialize_f64(visitor)
         })
     }
@@ -431,7 +566,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| {
+        Visitor::with_new(visitor, |visitor| {
             self.deserializer.deserialize_char(visitor)
         })
     }
@@ -440,7 +575,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| {
+        Visitor::with_new(visitor, |visitor| {
             self.deserializer.deserialize_str(visitor)
         })
     }
@@ -449,7 +584,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| {
+        Visitor::with_new(visitor, |visitor| {
             self.deserializer.deserialize_string(visitor)
         })
     }
@@ -458,7 +593,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| {
+        Visitor::with_new(visitor, |visitor| {
             self.deserializer.deserialize_bytes(visitor)
         })
     }
@@ -467,7 +602,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| {
+        Visitor::with_new(visitor, |visitor| {
             self.deserializer.deserialize_byte_buf(visitor)
         })
     }
@@ -476,7 +611,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| {
+        Visitor::with_new(visitor, |visitor| {
             self.deserializer.deserialize_option(visitor)
         })
     }
@@ -485,7 +620,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| {
+        Visitor::with_new(visitor, |visitor| {
             self.deserializer.deserialize_unit(visitor)
         })
     }
@@ -495,7 +630,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         name: &'static str,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| {
+        Visitor::with_new(visitor, |visitor| {
             self.deserializer.deserialize_unit_struct(name, visitor)
         })
     }
@@ -505,7 +640,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         name: &'static str,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| {
+        Visitor::with_new(visitor, |visitor| {
             self.deserializer.deserialize_newtype_struct(name, visitor)
         })
     }
@@ -514,7 +649,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| {
+        Visitor::with_new(visitor, |visitor| {
             self.deserializer.deserialize_seq(visitor)
         })
     }
@@ -524,7 +659,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         len: usize,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| {
+        Visitor::with_new(visitor, |visitor| {
             self.deserializer.deserialize_tuple(len, visitor)
         })
     }
@@ -535,7 +670,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         len: usize,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| {
+        Visitor::with_new(visitor, |visitor| {
             self.deserializer
                 .deserialize_tuple_struct(name, len, visitor)
         })
@@ -545,7 +680,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| {
+        Visitor::with_new(visitor, |visitor| {
             self.deserializer.deserialize_map(visitor)
         })
     }
@@ -556,7 +691,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         fields: &'static [&'static str],
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| {
+        Visitor::with_new(visitor, |visitor| {
             self.deserializer.deserialize_struct(name, fields, visitor)
         })
     }
@@ -567,7 +702,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         variants: &'static [&'static str],
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| {
+        Visitor::with_new(visitor, |visitor| {
             self.deserializer.deserialize_enum(name, variants, visitor)
         })
     }
@@ -576,7 +711,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| {
+        Visitor::with_new(visitor, |visitor| {
             self.deserializer.deserialize_identifier(visitor)
         })
     }
@@ -585,7 +720,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        with_wrapped_visitor(visitor, |visitor| {
+        Visitor::with_new(visitor, |visitor| {
             self.deserializer.deserialize_ignored_any(visitor)
         })
     }
@@ -746,6 +881,7 @@ impl Deserializer {
 
 struct Visitor {
     visitor: Box<dyn ErasedVisitor>,
+    scope: ScopedBorrowMut<()>,
 }
 
 struct SeqAccess {
@@ -979,7 +1115,24 @@ impl<'de> serde::de::EnumAccess<'de> for DeserializerableEnumAccess {
         self,
         seed: V,
     ) -> Result<(V::Value, Self::Variant), Self::Error> {
-        todo!()
+        let result = unsafe {
+            GuestsideDeserializerClient::with_new_seed_unchecked(seed, |seed| {
+                self.enum_access.variant_seed(seed)
+            })
+        };
+
+        match result {
+            Ok((value, variant_access)) => {
+                if let Some(value) = value.take() {
+                    return Ok((value, DeserializerableVariantAccess { variant_access }));
+                }
+            }
+            Err(err) => return Err(err),
+        }
+
+        Err(serde::de::Error::custom(
+            "bug: type mismatch across the wit boundary",
+        ))
     }
 }
 
@@ -987,14 +1140,23 @@ struct VariantAccess {
     _private: (),
 }
 
-impl VariantAccess {}
+impl VariantAccess {
+    fn unit_variant(self) -> Result<(), DeError> {
+        todo!("wit-bindgen")
+    }
 
-// resource variant-access {
-//     static unit-variant: func(self: variant-access) -> result<_, de-error>
-//     static newtype-variant-seed: func(self: variant-access, seed: deserialize-seed) -> result<de-value, de-error>
-//     static tuple-variant: func(self: variant-access, len: usize, visitor: visitor) -> result<de-value, de-error>
-//     static struct-variant: func(self: variant-access, fields: list<string>, visitor: visitor) -> result<de-value, de-error>
-// }
+    fn newtype_variant_seed(self, _seed: GuestsideDeserializerClient) -> Result<DeValue, DeError> {
+        todo!("wit-bindgen")
+    }
+
+    fn tuple_variant(self, _len: usize, _visitor: Visitor) -> Result<DeValue, DeError> {
+        todo!("wit-bindgen")
+    }
+
+    fn struct_variant(self, _fields: &[&str], _visitor: Visitor) -> Result<DeValue, DeError> {
+        todo!("wit-bindgen")
+    }
+}
 
 struct DeserializerableVariantAccess {
     variant_access: VariantAccess,
@@ -1004,14 +1166,31 @@ impl<'de> serde::de::VariantAccess<'de> for DeserializerableVariantAccess {
     type Error = DeError;
 
     fn unit_variant(self) -> Result<(), Self::Error> {
-        todo!()
+        self.variant_access.unit_variant()
     }
 
     fn newtype_variant_seed<T: serde::de::DeserializeSeed<'de>>(
         self,
         seed: T,
     ) -> Result<T::Value, Self::Error> {
-        todo!()
+        let result = unsafe {
+            GuestsideDeserializerClient::with_new_seed_unchecked(seed, |seed| {
+                self.variant_access.newtype_variant_seed(seed)
+            })
+        };
+
+        match result {
+            Ok(value) => {
+                if let Some(value) = value.take() {
+                    return Ok(value);
+                }
+            }
+            Err(err) => return Err(err),
+        }
+
+        Err(serde::de::Error::custom(
+            "bug: type mismatch across the wit boundary",
+        ))
     }
 
     fn tuple_variant<V: serde::de::Visitor<'de>>(
@@ -1019,7 +1198,9 @@ impl<'de> serde::de::VariantAccess<'de> for DeserializerableVariantAccess {
         len: usize,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        todo!()
+        Visitor::with_new(visitor, |visitor| {
+            self.variant_access.tuple_variant(len, visitor)
+        })
     }
 
     fn struct_variant<V: serde::de::Visitor<'de>>(
@@ -1027,13 +1208,11 @@ impl<'de> serde::de::VariantAccess<'de> for DeserializerableVariantAccess {
         fields: &'static [&'static str],
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        todo!()
+        Visitor::with_new(visitor, |visitor| {
+            self.variant_access.struct_variant(fields, visitor)
+        })
     }
 }
-
-// resource enum-access {
-//     static variant-seed: func(self: enum-access, seed: deserialize-seed) -> result<tuple<de-value, variant-access>, de-error>
-// }
 
 struct DeValue {
     value: Any,
