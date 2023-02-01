@@ -61,6 +61,37 @@ impl GuestsideDeserializerClient {
 
         result
     }
+
+    unsafe fn with_new_seed_unchecked<
+        'a,
+        'de,
+        D: serde::de::DeserializeSeed<'de> + 'a,
+        F: FnOnce(Self) -> Q,
+        Q,
+    >(
+        deserialize_seed: D,
+        inner: F,
+    ) -> Q {
+        #[allow(clippy::let_unit_value)]
+        let mut scope = ();
+        let mut scope = ScopedReference::new_mut(&mut scope);
+
+        let result = {
+            let deserialize_seed: Box<dyn ErasedDeserializeSeed + 'a> = Box::new(deserialize_seed);
+            let deserialize_seed: Box<dyn ErasedDeserializeSeed + 'static> =
+                unsafe { core::mem::transmute(deserialize_seed) };
+
+            inner(Self {
+                deserialize_seed,
+                scope: scope.borrow_mut(),
+            })
+        };
+
+        // Abort if there are any outstanding, soon dangling, scoped borrows
+        core::mem::drop(scope);
+
+        result
+    }
 }
 
 trait ErasedDeserializeSeed {
@@ -93,15 +124,21 @@ trait ErasedVisitor {
     fn erased_visit_none(self: Box<Self>) -> Result<DeValue, DeError>;
     fn erased_visit_some(
         self: Box<Self>,
-        d: DeserializerableDeserializer,
+        deserializer: DeserializerableDeserializer,
     ) -> Result<DeValue, DeError>;
     fn erased_visit_unit(self: Box<Self>) -> Result<DeValue, DeError>;
     fn erased_visit_newtype_struct(
         self: Box<Self>,
-        d: DeserializerableDeserializer,
+        deserializer: DeserializerableDeserializer,
     ) -> Result<DeValue, DeError>;
-    // fn erased_visit_seq(self: Box<Self>, s: &mut dyn SeqAccess<'de>) -> Result<DeValue, DeError>;
-    // fn erased_visit_map(self: Box<Self>, m: &mut dyn MapAccess<'de>) -> Result<DeValue, DeError>;
+    fn erased_visit_seq(
+        self: Box<Self>,
+        seq: DeserializerableSeqAccess,
+    ) -> Result<DeValue, DeError>;
+    fn erased_visit_map(
+        self: Box<Self>,
+        map: DeserializerableMapAccess,
+    ) -> Result<DeValue, DeError>;
     // fn erased_visit_enum(self: Box<Self>, e: &mut dyn EnumAccess<'de>) -> Result<DeValue, Error>;
 }
 
@@ -193,9 +230,9 @@ impl<'de, T: serde::de::Visitor<'de>> ErasedVisitor for T {
 
     fn erased_visit_some(
         self: Box<Self>,
-        d: DeserializerableDeserializer,
+        deserializer: DeserializerableDeserializer,
     ) -> Result<DeValue, DeError> {
-        self.visit_some(d).map(DeValue::wrap)
+        self.visit_some(deserializer).map(DeValue::wrap)
     }
 
     fn erased_visit_unit(self: Box<Self>) -> Result<DeValue, DeError> {
@@ -204,9 +241,23 @@ impl<'de, T: serde::de::Visitor<'de>> ErasedVisitor for T {
 
     fn erased_visit_newtype_struct(
         self: Box<Self>,
-        d: DeserializerableDeserializer,
+        deserializer: DeserializerableDeserializer,
     ) -> Result<DeValue, DeError> {
-        self.visit_newtype_struct(d).map(DeValue::wrap)
+        self.visit_newtype_struct(deserializer).map(DeValue::wrap)
+    }
+
+    fn erased_visit_seq(
+        self: Box<Self>,
+        seq: DeserializerableSeqAccess,
+    ) -> Result<DeValue, DeError> {
+        self.visit_seq(seq).map(DeValue::wrap)
+    }
+
+    fn erased_visit_map(
+        self: Box<Self>,
+        map: DeserializerableMapAccess,
+    ) -> Result<DeValue, DeError> {
+        self.visit_map(map).map(DeValue::wrap)
     }
 }
 
@@ -696,6 +747,293 @@ impl Deserializer {
 struct Visitor {
     visitor: Box<dyn ErasedVisitor>,
 }
+
+struct SeqAccess {
+    _private: (),
+}
+
+impl SeqAccess {
+    fn next_element_seed(
+        self,
+        _seed: GuestsideDeserializerClient,
+    ) -> (Self, Result<Option<DeValue>, DeError>) {
+        todo!("wit-bindgen")
+    }
+
+    fn size_hint(&self) -> Option<usize> {
+        todo!("wit-bindgen")
+    }
+}
+
+struct DeserializerableSeqAccess {
+    seq_access: Option<SeqAccess>,
+}
+
+impl<'de> serde::de::SeqAccess<'de> for DeserializerableSeqAccess {
+    type Error = DeError;
+
+    fn next_element_seed<T: serde::de::DeserializeSeed<'de>>(
+        &mut self,
+        seed: T,
+    ) -> Result<Option<T::Value>, Self::Error> {
+        let Some(seq_access) = self.seq_access.take() else {
+            return Err(serde::de::Error::custom("bug: SeqAccess::next_element_seed after free"));
+        };
+
+        let (seq_access, result) = unsafe {
+            GuestsideDeserializerClient::with_new_seed_unchecked(seed, |seed| {
+                seq_access.next_element_seed(seed)
+            })
+        };
+        self.seq_access = Some(seq_access);
+
+        match result {
+            Ok(Some(value)) => {
+                if let Some(value) = value.take() {
+                    return Ok(Some(value));
+                }
+            }
+            Ok(None) => return Ok(None),
+            Err(err) => return Err(err),
+        };
+
+        Err(serde::de::Error::custom(
+            "bug: type mismatch across the wit boundary",
+        ))
+    }
+
+    fn size_hint(&self) -> Option<usize> {
+        self.seq_access
+            .as_ref()
+            .and_then(|seq_access| seq_access.size_hint())
+    }
+}
+
+struct MapAccess {
+    _private: (),
+}
+
+impl MapAccess {
+    fn next_key_seed(
+        self,
+        _seed: GuestsideDeserializerClient,
+    ) -> (Self, Result<Option<DeValue>, DeError>) {
+        todo!("wit-bindgen")
+    }
+
+    fn next_value_seed(
+        self,
+        _seed: GuestsideDeserializerClient,
+    ) -> (Self, Result<DeValue, DeError>) {
+        todo!("wit-bindgen")
+    }
+
+    fn size_hint(&self) -> Option<usize> {
+        todo!("wit-bindgen")
+    }
+}
+
+struct DeserializerableMapAccess {
+    map_access: Option<MapAccess>,
+}
+
+impl<'de> serde::de::MapAccess<'de> for DeserializerableMapAccess {
+    type Error = DeError;
+
+    fn next_key_seed<K: serde::de::DeserializeSeed<'de>>(
+        &mut self,
+        seed: K,
+    ) -> Result<Option<K::Value>, Self::Error> {
+        let Some(map_access) = self.map_access.take() else {
+            return Err(serde::de::Error::custom("bug: MapAccess::next_key_seed after free"));
+        };
+
+        let (map_access, result) = unsafe {
+            GuestsideDeserializerClient::with_new_seed_unchecked(seed, |seed| {
+                map_access.next_key_seed(seed)
+            })
+        };
+        self.map_access = Some(map_access);
+
+        match result {
+            Ok(Some(value)) => {
+                if let Some(value) = value.take() {
+                    return Ok(Some(value));
+                }
+            }
+            Ok(None) => return Ok(None),
+            Err(err) => return Err(err),
+        };
+
+        Err(serde::de::Error::custom(
+            "bug: type mismatch across the wit boundary",
+        ))
+    }
+
+    fn next_value_seed<V: serde::de::DeserializeSeed<'de>>(
+        &mut self,
+        seed: V,
+    ) -> Result<V::Value, Self::Error> {
+        let Some(map_access) = self.map_access.take() else {
+            return Err(serde::de::Error::custom("bug: MapAccess::next_key_seed after free"));
+        };
+
+        let (map_access, result) = unsafe {
+            GuestsideDeserializerClient::with_new_seed_unchecked(seed, |seed| {
+                map_access.next_value_seed(seed)
+            })
+        };
+        self.map_access = Some(map_access);
+
+        match result {
+            Ok(value) => {
+                if let Some(value) = value.take() {
+                    return Ok(value);
+                }
+            }
+            Err(err) => return Err(err),
+        };
+
+        Err(serde::de::Error::custom(
+            "bug: type mismatch across the wit boundary",
+        ))
+    }
+
+    fn next_entry_seed<K: serde::de::DeserializeSeed<'de>, V: serde::de::DeserializeSeed<'de>>(
+        &mut self,
+        kseed: K,
+        vseed: V,
+    ) -> Result<Option<(K::Value, V::Value)>, Self::Error> {
+        let Some(map_access) = self.map_access.take() else {
+            return Err(serde::de::Error::custom("bug: MapAccess::next_entry_seed after free"));
+        };
+
+        let (map_access, result) = unsafe {
+            GuestsideDeserializerClient::with_new_seed_unchecked(kseed, |seed| {
+                map_access.next_key_seed(seed)
+            })
+        };
+
+        let key = match result {
+            Ok(Some(key)) => key,
+            Ok(None) => {
+                self.map_access = Some(map_access);
+                return Ok(None);
+            }
+            Err(err) => {
+                self.map_access = Some(map_access);
+                return Err(err);
+            }
+        };
+
+        let (map_access, result) = unsafe {
+            GuestsideDeserializerClient::with_new_seed_unchecked(vseed, |seed| {
+                map_access.next_value_seed(seed)
+            })
+        };
+        self.map_access = Some(map_access);
+
+        match result {
+            Ok(value) => {
+                if let (Some(key), Some(value)) = (key.take(), value.take()) {
+                    return Ok(Some((key, value)));
+                }
+            }
+            Err(err) => return Err(err),
+        };
+
+        Err(serde::de::Error::custom(
+            "bug: type mismatch across the wit boundary",
+        ))
+    }
+
+    fn size_hint(&self) -> Option<usize> {
+        self.map_access
+            .as_ref()
+            .and_then(|map_access| map_access.size_hint())
+    }
+}
+
+struct EnumAccess {
+    _private: (),
+}
+
+impl EnumAccess {
+    fn variant_seed(
+        self,
+        _seed: GuestsideDeserializerClient,
+    ) -> Result<(DeValue, VariantAccess), DeError> {
+        todo!("wit-bindgen")
+    }
+}
+
+struct DeserializerableEnumAccess {
+    enum_access: EnumAccess,
+}
+
+impl<'de> serde::de::EnumAccess<'de> for DeserializerableEnumAccess {
+    type Error = DeError;
+    type Variant = DeserializerableVariantAccess;
+
+    fn variant_seed<V: serde::de::DeserializeSeed<'de>>(
+        self,
+        seed: V,
+    ) -> Result<(V::Value, Self::Variant), Self::Error> {
+        todo!()
+    }
+}
+
+struct VariantAccess {
+    _private: (),
+}
+
+impl VariantAccess {}
+
+// resource variant-access {
+//     static unit-variant: func(self: variant-access) -> result<_, de-error>
+//     static newtype-variant-seed: func(self: variant-access, seed: deserialize-seed) -> result<de-value, de-error>
+//     static tuple-variant: func(self: variant-access, len: usize, visitor: visitor) -> result<de-value, de-error>
+//     static struct-variant: func(self: variant-access, fields: list<string>, visitor: visitor) -> result<de-value, de-error>
+// }
+
+struct DeserializerableVariantAccess {
+    variant_access: VariantAccess,
+}
+
+impl<'de> serde::de::VariantAccess<'de> for DeserializerableVariantAccess {
+    type Error = DeError;
+
+    fn unit_variant(self) -> Result<(), Self::Error> {
+        todo!()
+    }
+
+    fn newtype_variant_seed<T: serde::de::DeserializeSeed<'de>>(
+        self,
+        seed: T,
+    ) -> Result<T::Value, Self::Error> {
+        todo!()
+    }
+
+    fn tuple_variant<V: serde::de::Visitor<'de>>(
+        self,
+        len: usize,
+        visitor: V,
+    ) -> Result<V::Value, Self::Error> {
+        todo!()
+    }
+
+    fn struct_variant<V: serde::de::Visitor<'de>>(
+        self,
+        fields: &'static [&'static str],
+        visitor: V,
+    ) -> Result<V::Value, Self::Error> {
+        todo!()
+    }
+}
+
+// resource enum-access {
+//     static variant-seed: func(self: enum-access, seed: deserialize-seed) -> result<tuple<de-value, variant-access>, de-error>
+// }
 
 struct DeValue {
     value: Any,
