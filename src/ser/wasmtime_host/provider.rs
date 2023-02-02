@@ -359,8 +359,10 @@ impl SerError {
 
     fn debug(&self) -> String {
         match &self.inner {
-            SerErrorOrCustom::Error { debug, .. } => String::from(debug),
-            SerErrorOrCustom::Custom(msg) => String::from(msg),
+            SerErrorOrCustom::Error { debug, .. } => {
+                format!("serde_wit::ser::Error {{ err: {debug} }}")
+            }
+            SerErrorOrCustom::Custom(msg) => format!("serde_wit::ser::Error {{ custom: {msg} }}"),
         }
     }
 
