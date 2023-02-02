@@ -755,6 +755,10 @@ impl Deserializer {
         todo!("wit-bindgen")
     }
 
+    fn deserialize_i128(self, _visitor: Visitor) -> Result<DeValue, DeError> {
+        todo!("wit-bindgen")
+    }
+
     fn deserialize_u8(self, _visitor: Visitor) -> Result<DeValue, DeError> {
         todo!("wit-bindgen")
     }
@@ -768,6 +772,10 @@ impl Deserializer {
     }
 
     fn deserialize_u64(self, _visitor: Visitor) -> Result<DeValue, DeError> {
+        todo!("wit-bindgen")
+    }
+
+    fn deserialize_u128(self, _visitor: Visitor) -> Result<DeValue, DeError> {
         todo!("wit-bindgen")
     }
 
@@ -863,14 +871,6 @@ impl Deserializer {
     }
 
     fn deserialize_ignored_any(self, _visitor: Visitor) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
-    fn deserialize_i128(self, _visitor: Visitor) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
-    fn deserialize_u128(self, _visitor: Visitor) -> Result<DeValue, DeError> {
         todo!("wit-bindgen")
     }
 
