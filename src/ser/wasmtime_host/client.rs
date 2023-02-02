@@ -675,23 +675,37 @@ struct SerError {
     _private: (),
 }
 
-impl serde::ser::Error for SerError {
-    fn custom<T: fmt::Display>(_msg: T) -> Self {
+impl SerError {
+    fn display(&self) -> String {
         todo!("wit-bindgen")
+    }
+
+    fn debug(&self) -> String {
+        todo!("wit-bindgen")
+    }
+
+    fn custom(_msg: &str) -> Self {
+        todo!("wit-bindgen")
+    }
+}
+
+impl serde::ser::Error for SerError {
+    fn custom<T: fmt::Display>(msg: T) -> Self {
+        Self::custom(&format!("{msg}"))
     }
 }
 
 impl serde::ser::StdError for SerError {}
 
 impl fmt::Debug for SerError {
-    fn fmt(&self, _fmt: &mut fmt::Formatter) -> fmt::Result {
-        todo!() // fmt.write_str("SerError")
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.write_str(&self.debug())
     }
 }
 
 impl fmt::Display for SerError {
-    fn fmt(&self, _fmt: &mut fmt::Formatter) -> fmt::Result {
-        todo!() // fmt.write_str("SerError")
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.write_str(&self.display())
     }
 }
 

@@ -82,6 +82,9 @@ default interface serde-ser {
     }
 
     resource ser-error {
+        static display: func(self: borrowed<de-error>) -> string
+        static debug: func(self: borrowed<de-error>) -> string
+
         static custom: func(msg: string) -> ser-error
     } */
 }

@@ -319,29 +319,54 @@ struct SerError {
 }
 
 enum SerErrorOrCustom {
-    Error(Any),
+    Error {
+        err: Any,
+        display: String,
+        debug: String,
+    },
     Custom(String),
 }
 
 impl SerError {
-    fn wrap<T: serde::ser::Error>(value: T) -> Self {
+    fn wrap<T: serde::ser::Error>(err: T) -> Self {
+        let display = format!("{err}");
+        let debug = format!("{err:?}");
+
         // Safety: TODO
         Self {
-            inner: SerErrorOrCustom::Error(unsafe { Any::new(value) }),
+            inner: SerErrorOrCustom::Error {
+                err: unsafe { Any::new(err) },
+                display,
+                debug,
+            },
         }
     }
 
     fn take<T: serde::ser::Error>(self) -> Option<T> {
         match self.inner {
             // Safety: TODO
-            SerErrorOrCustom::Error(err) => unsafe { err.take() },
+            SerErrorOrCustom::Error { err, .. } => unsafe { err.take() },
             SerErrorOrCustom::Custom(msg) => Some(serde::ser::Error::custom(msg)),
         }
     }
 
-    fn custom(msg: String) -> Self {
+    fn display(&self) -> String {
+        match &self.inner {
+            SerErrorOrCustom::Error { display, .. } => String::from(display),
+            SerErrorOrCustom::Custom(msg) => String::from(msg),
+        }
+    }
+
+    fn debug(&self) -> String {
+        match &self.inner {
+            SerErrorOrCustom::Error { debug, .. } => String::from(debug),
+            SerErrorOrCustom::Custom(msg) => String::from(msg),
+        }
+    }
+
+    fn custom(msg: &str) -> Self {
         Self {
-            inner: SerErrorOrCustom::Custom(msg),
+            inner: SerErrorOrCustom::Custom(String::from(msg)),
         }
     }
 }

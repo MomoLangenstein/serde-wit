@@ -1294,6 +1294,14 @@ impl serde::de::Error for DeError {
 }
 
 impl DeError {
+    fn display(&self) -> String {
+        todo!("wit-bindgen")
+    }
+
+    fn debug(&self) -> String {
+        todo!("wit-bindgen")
+    }
+
     fn custom(_msg: &str) -> Self {
         todo!("wit-bindgen")
     }
@@ -1330,14 +1338,14 @@ impl DeError {
 impl serde::de::StdError for DeError {}
 
 impl fmt::Debug for DeError {
-    fn fmt(&self, _fmt: &mut fmt::Formatter) -> fmt::Result {
-        todo!() // fmt.write_str("DeError")
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.write_str(&self.debug())
     }
 }
 
 impl fmt::Display for DeError {
-    fn fmt(&self, _fmt: &mut fmt::Formatter) -> fmt::Result {
-        todo!() // fmt.write_str("DeError")
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.write_str(&self.display())
     }
 }
 

@@ -98,6 +98,9 @@ default interface serde-de {
     }
 
     resource de-error {
+        static display: func(self: borrowed<de-error>) -> string
+        static debug: func(self: borrowed<de-error>) -> string
+
         static custom: func(msg: string) -> de-error
         static invalid-type: func(unexp: unexpected, exp: string) -> de-error
         static invalid-value: func(unexp: unexpected, exp: string) -> de-error
