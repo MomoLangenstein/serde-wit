@@ -362,7 +362,9 @@ impl SerError {
             SerErrorOrCustom::Error { debug, .. } => {
                 format!("serde_wit::ser::Error {{ err: {debug} }}")
             }
-            SerErrorOrCustom::Custom(msg) => format!("serde_wit::ser::Error {{ custom: {msg} }}"),
+            SerErrorOrCustom::Custom(msg) => {
+                format!("serde_wit::ser::Error {{ err: Custom({msg}) }}")
+            }
         }
     }
 
