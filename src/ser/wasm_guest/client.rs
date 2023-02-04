@@ -1,3 +1,4 @@
+use alloc::{string::String, format};
 use core::fmt;
 
 use scoped_reference::{ScopedBorrow, ScopedReference};

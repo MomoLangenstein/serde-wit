@@ -21,7 +21,7 @@ wasmtime-host = ["anyhow", "wasmtime", "wasmtime-component-macro"]
 anyhow = { version = "1.0", optional = true }
 hash32 = { version = "0.3" }
 scoped_reference = "0.1"
-serde = { version = "1.0" }
+serde = { version = "1.0", features = ["alloc"], default-features = false }
 simple-interner = { version = "0.3", features = ["hashbrown"] }
 wit-bindgen-guest-rust = { version = "0.3.0", git = "https://github.com/bytecodealliance/wit-bindgen", rev = "d7b8702", optional = true }
 wasmtime = { version = "6.0.0", git = "https://github.com/bytecodealliance/wasmtime", rev = "2478512", default-features = false, features = ["component-model"], optional = true }

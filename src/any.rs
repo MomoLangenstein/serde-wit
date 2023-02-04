@@ -64,21 +64,6 @@ impl Any {
     }
 
     // This is unsafe -- caller is responsible that T is the correct type.
-    pub(crate) unsafe fn view<T>(&mut self) -> Option<&mut T> {
-        if self.fingerprint != Fingerprint::of::<T>() {
-            return None;
-        }
-
-        let ptr = if is_small::<T>() {
-            unsafe { self.value.inline.as_mut_ptr() as *mut T }
-        } else {
-            unsafe { self.value.ptr as *mut T }
-        };
-
-        Some(unsafe { &mut *ptr })
-    }
-
-    // This is unsafe -- caller is responsible that T is the correct type.
     pub(crate) unsafe fn take<T>(mut self) -> Option<T> {
         if self.fingerprint != Fingerprint::of::<T>() {
             return None;

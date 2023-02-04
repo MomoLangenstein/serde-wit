@@ -1,4 +1,4 @@
-use alloc::string::String;
+use alloc::{string::String, vec::Vec};
 
 use hash32::{BuildHasherDefault, FnvHasher};
 use simple_interner::{Interned, Interner};
