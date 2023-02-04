@@ -82,7 +82,6 @@ default interface serde-de {
     resource map-access {
         static next-key-seed: func(self: map-access, seed: deserialize-seed) -> tuple<map-access, result<option<de-value>, de-error>>
         static next-value-seed: func(self: map-access, seed: deserialize-seed) -> tuple<map-access, result<de-value, de-error>>
-        static next-entry-seed: func(self: map-access, kseed: deserialize-seed, vseed: deserialize-seed) -> tuple<map-access, result<option<tuple<de-value, de-value>>, de-error>>
         static size-hint: func(self: borrowed<map-access>) -> option<usize>
     }
 

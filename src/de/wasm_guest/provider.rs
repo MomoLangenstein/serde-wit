@@ -716,29 +716,360 @@ impl Visitor {
         todo!("wit-bindgen")
     }
 
-    fn visit_seq(self, _seq: SeqAccess) -> Result<DeValue, DeError> {
+    fn visit_seq(self, _seq: GuestsideSeqAccessProvider) -> Result<DeValue, DeError> {
         todo!("wit-bindgen")
     }
 
-    fn visit_map(self, _map: MapAccess) -> Result<DeValue, DeError> {
+    fn visit_map(self, _map: GuestsideMapAccessProvider) -> Result<DeValue, DeError> {
         todo!("wit-bindgen")
     }
 
-    fn visit_enum(self, _data: EnumAccess) -> Result<DeValue, DeError> {
+    fn visit_enum(self, _data: GuestsideEnumAccessProvider) -> Result<DeValue, DeError> {
         todo!("wit-bindgen")
     }
 }
 
-struct SeqAccess {
-    // TOOD
+trait ErasedSeqAccess {
+    fn erased_next_element_seed(
+        &mut self,
+        seed: DeserializableDeserializeSeed,
+    ) -> Result<Option<DeValue>, DeError>;
+
+    fn erased_size_hint(&self) -> Option<usize>;
 }
 
-struct MapAccess {
-    // TOOD
+impl<'de, T: serde::de::SeqAccess<'de>> ErasedSeqAccess for T {
+    fn erased_next_element_seed(
+        &mut self,
+        seed: DeserializableDeserializeSeed,
+    ) -> Result<Option<DeValue>, DeError> {
+        self.next_element_seed(seed).map_err(DeError::wrap)
+    }
+
+    fn erased_size_hint(&self) -> Option<usize> {
+        self.size_hint()
+    }
 }
 
-struct EnumAccess {
-    // TOOD
+struct GuestsideSeqAccessProvider {
+    seq_access: Box<dyn ErasedSeqAccess>,
+    scope: ScopedBorrowMut<()>,
+}
+
+impl GuestsideSeqAccessProvider {
+    #[must_use]
+    pub fn with_new<'a, 'de, D: serde::de::SeqAccess<'de> + 'a, F: FnOnce(Self) -> Q, Q>(
+        seq_access: D,
+        inner: F,
+    ) -> Q {
+        #[allow(clippy::let_unit_value)]
+        let mut scope = ();
+        let mut scope = ScopedReference::new_mut(&mut scope);
+
+        let result = {
+            let seq_access: Box<dyn ErasedSeqAccess + 'a> = Box::new(seq_access);
+            let seq_access: Box<dyn ErasedSeqAccess + 'static> =
+                unsafe { core::mem::transmute(seq_access) };
+
+            inner(Self {
+                seq_access,
+                scope: scope.borrow_mut(),
+            })
+        };
+
+        // Abort if there are any outstanding, soon dangling, scoped borrows
+        core::mem::drop(scope);
+
+        result
+    }
+
+    fn next_element_seed(
+        mut self,
+        seed: DeserializeSeed,
+    ) -> (Self, Result<Option<DeValue>, DeError>) {
+        let result = self
+            .seq_access
+            .erased_next_element_seed(DeserializableDeserializeSeed {
+                deserialize_seed: seed,
+            });
+        (self, result)
+    }
+
+    fn size_hint(&self) -> Option<usize> {
+        self.seq_access.erased_size_hint()
+    }
+}
+
+trait ErasedMapAccess {
+    fn erased_next_key_seed(
+        &mut self,
+        seed: DeserializableDeserializeSeed,
+    ) -> Result<Option<DeValue>, DeError>;
+    fn erased_next_value_seed(
+        &mut self,
+        seed: DeserializableDeserializeSeed,
+    ) -> Result<DeValue, DeError>;
+    fn erased_size_hint(&self) -> Option<usize>;
+}
+
+impl<'de, T: serde::de::MapAccess<'de>> ErasedMapAccess for T {
+    fn erased_next_key_seed(
+        &mut self,
+        seed: DeserializableDeserializeSeed,
+    ) -> Result<Option<DeValue>, DeError> {
+        self.next_key_seed(seed).map_err(DeError::wrap)
+    }
+
+    fn erased_next_value_seed(
+        &mut self,
+        seed: DeserializableDeserializeSeed,
+    ) -> Result<DeValue, DeError> {
+        self.next_value_seed(seed).map_err(DeError::wrap)
+    }
+
+    fn erased_size_hint(&self) -> Option<usize> {
+        self.size_hint()
+    }
+}
+
+struct GuestsideMapAccessProvider {
+    map_access: Box<dyn ErasedMapAccess>,
+    scope: ScopedBorrowMut<()>,
+}
+
+impl GuestsideMapAccessProvider {
+    #[must_use]
+    pub fn with_new<'a, 'de, D: serde::de::MapAccess<'de> + 'a, F: FnOnce(Self) -> Q, Q>(
+        map_access: D,
+        inner: F,
+    ) -> Q {
+        #[allow(clippy::let_unit_value)]
+        let mut scope = ();
+        let mut scope = ScopedReference::new_mut(&mut scope);
+
+        let result = {
+            let map_access: Box<dyn ErasedMapAccess + 'a> = Box::new(map_access);
+            let map_access: Box<dyn ErasedMapAccess + 'static> =
+                unsafe { core::mem::transmute(map_access) };
+
+            inner(Self {
+                map_access,
+                scope: scope.borrow_mut(),
+            })
+        };
+
+        // Abort if there are any outstanding, soon dangling, scoped borrows
+        core::mem::drop(scope);
+
+        result
+    }
+
+    fn next_key_seed(mut self, seed: DeserializeSeed) -> (Self, Result<Option<DeValue>, DeError>) {
+        let result = self
+            .map_access
+            .erased_next_key_seed(DeserializableDeserializeSeed {
+                deserialize_seed: seed,
+            });
+        (self, result)
+    }
+
+    fn next_value_seed(mut self, seed: DeserializeSeed) -> (Self, Result<DeValue, DeError>) {
+        let result = self
+            .map_access
+            .erased_next_value_seed(DeserializableDeserializeSeed {
+                deserialize_seed: seed,
+            });
+        (self, result)
+    }
+
+    fn size_hint(&self) -> Option<usize> {
+        self.map_access.erased_size_hint()
+    }
+}
+
+trait ErasedEnumAccess {
+    fn erased_variant_seed(
+        self: Box<Self>,
+        seed: DeserializableDeserializeSeed,
+        scope: ScopedBorrowMut<()>,
+    ) -> Result<(DeValue, GuestsideVariantAccessProvider), DeError>;
+}
+
+impl<'de, T: serde::de::EnumAccess<'de>> ErasedEnumAccess for T {
+    fn erased_variant_seed(
+        self: Box<Self>,
+        seed: DeserializableDeserializeSeed,
+        scope: ScopedBorrowMut<()>,
+    ) -> Result<(DeValue, GuestsideVariantAccessProvider), DeError> {
+        match self.variant_seed(seed) {
+            Ok((value, variant_access)) => {
+                let variant_access: Box<dyn ErasedVariantAccess + '_> = Box::new(variant_access);
+                let variant_access: Box<dyn ErasedVariantAccess + 'static> =
+                    unsafe { core::mem::transmute(variant_access) };
+
+                let variant_access = GuestsideVariantAccessProvider {
+                    variant_access,
+                    scope,
+                };
+
+                Ok((value, variant_access))
+            }
+            Err(err) => Err(DeError::wrap(err)),
+        }
+    }
+}
+
+struct GuestsideEnumAccessProvider {
+    enum_access: Box<dyn ErasedEnumAccess>,
+    scope: ScopedBorrowMut<()>,
+}
+
+impl GuestsideEnumAccessProvider {
+    #[must_use]
+    pub fn with_new<'a, 'de, D: serde::de::EnumAccess<'de> + 'a, F: FnOnce(Self) -> Q, Q>(
+        enum_access: D,
+        inner: F,
+    ) -> Q {
+        #[allow(clippy::let_unit_value)]
+        let mut scope = ();
+        let mut scope = ScopedReference::new_mut(&mut scope);
+
+        let result = {
+            let enum_access: Box<dyn ErasedEnumAccess + 'a> = Box::new(enum_access);
+            let enum_access: Box<dyn ErasedEnumAccess + 'static> =
+                unsafe { core::mem::transmute(enum_access) };
+
+            inner(Self {
+                enum_access,
+                scope: scope.borrow_mut(),
+            })
+        };
+
+        // Abort if there are any outstanding, soon dangling, scoped borrows
+        core::mem::drop(scope);
+
+        result
+    }
+
+    fn variant_seed(
+        self,
+        seed: DeserializeSeed,
+    ) -> Result<(DeValue, GuestsideVariantAccessProvider), DeError> {
+        self.enum_access.erased_variant_seed(
+            DeserializableDeserializeSeed {
+                deserialize_seed: seed,
+            },
+            self.scope,
+        )
+    }
+}
+
+trait ErasedVariantAccess {
+    fn erased_unit_variant(self: Box<Self>) -> Result<(), DeError>;
+    fn erased_newtype_variant_seed(
+        self: Box<Self>,
+        seed: DeserializableDeserializeSeed,
+    ) -> Result<DeValue, DeError>;
+    fn erased_tuple_variant(
+        self: Box<Self>,
+        len: usize,
+        visitor: VisitableVisitor,
+    ) -> Result<DeValue, DeError>;
+    fn erased_struct_variant(
+        self: Box<Self>,
+        fields: &'static [&'static str],
+        visitor: VisitableVisitor,
+    ) -> Result<DeValue, DeError>;
+}
+
+impl<'de, T: serde::de::VariantAccess<'de>> ErasedVariantAccess for T {
+    fn erased_unit_variant(self: Box<Self>) -> Result<(), DeError> {
+        self.unit_variant().map_err(DeError::wrap)
+    }
+
+    fn erased_newtype_variant_seed(
+        self: Box<Self>,
+        seed: DeserializableDeserializeSeed,
+    ) -> Result<DeValue, DeError> {
+        self.newtype_variant_seed(seed).map_err(DeError::wrap)
+    }
+
+    fn erased_tuple_variant(
+        self: Box<Self>,
+        len: usize,
+        visitor: VisitableVisitor,
+    ) -> Result<DeValue, DeError> {
+        self.tuple_variant(len, visitor).map_err(DeError::wrap)
+    }
+
+    fn erased_struct_variant(
+        self: Box<Self>,
+        fields: &'static [&'static str],
+        visitor: VisitableVisitor,
+    ) -> Result<DeValue, DeError> {
+        self.struct_variant(fields, visitor).map_err(DeError::wrap)
+    }
+}
+
+struct GuestsideVariantAccessProvider {
+    variant_access: Box<dyn ErasedVariantAccess>,
+    scope: ScopedBorrowMut<()>,
+}
+
+impl GuestsideVariantAccessProvider {
+    fn unit_variant(self) -> Result<(), DeError> {
+        self.variant_access.erased_unit_variant()
+    }
+
+    fn newtype_variant_seed(self, seed: DeserializeSeed) -> Result<DeValue, DeError> {
+        self.variant_access
+            .erased_newtype_variant_seed(DeserializableDeserializeSeed {
+                deserialize_seed: seed,
+            })
+    }
+
+    fn tuple_variant(self, len: usize, visitor: Visitor) -> Result<DeValue, DeError> {
+        self.variant_access
+            .erased_tuple_variant(len, VisitableVisitor { visitor })
+    }
+
+    fn struct_variant(self, fields: &[&str], visitor: Visitor) -> Result<DeValue, DeError> {
+        let fields = fields
+            .iter()
+            .map(|f| intern_string(String::from(*f)))
+            .collect();
+
+        self.variant_access
+            .erased_struct_variant(intern_str_list(fields), VisitableVisitor { visitor })
+    }
+}
+
+struct DeserializeSeed {
+    _private: (),
+}
+
+impl DeserializeSeed {
+    fn deserialize(self, _deserializer: GuestsideDeserializerProvider) -> Result<DeValue, DeError> {
+        todo!("wit-bindgen")
+    }
+}
+
+struct DeserializableDeserializeSeed {
+    deserialize_seed: DeserializeSeed,
+}
+
+impl<'de> serde::de::DeserializeSeed<'de> for DeserializableDeserializeSeed {
+    type Value = DeValue;
+
+    fn deserialize<D: serde::Deserializer<'de>>(
+        self,
+        deserializer: D,
+    ) -> Result<Self::Value, D::Error> {
+        unwrap_de_error(GuestsideDeserializerProvider::with_new(
+            deserializer,
+            |deserializer| self.deserialize_seed.deserialize(deserializer),
+        ))
+    }
 }
 
 struct VisitableVisitor {
@@ -824,109 +1155,75 @@ impl<'de> serde::de::Visitor<'de> for VisitableVisitor {
         unwrap_de_error(self.visitor.visit_char(v))
     }
 
-    //     fn visit_str<E: serde::de::Error>(self, v: &str) -> Result<Self::Value, E>
-    //     where
-    //         E: serde::de::Error,
-    //     {
-    //         Err(serde::de::Error::invalid_type(serde::de::Unexpected::Str(v), &self))
-    //     }
+    fn visit_str<E: serde::de::Error>(self, v: &str) -> Result<Self::Value, E> {
+        unwrap_de_error(self.visitor.visit_string(String::from(v)))
+    }
 
-    //     fn visit_borrowed_str<E: serde::de::Error>(self, v: &'de str) -> Result<Self::Value, E>
-    //     where
-    //         E: serde::de::Error,
-    //     {
-    //         self.visit_str(v)
-    //     }
+    fn visit_borrowed_str<E: serde::de::Error>(self, v: &'de str) -> Result<Self::Value, E> {
+        unwrap_de_error(self.visitor.visit_string(String::from(v)))
+    }
 
-    //     fn visit_string<E: serde::de::Error>(self, v: String) -> Result<Self::Value, E>
-    //     where
-    //         E: serde::de::Error,
-    //     {
-    //         self.visit_str(&v)
-    //     }
+    fn visit_string<E: serde::de::Error>(self, v: String) -> Result<Self::Value, E> {
+        unwrap_de_error(self.visitor.visit_string(v))
+    }
 
-    //     fn visit_bytes<E: serde::de::Error>(self, v: &[u8]) -> Result<Self::Value, E>
-    //     where
-    //         E: serde::de::Error,
-    //     {
-    //         let _ = v;
-    //         Err(serde::de::Error::invalid_type(serde::de::Unexpected::Bytes(v), &self))
-    //     }
+    fn visit_bytes<E: serde::de::Error>(self, v: &[u8]) -> Result<Self::Value, E> {
+        unwrap_de_error(self.visitor.visit_byte_buf(Vec::from(v)))
+    }
 
-    //     fn visit_borrowed_bytes<E: serde::de::Error>(self, v: &'de [u8]) -> Result<Self::Value, E>
-    //     where
-    //         E: serde::de::Error,
-    //     {
-    //         self.visit_bytes(v)
-    //     }
+    fn visit_borrowed_bytes<E: serde::de::Error>(self, v: &'de [u8]) -> Result<Self::Value, E> {
+        unwrap_de_error(self.visitor.visit_byte_buf(Vec::from(v)))
+    }
 
-    //     fn visit_byte_buf<E: serde::de::Error>(self, v: Vec<u8>) -> Result<Self::Value, E>
-    //     where
-    //         E: serde::de::Error,
-    //     {
-    //         self.visit_bytes(&v)
-    //     }
+    fn visit_byte_buf<E: serde::de::Error>(self, v: Vec<u8>) -> Result<Self::Value, E> {
+        unwrap_de_error(self.visitor.visit_byte_buf(v))
+    }
 
-    //     fn visit_none<E: serde::de::Error>(self) -> Result<Self::Value, E>
-    //     where
-    //         E: serde::de::Error,
-    //     {
-    //         Err(serde::de::Error::invalid_type(serde::de::Unexpected::Option, &self))
-    //     }
+    fn visit_none<E: serde::de::Error>(self) -> Result<Self::Value, E> {
+        unwrap_de_error(self.visitor.visit_none())
+    }
 
-    //     fn visit_some<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
-    //     where
-    //         D: serde::Deserializer<'de>,
-    //     {
-    //         let _ = deserializer;
-    //         Err(serde::de::Error::invalid_type(serde::de::Unexpected::Option, &self))
-    //     }
+    fn visit_some<D: serde::Deserializer<'de>>(
+        self,
+        deserializer: D,
+    ) -> Result<Self::Value, D::Error> {
+        unwrap_de_error(GuestsideDeserializerProvider::with_new(
+            deserializer,
+            |deserializer| self.visitor.visit_some(deserializer),
+        ))
+    }
 
-    //     fn visit_unit<E: serde::de::Error>(self) -> Result<Self::Value, E>
-    //     where
-    //         E: serde::de::Error,
-    //     {
-    //         Err(serde::de::Error::invalid_type(serde::de::Unexpected::Unit, &self))
-    //     }
+    fn visit_unit<E: serde::de::Error>(self) -> Result<Self::Value, E> {
+        unwrap_de_error(self.visitor.visit_unit())
+    }
 
-    //     fn visit_newtype_struct<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
-    //     where
-    //         D: serde::Deserializer<'de>,
-    //     {
-    //         let _ = deserializer;
-    //         Err(serde::de::Error::invalid_type(serde::de::Unexpected::NewtypeStruct, &self))
-    //     }
+    fn visit_newtype_struct<D: serde::Deserializer<'de>>(
+        self,
+        deserializer: D,
+    ) -> Result<Self::Value, D::Error> {
+        unwrap_de_error(GuestsideDeserializerProvider::with_new(
+            deserializer,
+            |deserializer| self.visitor.visit_newtype_struct(deserializer),
+        ))
+    }
 
-    //     fn visit_seq<A>(self, seq: A) -> Result<Self::Value, A::Error>
-    //     where
-    //         A: serde::de::SeqAccess<'de>,
-    //     {
-    //         let _ = seq;
-    //         Err(serde::de::Error::invalid_type(serde::de::Unexpected::Seq, &self))
-    //     }
+    fn visit_seq<A: serde::de::SeqAccess<'de>>(self, seq: A) -> Result<Self::Value, A::Error> {
+        unwrap_de_error(GuestsideSeqAccessProvider::with_new(seq, |seq| {
+            self.visitor.visit_seq(seq)
+        }))
+    }
 
-    //     fn visit_map<A>(self, map: A) -> Result<Self::Value, A::Error>
-    //     where
-    //         A: serde::de::MapAccess<'de>,
-    //     {
-    //         let _ = map;
-    //         Err(serde::de::Error::invalid_type(serde::de::Unexpected::Map, &self))
-    //     }
+    fn visit_map<A: serde::de::MapAccess<'de>>(self, map: A) -> Result<Self::Value, A::Error> {
+        unwrap_de_error(GuestsideMapAccessProvider::with_new(map, |map| {
+            self.visitor.visit_map(map)
+        }))
+    }
 
-    //     fn visit_enum<A>(self, data: A) -> Result<Self::Value, A::Error>
-    //     where
-    //         A: serde::de::EnumAccess<'de>,
-    //     {
-    //         let _ = data;
-    //         Err(serde::de::Error::invalid_type(serde::de::Unexpected::Enum, &self))
-    //     }
-
-    //     fn __private_visit_untagged_option<D>(self, _: D) -> Result<Self::Value, ()>
-    //     where
-    //         D: serde::Deserializer<'de>,
-    //     {
-    //         Err(())
-    //     }
+    fn visit_enum<A: serde::de::EnumAccess<'de>>(self, data: A) -> Result<Self::Value, A::Error> {
+        unwrap_de_error(GuestsideEnumAccessProvider::with_new(data, |data| {
+            self.visitor.visit_enum(data)
+        }))
+    }
 }
 
 struct DeValue {
