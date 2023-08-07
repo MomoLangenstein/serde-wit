@@ -52,12 +52,12 @@ interface serde-serializer {
         serialize-newtype-struct: static func(self: serializer, name: string, value: borrowed-serialize-handle) -> result<ser-ok, ser-error>
         serialize-newtype-variant: static func(self: serializer, name: string, variant-index: u32, %variant: string, value: borrowed-serialize-handle) -> result<ser-ok, ser-error>
         serialize-seq: static func(self: serializer, len: option<usize>) -> result<serialize-seq, ser-error>
-        /*serialize-tuple: static func(self: serializer, len: usize) -> result<serialize-tuple, ser-error>
+        serialize-tuple: static func(self: serializer, len: usize) -> result<serialize-tuple, ser-error>
         serialize-tuple-struct: static func(self: serializer, name: string, len: usize) -> result<serialize-tuple-struct, ser-error>
         serialize-tuple-variant: static func(self: serializer, name: string, variant-index: u32, %variant: string, len: usize) -> result<serialize-tuple-variant, ser-error>
         serialize-map: static func(self: serializer, len: option<usize>) -> result<serialize-map, ser-error>
         serialize-struct: static func(self: serializer, name: string, len: usize) -> result<serialize-struct, ser-error>
-        serialize-struct-variant: static func(self: serializer, name: string, variant-index: u32, %variant: string, len: usize) -> result<serialize-struct-variant, ser-error>*/
+        serialize-struct-variant: static func(self: serializer, name: string, variant-index: u32, %variant: string, len: usize) -> result<serialize-struct-variant, ser-error>
         is-human-readable: static func(self: borrow<serializer>) -> bool
     }
 
@@ -77,7 +77,7 @@ interface serde-serializer {
         end: static func(self: serialize-seq) -> result<ser-ok, ser-error>
     }
 
-    /*resource serialize-tuple {
+    resource serialize-tuple {
         serialize-element: static func(self: serialize-tuple, value: borrowed-serialize-handle) -> tuple<serialize-tuple, result<_, ser-error>>
         end: static func(self: serialize-tuple) -> result<ser-ok, ser-error>
     }
@@ -108,5 +108,5 @@ interface serde-serializer {
         serialize-field: static func(self: serialize-struct-variant, key: string, value: borrowed-serialize-handle) -> tuple<serialize-struct-variant, result<_, ser-error>>
         end: static func(self: serialize-struct-variant) -> result<ser-ok, ser-error>
         skip-field: static func(self: serialize-struct-variant, key: string) -> tuple<serialize-struct-variant, result<_, ser-error>>
-    }*/
+    }
 }
