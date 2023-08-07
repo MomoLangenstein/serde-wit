@@ -1,15 +1,6 @@
 package serde:serde
 
 world serde-serializer-provider {
-    import serialize: interface {
-        use serde-ser.{s128, usize, u128}
-
-        test: func(x: s128, y: usize) -> tuple<u128, usize>
-    }
-    
-    export serializer: interface {
-        use serde-ser.{s128, usize, u128}
-
-        test: func(x: s128, y: usize) -> tuple<u128, usize>
-    }
+    import serde-serialize
+    export serde-serializer
 }
