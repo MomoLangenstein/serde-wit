@@ -1,80 +1,82 @@
-default interface serde-ser {
-    use pkg.serde-types.{s128, usize, u128}
+package serde:serde
 
-    /* resource serialize {
-        static serialize: func(self: borrowed<serialize>, serializer: serializer) -> result<ser-ok, ser-error>
+interface serde-ser {
+    use serde-types.{s128, usize, u128}
+
+    resource serialize {
+        serialize: static func(self: borrow<serialize>, serializer: serializer) -> result<ser-ok, ser-error>
     }
     
     resource serializer {
-        static serialize-bool: func(self: serializer, v: bool) -> result<ser-ok, ser-error>
-        static serialize-i8: func(self: serializer, v: s8) -> result<ser-ok, ser-error>
-        static serialize-i16: func(self: serializer, v: s16) -> result<ser-ok, ser-error>
-        static serialize-i32: func(self: serializer, v: s32) -> result<ser-ok, ser-error>
-        static serialize-i64: func(self: serializer, v: s64) -> result<ser-ok, ser-error>
-        static serialize-i128: func(self: serializer, v: s128) -> result<ser-ok, ser-error>
-        static serialize-u8: func(self: serializer, v: u8) -> result<ser-ok, ser-error>
-        static serialize-u16: func(self: serializer, v: u16) -> result<ser-ok, ser-error>
-        static serialize-u32: func(self: serializer, v: u32) -> result<ser-ok, ser-error>
-        static serialize-u64: func(self: serializer, v: u64) -> result<ser-ok, ser-error>
-        static serialize-u128: func(self: serializer, v: u128) -> result<ser-ok, ser-error>
-        static serialize-f32: func(self: serializer, v: float32) -> result<ser-ok, ser-error>
-        static serialize-f64: func(self: serializer, v: float64) -> result<ser-ok, ser-error>
-        static serialize-char: func(self: serializer, v: char) -> result<ser-ok, ser-error>
-        static serialize-str: func(self: serializer, v: string) -> result<ser-ok, ser-error>
-        static serialize-bytes: func(self: serializer, v: list<u8>) -> result<ser-ok, ser-error>
-        static serialize-none: func(self: serializer) -> result<ser-ok, ser-error>
-        static serialize-some: func(self: serializer, value: borrowed<serialize>) -> result<ser-ok, ser-error>
-        static serialize-unit: func(self: serializer) -> result<ser-ok, ser-error>
-        static serialize-unit-struct: func(self: serializer, name: string) -> result<ser-ok, ser-error>
-        static serialize-unit-variant: func(self: serializer, name: string, variant-index: u32, variant: string) -> result<ser-ok, ser-error>
-        static serialize-newtype-struct: func(self: serializer, name: string, value: borrowed<serialize>) -> result<ser-ok, ser-error>
-        static serialize-newtype-variant: func(self: serializer, name: string, variant-index: u32, variant: string, value: borrowed<serialize>) -> result<ser-ok, ser-error>
-        static serialize-seq: func(self: serializer, len: option<usize>) -> result<serialize-seq, ser-error>
-        static serialize-tuple: func(self: serializer, len: usize) -> result<serialize-tuple, ser-error>
-        static serialize-tuple-struct: func(self: serializer, name: string, len: usize) -> result<serialize-tuple-struct, ser-error>
-        static serialize-tuple-variant: func(self: serializer, name: string, variant-index: u32, variant: string, len: usize) -> result<serialize-tuple-variant, ser-error>
-        static serialize-map: func(self: serializer, len: option<usize>) -> result<serialize-map, ser-error>
-        static serialize-struct: func(self: serializer, name: string, len: usize) -> result<serialize-struct, ser-error>
-        static serialize-struct-variant(name: string, variant-index: u32, variant: string, len: usize) -> result<serialize-struct-variant, ser-error>
-        static is-human-readable: func(self: borrowed<serializer>) -> bool
+        serialize-bool: static func(self: serializer, v: bool) -> result<ser-ok, ser-error>
+        serialize-i8: static func(self: serializer, v: s8) -> result<ser-ok, ser-error>
+        serialize-i16: static func(self: serializer, v: s16) -> result<ser-ok, ser-error>
+        serialize-i32: static func(self: serializer, v: s32) -> result<ser-ok, ser-error>
+        serialize-i64: static func(self: serializer, v: s64) -> result<ser-ok, ser-error>
+        serialize-i128: static func(self: serializer, v: s128) -> result<ser-ok, ser-error>
+        serialize-u8: static func(self: serializer, v: u8) -> result<ser-ok, ser-error>
+        serialize-u16: static func(self: serializer, v: u16) -> result<ser-ok, ser-error>
+        serialize-u32: static func(self: serializer, v: u32) -> result<ser-ok, ser-error>
+        serialize-u64: static func(self: serializer, v: u64) -> result<ser-ok, ser-error>
+        serialize-u128: static func(self: serializer, v: u128) -> result<ser-ok, ser-error>
+        serialize-f32: static func(self: serializer, v: float32) -> result<ser-ok, ser-error>
+        serialize-f64: static func(self: serializer, v: float64) -> result<ser-ok, ser-error>
+        serialize-char: static func(self: serializer, v: char) -> result<ser-ok, ser-error>
+        serialize-str: static func(self: serializer, v: string) -> result<ser-ok, ser-error>
+        serialize-bytes: static func(self: serializer, v: list<u8>) -> result<ser-ok, ser-error>
+        serialize-none: static func(self: serializer) -> result<ser-ok, ser-error>
+        serialize-some: static func(self: serializer, value: borrow<serialize>) -> result<ser-ok, ser-error>
+        serialize-unit: static func(self: serializer) -> result<ser-ok, ser-error>
+        serialize-unit-struct: static func(self: serializer, name: string) -> result<ser-ok, ser-error>
+        serialize-unit-variant: static func(self: serializer, name: string, variant-index: u32, %variant: string) -> result<ser-ok, ser-error>
+        serialize-newtype-struct: static func(self: serializer, name: string, value: borrow<serialize>) -> result<ser-ok, ser-error>
+        serialize-newtype-variant: static func(self: serializer, name: string, variant-index: u32, %variant: string, value: borrow<serialize>) -> result<ser-ok, ser-error>
+        serialize-seq: static func(self: serializer, len: option<usize>) -> result<serialize-seq, ser-error>
+        serialize-tuple: static func(self: serializer, len: usize) -> result<serialize-tuple, ser-error>
+        serialize-tuple-struct: static func(self: serializer, name: string, len: usize) -> result<serialize-tuple-struct, ser-error>
+        serialize-tuple-variant: static func(self: serializer, name: string, variant-index: u32, %variant: string, len: usize) -> result<serialize-tuple-variant, ser-error>
+        serialize-map: static func(self: serializer, len: option<usize>) -> result<serialize-map, ser-error>
+        serialize-struct: static func(self: serializer, name: string, len: usize) -> result<serialize-struct, ser-error>
+        serialize-struct-variant: static func(name: string, variant-index: u32, %variant: string, len: usize) -> result<serialize-struct-variant, ser-error>
+        is-human-readable: static func(self: borrow<serializer>) -> bool
     }
 
     resource serialize-seq {
-        static serialize-element: func(self: serialize-seq, value: borrowed<serialize>) -> tuple<serialize-seq, result<_, ser-error>>
-        static end: func(self: serialize-seq) -> result<ser-ok, ser-error>
+        serialize-element: static func(self: serialize-seq, value: borrow<serialize>) -> tuple<serialize-seq, result<_, ser-error>>
+        end: static func(self: serialize-seq) -> result<ser-ok, ser-error>
     }
 
     resource serialize-tuple {
-        static serialize-element: func(self: serialize-tuple, value: borrowed<serialize>) -> tuple<serialize-tuple, result<_, ser-error>>
-        static end: func(self: serialize-tuple) -> result<ser-ok, ser-error>
+        serialize-element: static func(self: serialize-tuple, value: borrow<serialize>) -> tuple<serialize-tuple, result<_, ser-error>>
+        end: static func(self: serialize-tuple) -> result<ser-ok, ser-error>
     }
 
     resource serialize-tuple-struct {
-        static serialize-field: func(self: serialize-tuple-struct, value: borrowed<serialize>) -> tuple<serialize-tuple-struct, result<_, ser-error>>
-        static end: func(self: serialize-tuple-struct) -> result<ser-ok, ser-error>
+        serialize-field: static func(self: serialize-tuple-struct, value: borrow<serialize>) -> tuple<serialize-tuple-struct, result<_, ser-error>>
+        end: static func(self: serialize-tuple-struct) -> result<ser-ok, ser-error>
     }
 
     resource serialize-tuple-variant {
-        static serialize-field: func(self: serialize-tuple-variant, value: borrowed<serialize>) -> tuple<serialize-tuple-variant, result<_, ser-error>>
-        static end: func(self: serialize-tuple-variant) -> result<ser-ok, ser-error>
+        serialize-field: static func(self: serialize-tuple-variant, value: borrow<serialize>) -> tuple<serialize-tuple-variant, result<_, ser-error>>
+        end: static func(self: serialize-tuple-variant) -> result<ser-ok, ser-error>
     }
 
     resource serialize-map {
-        static serialize-key: func(self: serialize-map, key: borrowed<serialize>) -> tuple<serialize-map, result<_, ser-error>>
-        static serialize-value: func(self: serialize-map, value: borrowed<serialize>) -> tuple<serialize-map, result<_, ser-error>>
-        static end: func(self: serialize-map) -> result<ser-ok, ser-error>
+        serialize-key: static func(self: serialize-map, key: borrow<serialize>) -> tuple<serialize-map, result<_, ser-error>>
+        serialize-value: static func(self: serialize-map, value: borrow<serialize>) -> tuple<serialize-map, result<_, ser-error>>
+        end: static func(self: serialize-map) -> result<ser-ok, ser-error>
     }
 
     resource serialize-struct {
-        static serialize-field: func(self: serialize-struct, key: string, value: borrowed<serialize>) -> tuple<serialize-struct, result<_, ser-error>>
-        static end: func(self: serialize-struct) -> result<ser-ok, ser-error>
-        static skip-field: func(self: serialize-struct, key: string) -> tuple<serialize-struct, result<_, ser-error>>
+        serialize-field: static func(self: serialize-struct, key: string, value: borrow<serialize>) -> tuple<serialize-struct, result<_, ser-error>>
+        end: static func(self: serialize-struct) -> result<ser-ok, ser-error>
+        skip-field: static func(self: serialize-struct, key: string) -> tuple<serialize-struct, result<_, ser-error>>
     }
 
     resource serialize-struct-variant {
-        static serialize_field: func(self: serialize-struct-variant, key: string, value: borrowed<serialize>) -> tuple<serialize-struct-variant, result<_, ser-error>>
-        static end: func(self: serialize-struct-variant) -> result<ser-ok, ser-error>
-        static skip-field: func(self: serialize-struct-variant, key: string) -> tuple<serialize-struct-variant, result<_, ser-rror>>
+        serialize-field: static func(self: serialize-struct-variant, key: string, value: borrow<serialize>) -> tuple<serialize-struct-variant, result<_, ser-error>>
+        end: static func(self: serialize-struct-variant) -> result<ser-ok, ser-error>
+        skip-field: static func(self: serialize-struct-variant, key: string) -> tuple<serialize-struct-variant, result<_, ser-error>>
     }
 
     resource ser-ok {
@@ -82,9 +84,9 @@ default interface serde-ser {
     }
 
     resource ser-error {
-        static display: func(self: borrowed<de-error>) -> string
-        static debug: func(self: borrowed<de-error>) -> string
+        display: static func(self: borrow<ser-error>) -> string
+        debug: static func(self: borrow<ser-error>) -> string
 
-        static custom: func(msg: string) -> ser-error
-    } */
+        custom: static func(msg: string) -> ser-error
+    }
 }

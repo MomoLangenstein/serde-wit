@@ -4,7 +4,7 @@ use core::fmt;
 use scoped_reference::{ScopedBorrowMut, ScopedReference};
 use serde::serde_if_integer128;
 
-wit_bindgen_guest_rust::generate!({ world: "serde-deserializer-provider", no_std });
+wit_bindgen::generate!({ world: "serde-deserializer-provider" });
 export_serde_deserializer_provider!(GuestsideDeserializerProvider);
 
 use crate::{

@@ -1,31 +1,38 @@
-use alloc::{boxed::Box, vec::Vec, string::String, format};
+use alloc::{boxed::Box, format, string::String, vec::Vec};
 use core::fmt;
 
+use ::serde::serde_if_integer128;
 use scoped_reference::{ScopedBorrowMut, ScopedReference};
-use serde::serde_if_integer128;
 
-wit_bindgen_guest_rust::generate!({ world: "serde-deserializer-client", no_std });
-export_serde_deserializer_client!(GuestsideDeserializerClient);
+wit_bindgen::generate!({ world: "serde-deserializer-client", exports: { "deserialize": GuestsideDeserializerClient } });
 
 use crate::any::Any;
+
+struct Hi;
 
 pub struct GuestsideDeserializerClient {
     deserialize_seed: Box<dyn ErasedDeserializeSeed>,
     scope: ScopedBorrowMut<()>,
 }
 
-impl deserialize::Deserialize for GuestsideDeserializerClient {
+impl self::exports::deserialize::Deserialize for GuestsideDeserializerClient {
     fn test(
-        x: serde_types::S128,
-        y: serde_types::Usize,
-    ) -> Result<(serde_types::U128, serde_types::Usize), serde_de::Unexpected> {
+        x: self::serde::serde::serde_types::S128,
+        y: self::serde::serde::serde_types::Usize,
+    ) -> Result<
+        (
+            self::serde::serde::serde_types::U128,
+            self::serde::serde::serde_types::Usize,
+        ),
+        self::serde::serde::serde_de::Unexpected,
+    > {
         deserializer::test(x, y)
     }
 }
 
 impl GuestsideDeserializerClient {
     #[must_use]
-    pub fn with_new<'a, D: for<'de> serde::de::Deserialize<'de> + 'a, F: FnOnce(Self) -> Q, Q>(
+    pub fn with_new<'a, D: for<'de> ::serde::de::Deserialize<'de> + 'a, F: FnOnce(Self) -> Q, Q>(
         inner: F,
     ) -> Q {
         Self::with_new_seed(core::marker::PhantomData::<D>, inner)
@@ -34,7 +41,7 @@ impl GuestsideDeserializerClient {
     #[must_use]
     pub fn with_new_seed<
         'a,
-        D: for<'de> serde::de::DeserializeSeed<'de> + 'a,
+        D: for<'de> ::serde::de::DeserializeSeed<'de> + 'a,
         F: FnOnce(Self) -> Q,
         Q,
     >(
@@ -65,7 +72,7 @@ impl GuestsideDeserializerClient {
     unsafe fn with_new_seed_unchecked<
         'a,
         'de,
-        D: serde::de::DeserializeSeed<'de> + 'a,
+        D: ::serde::de::DeserializeSeed<'de> + 'a,
         F: FnOnce(Self) -> Q,
         Q,
     >(
@@ -152,7 +159,7 @@ trait ErasedVisitor {
     ) -> Result<DeValue, DeError>;
 }
 
-impl<'de, T: serde::de::DeserializeSeed<'de>> ErasedDeserializeSeed for T {
+impl<'de, T: ::serde::de::DeserializeSeed<'de>> ErasedDeserializeSeed for T {
     fn erased_deserialize(
         self: Box<Self>,
         deserializer: DeserializerableDeserializer,
@@ -161,7 +168,7 @@ impl<'de, T: serde::de::DeserializeSeed<'de>> ErasedDeserializeSeed for T {
     }
 }
 
-impl<'de, T: serde::de::Visitor<'de>> ErasedVisitor for T {
+impl<'de, T: ::serde::de::Visitor<'de>> ErasedVisitor for T {
     fn erased_expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         self.expecting(formatter)
     }
@@ -283,7 +290,7 @@ struct DeserializerableDeserializer {
 }
 
 impl Visitor {
-    fn with_new<'de, V: serde::de::Visitor<'de>, F: FnOnce(Self) -> Result<DeValue, DeError>>(
+    fn with_new<'de, V: ::serde::de::Visitor<'de>, F: FnOnce(Self) -> Result<DeValue, DeError>>(
         visitor: V,
         inner: F,
     ) -> Result<V::Value, DeError> {
@@ -314,7 +321,7 @@ impl Visitor {
             Err(err) => return Err(err),
         };
 
-        Err(serde::de::Error::custom(
+        Err(::serde::de::Error::custom(
             "bug: type mismatch across the wit boundary",
         ))
     }
@@ -437,10 +444,10 @@ impl Visitor {
     }
 }
 
-impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
+impl<'de> ::serde::Deserializer<'de> for DeserializerableDeserializer {
     type Error = DeError;
 
-    fn deserialize_any<V: serde::de::Visitor<'de>>(
+    fn deserialize_any<V: ::serde::de::Visitor<'de>>(
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
@@ -449,7 +456,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         })
     }
 
-    fn deserialize_bool<V: serde::de::Visitor<'de>>(
+    fn deserialize_bool<V: ::serde::de::Visitor<'de>>(
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
@@ -458,14 +465,14 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         })
     }
 
-    fn deserialize_i8<V: serde::de::Visitor<'de>>(
+    fn deserialize_i8<V: ::serde::de::Visitor<'de>>(
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
         Visitor::with_new(visitor, |visitor| self.deserializer.deserialize_i8(visitor))
     }
 
-    fn deserialize_i16<V: serde::de::Visitor<'de>>(
+    fn deserialize_i16<V: ::serde::de::Visitor<'de>>(
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
@@ -474,7 +481,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         })
     }
 
-    fn deserialize_i32<V: serde::de::Visitor<'de>>(
+    fn deserialize_i32<V: ::serde::de::Visitor<'de>>(
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
@@ -483,7 +490,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         })
     }
 
-    fn deserialize_i64<V: serde::de::Visitor<'de>>(
+    fn deserialize_i64<V: ::serde::de::Visitor<'de>>(
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
@@ -493,7 +500,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
     }
 
     serde_if_integer128! {
-        fn deserialize_i128<V: serde::de::Visitor<'de>>(
+        fn deserialize_i128<V: ::serde::de::Visitor<'de>>(
             self,
             visitor: V,
         ) -> Result<V::Value, Self::Error> {
@@ -501,14 +508,14 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         }
     }
 
-    fn deserialize_u8<V: serde::de::Visitor<'de>>(
+    fn deserialize_u8<V: ::serde::de::Visitor<'de>>(
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
         Visitor::with_new(visitor, |visitor| self.deserializer.deserialize_u8(visitor))
     }
 
-    fn deserialize_u16<V: serde::de::Visitor<'de>>(
+    fn deserialize_u16<V: ::serde::de::Visitor<'de>>(
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
@@ -517,7 +524,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         })
     }
 
-    fn deserialize_u32<V: serde::de::Visitor<'de>>(
+    fn deserialize_u32<V: ::serde::de::Visitor<'de>>(
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
@@ -526,7 +533,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         })
     }
 
-    fn deserialize_u64<V: serde::de::Visitor<'de>>(
+    fn deserialize_u64<V: ::serde::de::Visitor<'de>>(
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
@@ -536,7 +543,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
     }
 
     serde_if_integer128! {
-        fn deserialize_u128<V: serde::de::Visitor<'de>>(
+        fn deserialize_u128<V: ::serde::de::Visitor<'de>>(
             self,
             visitor: V,
         ) -> Result<V::Value, Self::Error> {
@@ -544,7 +551,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         }
     }
 
-    fn deserialize_f32<V: serde::de::Visitor<'de>>(
+    fn deserialize_f32<V: ::serde::de::Visitor<'de>>(
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
@@ -553,7 +560,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         })
     }
 
-    fn deserialize_f64<V: serde::de::Visitor<'de>>(
+    fn deserialize_f64<V: ::serde::de::Visitor<'de>>(
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
@@ -562,7 +569,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         })
     }
 
-    fn deserialize_char<V: serde::de::Visitor<'de>>(
+    fn deserialize_char<V: ::serde::de::Visitor<'de>>(
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
@@ -571,7 +578,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         })
     }
 
-    fn deserialize_str<V: serde::de::Visitor<'de>>(
+    fn deserialize_str<V: ::serde::de::Visitor<'de>>(
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
@@ -580,7 +587,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         })
     }
 
-    fn deserialize_string<V: serde::de::Visitor<'de>>(
+    fn deserialize_string<V: ::serde::de::Visitor<'de>>(
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
@@ -589,7 +596,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         })
     }
 
-    fn deserialize_bytes<V: serde::de::Visitor<'de>>(
+    fn deserialize_bytes<V: ::serde::de::Visitor<'de>>(
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
@@ -598,7 +605,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         })
     }
 
-    fn deserialize_byte_buf<V: serde::de::Visitor<'de>>(
+    fn deserialize_byte_buf<V: ::serde::de::Visitor<'de>>(
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
@@ -607,7 +614,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         })
     }
 
-    fn deserialize_option<V: serde::de::Visitor<'de>>(
+    fn deserialize_option<V: ::serde::de::Visitor<'de>>(
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
@@ -616,7 +623,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         })
     }
 
-    fn deserialize_unit<V: serde::de::Visitor<'de>>(
+    fn deserialize_unit<V: ::serde::de::Visitor<'de>>(
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
@@ -625,7 +632,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         })
     }
 
-    fn deserialize_unit_struct<V: serde::de::Visitor<'de>>(
+    fn deserialize_unit_struct<V: ::serde::de::Visitor<'de>>(
         self,
         name: &'static str,
         visitor: V,
@@ -635,7 +642,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         })
     }
 
-    fn deserialize_newtype_struct<V: serde::de::Visitor<'de>>(
+    fn deserialize_newtype_struct<V: ::serde::de::Visitor<'de>>(
         self,
         name: &'static str,
         visitor: V,
@@ -645,7 +652,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         })
     }
 
-    fn deserialize_seq<V: serde::de::Visitor<'de>>(
+    fn deserialize_seq<V: ::serde::de::Visitor<'de>>(
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
@@ -654,7 +661,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         })
     }
 
-    fn deserialize_tuple<V: serde::de::Visitor<'de>>(
+    fn deserialize_tuple<V: ::serde::de::Visitor<'de>>(
         self,
         len: usize,
         visitor: V,
@@ -664,7 +671,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         })
     }
 
-    fn deserialize_tuple_struct<V: serde::de::Visitor<'de>>(
+    fn deserialize_tuple_struct<V: ::serde::de::Visitor<'de>>(
         self,
         name: &'static str,
         len: usize,
@@ -676,7 +683,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         })
     }
 
-    fn deserialize_map<V: serde::de::Visitor<'de>>(
+    fn deserialize_map<V: ::serde::de::Visitor<'de>>(
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
@@ -685,7 +692,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         })
     }
 
-    fn deserialize_struct<V: serde::de::Visitor<'de>>(
+    fn deserialize_struct<V: ::serde::de::Visitor<'de>>(
         self,
         name: &'static str,
         fields: &'static [&'static str],
@@ -696,7 +703,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         })
     }
 
-    fn deserialize_enum<V: serde::de::Visitor<'de>>(
+    fn deserialize_enum<V: ::serde::de::Visitor<'de>>(
         self,
         name: &'static str,
         variants: &'static [&'static str],
@@ -707,7 +714,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         })
     }
 
-    fn deserialize_identifier<V: serde::de::Visitor<'de>>(
+    fn deserialize_identifier<V: ::serde::de::Visitor<'de>>(
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
@@ -716,7 +723,7 @@ impl<'de> serde::Deserializer<'de> for DeserializerableDeserializer {
         })
     }
 
-    fn deserialize_ignored_any<V: serde::de::Visitor<'de>>(
+    fn deserialize_ignored_any<V: ::serde::de::Visitor<'de>>(
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
@@ -905,15 +912,15 @@ struct DeserializerableSeqAccess {
     seq_access: Option<SeqAccess>,
 }
 
-impl<'de> serde::de::SeqAccess<'de> for DeserializerableSeqAccess {
+impl<'de> ::serde::de::SeqAccess<'de> for DeserializerableSeqAccess {
     type Error = DeError;
 
-    fn next_element_seed<T: serde::de::DeserializeSeed<'de>>(
+    fn next_element_seed<T: ::serde::de::DeserializeSeed<'de>>(
         &mut self,
         seed: T,
     ) -> Result<Option<T::Value>, Self::Error> {
         let Some(seq_access) = self.seq_access.take() else {
-            return Err(serde::de::Error::custom("bug: SeqAccess::next_element_seed after free"));
+            return Err(::serde::de::Error::custom("bug: SeqAccess::next_element_seed after free"));
         };
 
         let (seq_access, result) = unsafe {
@@ -933,7 +940,7 @@ impl<'de> serde::de::SeqAccess<'de> for DeserializerableSeqAccess {
             Err(err) => return Err(err),
         };
 
-        Err(serde::de::Error::custom(
+        Err(::serde::de::Error::custom(
             "bug: type mismatch across the wit boundary",
         ))
     }
@@ -973,15 +980,15 @@ struct DeserializerableMapAccess {
     map_access: Option<MapAccess>,
 }
 
-impl<'de> serde::de::MapAccess<'de> for DeserializerableMapAccess {
+impl<'de> ::serde::de::MapAccess<'de> for DeserializerableMapAccess {
     type Error = DeError;
 
-    fn next_key_seed<K: serde::de::DeserializeSeed<'de>>(
+    fn next_key_seed<K: ::serde::de::DeserializeSeed<'de>>(
         &mut self,
         seed: K,
     ) -> Result<Option<K::Value>, Self::Error> {
         let Some(map_access) = self.map_access.take() else {
-            return Err(serde::de::Error::custom("bug: MapAccess::next_key_seed after free"));
+            return Err(::serde::de::Error::custom("bug: MapAccess::next_key_seed after free"));
         };
 
         let (map_access, result) = unsafe {
@@ -1001,17 +1008,17 @@ impl<'de> serde::de::MapAccess<'de> for DeserializerableMapAccess {
             Err(err) => return Err(err),
         };
 
-        Err(serde::de::Error::custom(
+        Err(::serde::de::Error::custom(
             "bug: type mismatch across the wit boundary",
         ))
     }
 
-    fn next_value_seed<V: serde::de::DeserializeSeed<'de>>(
+    fn next_value_seed<V: ::serde::de::DeserializeSeed<'de>>(
         &mut self,
         seed: V,
     ) -> Result<V::Value, Self::Error> {
         let Some(map_access) = self.map_access.take() else {
-            return Err(serde::de::Error::custom("bug: MapAccess::next_key_seed after free"));
+            return Err(::serde::de::Error::custom("bug: MapAccess::next_key_seed after free"));
         };
 
         let (map_access, result) = unsafe {
@@ -1030,18 +1037,21 @@ impl<'de> serde::de::MapAccess<'de> for DeserializerableMapAccess {
             Err(err) => return Err(err),
         };
 
-        Err(serde::de::Error::custom(
+        Err(::serde::de::Error::custom(
             "bug: type mismatch across the wit boundary",
         ))
     }
 
-    fn next_entry_seed<K: serde::de::DeserializeSeed<'de>, V: serde::de::DeserializeSeed<'de>>(
+    fn next_entry_seed<
+        K: ::serde::de::DeserializeSeed<'de>,
+        V: ::serde::de::DeserializeSeed<'de>,
+    >(
         &mut self,
         kseed: K,
         vseed: V,
     ) -> Result<Option<(K::Value, V::Value)>, Self::Error> {
         let Some(map_access) = self.map_access.take() else {
-            return Err(serde::de::Error::custom("bug: MapAccess::next_entry_seed after free"));
+            return Err(::serde::de::Error::custom("bug: MapAccess::next_entry_seed after free"));
         };
 
         let (map_access, result) = unsafe {
@@ -1078,7 +1088,7 @@ impl<'de> serde::de::MapAccess<'de> for DeserializerableMapAccess {
             Err(err) => return Err(err),
         };
 
-        Err(serde::de::Error::custom(
+        Err(::serde::de::Error::custom(
             "bug: type mismatch across the wit boundary",
         ))
     }
@@ -1107,11 +1117,11 @@ struct DeserializerableEnumAccess {
     enum_access: EnumAccess,
 }
 
-impl<'de> serde::de::EnumAccess<'de> for DeserializerableEnumAccess {
+impl<'de> ::serde::de::EnumAccess<'de> for DeserializerableEnumAccess {
     type Error = DeError;
     type Variant = DeserializerableVariantAccess;
 
-    fn variant_seed<V: serde::de::DeserializeSeed<'de>>(
+    fn variant_seed<V: ::serde::de::DeserializeSeed<'de>>(
         self,
         seed: V,
     ) -> Result<(V::Value, Self::Variant), Self::Error> {
@@ -1130,7 +1140,7 @@ impl<'de> serde::de::EnumAccess<'de> for DeserializerableEnumAccess {
             Err(err) => return Err(err),
         }
 
-        Err(serde::de::Error::custom(
+        Err(::serde::de::Error::custom(
             "bug: type mismatch across the wit boundary",
         ))
     }
@@ -1162,14 +1172,14 @@ struct DeserializerableVariantAccess {
     variant_access: VariantAccess,
 }
 
-impl<'de> serde::de::VariantAccess<'de> for DeserializerableVariantAccess {
+impl<'de> ::serde::de::VariantAccess<'de> for DeserializerableVariantAccess {
     type Error = DeError;
 
     fn unit_variant(self) -> Result<(), Self::Error> {
         self.variant_access.unit_variant()
     }
 
-    fn newtype_variant_seed<T: serde::de::DeserializeSeed<'de>>(
+    fn newtype_variant_seed<T: ::serde::de::DeserializeSeed<'de>>(
         self,
         seed: T,
     ) -> Result<T::Value, Self::Error> {
@@ -1188,12 +1198,12 @@ impl<'de> serde::de::VariantAccess<'de> for DeserializerableVariantAccess {
             Err(err) => return Err(err),
         }
 
-        Err(serde::de::Error::custom(
+        Err(::serde::de::Error::custom(
             "bug: type mismatch across the wit boundary",
         ))
     }
 
-    fn tuple_variant<V: serde::de::Visitor<'de>>(
+    fn tuple_variant<V: ::serde::de::Visitor<'de>>(
         self,
         len: usize,
         visitor: V,
@@ -1203,7 +1213,7 @@ impl<'de> serde::de::VariantAccess<'de> for DeserializerableVariantAccess {
         })
     }
 
-    fn struct_variant<V: serde::de::Visitor<'de>>(
+    fn struct_variant<V: ::serde::de::Visitor<'de>>(
         self,
         fields: &'static [&'static str],
         visitor: V,
@@ -1236,43 +1246,63 @@ struct DeError {
     _private: (),
 }
 
-fn translate_serde_de_unexpected(unexp: serde::de::Unexpected) -> serde_de::Unexpected {
+fn translate_serde_de_unexpected(
+    unexp: ::serde::de::Unexpected,
+) -> self::serde::serde::serde_de::Unexpected {
     match unexp {
-        serde::de::Unexpected::Bool(v) => serde_de::Unexpected::Bool(v),
-        serde::de::Unexpected::Unsigned(v) => serde_de::Unexpected::Unsigned(v),
-        serde::de::Unexpected::Signed(v) => serde_de::Unexpected::Signed(v),
-        serde::de::Unexpected::Float(v) => serde_de::Unexpected::Float(v),
-        serde::de::Unexpected::Char(v) => serde_de::Unexpected::Char(v),
-        serde::de::Unexpected::Str(v) => serde_de::Unexpected::Str(String::from(v)),
-        serde::de::Unexpected::Bytes(v) => serde_de::Unexpected::Bytes(Vec::from(v)),
-        serde::de::Unexpected::Unit => serde_de::Unexpected::Unit,
-        serde::de::Unexpected::Option => serde_de::Unexpected::Option,
-        serde::de::Unexpected::NewtypeStruct => serde_de::Unexpected::NewtypeStruct,
-        serde::de::Unexpected::Seq => serde_de::Unexpected::Seq,
-        serde::de::Unexpected::Map => serde_de::Unexpected::Map,
-        serde::de::Unexpected::Enum => serde_de::Unexpected::Enum,
-        serde::de::Unexpected::UnitVariant => serde_de::Unexpected::UnitVariant,
-        serde::de::Unexpected::NewtypeVariant => serde_de::Unexpected::NewtypeVariant,
-        serde::de::Unexpected::TupleVariant => serde_de::Unexpected::TupleVariant,
-        serde::de::Unexpected::StructVariant => serde_de::Unexpected::StructVariant,
-        serde::de::Unexpected::Other(v) => serde_de::Unexpected::Other(String::from(v)),
+        ::serde::de::Unexpected::Bool(v) => self::serde::serde::serde_de::Unexpected::Bool(v),
+        ::serde::de::Unexpected::Unsigned(v) => {
+            self::serde::serde::serde_de::Unexpected::Unsigned(v)
+        }
+        ::serde::de::Unexpected::Signed(v) => self::serde::serde::serde_de::Unexpected::Signed(v),
+        ::serde::de::Unexpected::Float(v) => self::serde::serde::serde_de::Unexpected::Float(v),
+        ::serde::de::Unexpected::Char(v) => self::serde::serde::serde_de::Unexpected::Char(v),
+        ::serde::de::Unexpected::Str(v) => {
+            self::serde::serde::serde_de::Unexpected::Str(String::from(v))
+        }
+        ::serde::de::Unexpected::Bytes(v) => {
+            self::serde::serde::serde_de::Unexpected::Bytes(Vec::from(v))
+        }
+        ::serde::de::Unexpected::Unit => self::serde::serde::serde_de::Unexpected::Unit,
+        ::serde::de::Unexpected::Option => self::serde::serde::serde_de::Unexpected::Option,
+        ::serde::de::Unexpected::NewtypeStruct => {
+            self::serde::serde::serde_de::Unexpected::NewtypeStruct
+        }
+        ::serde::de::Unexpected::Seq => self::serde::serde::serde_de::Unexpected::Seq,
+        ::serde::de::Unexpected::Map => self::serde::serde::serde_de::Unexpected::Map,
+        ::serde::de::Unexpected::Enum => self::serde::serde::serde_de::Unexpected::Enum,
+        ::serde::de::Unexpected::UnitVariant => {
+            self::serde::serde::serde_de::Unexpected::UnitVariant
+        }
+        ::serde::de::Unexpected::NewtypeVariant => {
+            self::serde::serde::serde_de::Unexpected::NewtypeVariant
+        }
+        ::serde::de::Unexpected::TupleVariant => {
+            self::serde::serde::serde_de::Unexpected::TupleVariant
+        }
+        ::serde::de::Unexpected::StructVariant => {
+            self::serde::serde::serde_de::Unexpected::StructVariant
+        }
+        ::serde::de::Unexpected::Other(v) => {
+            self::serde::serde::serde_de::Unexpected::Other(String::from(v))
+        }
     }
 }
 
-impl serde::de::Error for DeError {
+impl ::serde::de::Error for DeError {
     fn custom<T: fmt::Display>(msg: T) -> Self {
         Self::custom(&format!("{msg}"))
     }
 
-    fn invalid_type(unexp: serde::de::Unexpected, exp: &dyn serde::de::Expected) -> Self {
+    fn invalid_type(unexp: ::serde::de::Unexpected, exp: &dyn ::serde::de::Expected) -> Self {
         Self::invalid_type(translate_serde_de_unexpected(unexp), &format!("{exp}"))
     }
 
-    fn invalid_value(unexp: serde::de::Unexpected, exp: &dyn serde::de::Expected) -> Self {
+    fn invalid_value(unexp: ::serde::de::Unexpected, exp: &dyn ::serde::de::Expected) -> Self {
         Self::invalid_value(translate_serde_de_unexpected(unexp), &format!("{exp}"))
     }
 
-    fn invalid_length(len: usize, exp: &dyn serde::de::Expected) -> Self {
+    fn invalid_length(len: usize, exp: &dyn ::serde::de::Expected) -> Self {
         Self::invalid_length(len, &format!("{exp}"))
     }
 
@@ -1306,11 +1336,11 @@ impl DeError {
         todo!("wit-bindgen")
     }
 
-    fn invalid_type(_unexp: serde_de::Unexpected, _exp: &str) -> Self {
+    fn invalid_type(_unexp: self::serde::serde::serde_de::Unexpected, _exp: &str) -> Self {
         todo!("wit-bindgen")
     }
 
-    fn invalid_value(_unexp: serde_de::Unexpected, _exp: &str) -> Self {
+    fn invalid_value(_unexp: self::serde::serde::serde_de::Unexpected, _exp: &str) -> Self {
         todo!("wit-bindgen")
     }
 
@@ -1335,7 +1365,7 @@ impl DeError {
     }
 }
 
-impl serde::de::StdError for DeError {}
+impl ::serde::de::StdError for DeError {}
 
 impl fmt::Debug for DeError {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {

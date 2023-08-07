@@ -1,4 +1,6 @@
-default interface serde-types {
+package serde:serde
+
+interface serde-types {
     record s128 {
         le-hi: u64,
         le-lo: u64,

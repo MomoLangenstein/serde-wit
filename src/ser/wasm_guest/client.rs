@@ -1,27 +1,47 @@
-use alloc::{string::String, format};
+use alloc::format;
 use core::fmt;
 
+use ::serde::serde_if_integer128;
 use scoped_reference::{ScopedBorrow, ScopedReference};
-use serde::serde_if_integer128;
 
-wit_bindgen_guest_rust::generate!({ world: "serde-serializer-client", no_std });
-export_serde_serializer_client!(GuestsideSerializerClient);
+wit_bindgen::generate!({ world: "serde-serializer-client", exports: {
+    "serde:serde/serde-serialize/serialize": GuestsideSerializerClient,
+    "serde:serde/serde-raw-serialize/serialize": GuestsideSerializerClient,
+} });
 
 pub struct GuestsideSerializerClient {
     serialize: ScopedBorrow<dyn ErasedSerialize>,
 }
 
-impl serialize::Serialize for GuestsideSerializerClient {
-    fn test(
-        x: serde_types::S128,
-        y: serde_types::Usize,
-    ) -> (serde_types::U128, serde_types::Usize) {
-        serializer::test(x, y)
+impl self::exports::serde::serde::serde_serialize::Serialize for GuestsideSerializerClient {
+    fn serialize(
+        &self,
+        serializer: self::exports::serde::serde::serde_serialize::OwnedSerializerHandle,
+    ) -> Result<
+        self::exports::serde::serde::serde_serialize::OwnedSerOkHandle,
+        self::exports::serde::serde::serde_serialize::OwnedSerErrorHandle,
+    > {
+        let result = ErasedSerialize::erased_serialize(
+            &*self.serialize,
+            SerializerableSerializer::new(serializer),
+        );
+        match result {
+            Ok(ok) => Ok(
+                self::exports::serde::serde::serde_serialize::OwnedSerOkHandle {
+                    owned_handle: ok.ok.into_handle(),
+                },
+            ),
+            Err(err) => Err(
+                self::exports::serde::serde::serde_serialize::OwnedSerErrorHandle {
+                    owned_handle: err.error.into_handle(),
+                },
+            ),
+        }
     }
 }
 
 impl GuestsideSerializerClient {
-    pub fn with_new<'a, S: ?Sized + serde::Serialize, F: FnOnce(&Self) -> Q, Q>(
+    pub fn with_new<'a, S: ?Sized + ::serde::Serialize, F: FnOnce(&Self) -> Q, Q>(
         serialize: &'a S,
         inner: F,
     ) -> Q {
@@ -41,36 +61,73 @@ impl GuestsideSerializerClient {
 
         result
     }
-
-    fn serialize(&self, serializer: Serializer) -> Result<SerOk, SerError> {
-        ErasedSerialize::erased_serialize(
-            &*self.serialize,
-            SerializerableSerializer::new(serializer),
-        )
-    }
 }
 
 trait ErasedSerialize {
     fn erased_serialize(&self, serializer: SerializerableSerializer) -> Result<SerOk, SerError>;
 }
 
-impl<T: ?Sized + serde::Serialize> ErasedSerialize for T {
+impl<T: ?Sized + ::serde::Serialize> ErasedSerialize for T {
     fn erased_serialize(&self, serializer: SerializerableSerializer) -> Result<SerOk, SerError> {
         self.serialize(serializer)
     }
 }
 
 struct SerializerableSerializer {
-    serializer: Serializer,
+    serializer_placeholder: Serializer,
+    serializer: self::serde::serde::serde_serializer::Serializer,
 }
 
 impl SerializerableSerializer {
-    fn new(serializer: Serializer) -> Self {
-        Self { serializer }
+    fn new(
+        serializer: self::exports::serde::serde::serde_serialize::OwnedSerializerHandle,
+    ) -> Self {
+        // Safety: both serializers should be the same on the other side, from owned to owned
+        let serializer = unsafe {
+            self::serde::serde::serde_serializer::Serializer::from_handle(
+                serializer.owned_handle,
+                true,
+            )
+        };
+
+        Self {
+            serializer_placeholder: Serializer { _private: () },
+            serializer,
+        }
     }
 }
 
-impl serde::Serializer for SerializerableSerializer {
+trait WrapSerResult {
+    type Ok;
+
+    fn wrap(self) -> Result<Self::Ok, SerError>;
+}
+
+impl WrapSerResult
+    for Result<
+        self::serde::serde::serde_serializer::SerOk,
+        self::serde::serde::serde_serializer::SerError,
+    >
+{
+    type Ok = SerOk;
+
+    fn wrap(self) -> Result<SerOk, SerError> {
+        match self {
+            Ok(ok) => Ok(SerOk { ok }),
+            Err(error) => Err(SerError { error }),
+        }
+    }
+}
+
+impl WrapSerResult for Result<(), self::serde::serde::serde_serializer::SerError> {
+    type Ok = ();
+
+    fn wrap(self) -> Result<(), SerError> {
+        self.map_err(|error| SerError { error })
+    }
+}
+
+impl ::serde::Serializer for SerializerableSerializer {
     type Ok = SerOk;
     type Error = SerError;
 
@@ -83,23 +140,23 @@ impl serde::Serializer for SerializerableSerializer {
     type SerializeStructVariant = SerializerableSerializeStructVariant;
 
     fn serialize_bool(self, v: bool) -> Result<Self::Ok, Self::Error> {
-        self.serializer.serialize_bool(v)
+        self::serde::serde::serde_serializer::Serializer::serialize_bool(self.serializer, v).wrap()
     }
 
     fn serialize_i8(self, v: i8) -> Result<Self::Ok, Self::Error> {
-        self.serializer.serialize_i8(v)
+        self::serde::serde::serde_serializer::Serializer::serialize_i8(self.serializer, v).wrap()
     }
 
     fn serialize_i16(self, v: i16) -> Result<Self::Ok, Self::Error> {
-        self.serializer.serialize_i16(v)
+        self::serde::serde::serde_serializer::Serializer::serialize_i16(self.serializer, v).wrap()
     }
 
     fn serialize_i32(self, v: i32) -> Result<Self::Ok, Self::Error> {
-        self.serializer.serialize_i32(v)
+        self::serde::serde::serde_serializer::Serializer::serialize_i32(self.serializer, v).wrap()
     }
 
     fn serialize_i64(self, v: i64) -> Result<Self::Ok, Self::Error> {
-        self.serializer.serialize_i64(v)
+        self::serde::serde::serde_serializer::Serializer::serialize_i64(self.serializer, v).wrap()
     }
 
     serde_if_integer128! {
@@ -113,27 +170,27 @@ impl serde::Serializer for SerializerableSerializer {
                 bytes[8], bytes[9], bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15],
             ];
 
-            self.serializer.serialize_i128(serde_types::S128 {
+            self::serde::serde::serde_serializer::Serializer::serialize_i128(self.serializer, self::serde::serde::serde_types::S128 {
                 le_hi: u64::from_le_bytes(le_hi),
                 le_lo: u64::from_le_bytes(le_lo),
-            })
+            }).wrap()
         }
     }
 
     fn serialize_u8(self, v: u8) -> Result<Self::Ok, Self::Error> {
-        self.serializer.serialize_u8(v)
+        self::serde::serde::serde_serializer::Serializer::serialize_u8(self.serializer, v).wrap()
     }
 
     fn serialize_u16(self, v: u16) -> Result<Self::Ok, Self::Error> {
-        self.serializer.serialize_u16(v)
+        self::serde::serde::serde_serializer::Serializer::serialize_u16(self.serializer, v).wrap()
     }
 
     fn serialize_u32(self, v: u32) -> Result<Self::Ok, Self::Error> {
-        self.serializer.serialize_u32(v)
+        self::serde::serde::serde_serializer::Serializer::serialize_u32(self.serializer, v).wrap()
     }
 
     fn serialize_u64(self, v: u64) -> Result<Self::Ok, Self::Error> {
-        self.serializer.serialize_u64(v)
+        self::serde::serde::serde_serializer::Serializer::serialize_u64(self.serializer, v).wrap()
     }
 
     serde_if_integer128! {
@@ -147,50 +204,60 @@ impl serde::Serializer for SerializerableSerializer {
                 bytes[8], bytes[9], bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15],
             ];
 
-            self.serializer.serialize_u128(serde_types::U128 {
+            self::serde::serde::serde_serializer::Serializer::serialize_u128(self.serializer, self::serde::serde::serde_types::U128 {
                 le_hi: u64::from_le_bytes(le_hi),
                 le_lo: u64::from_le_bytes(le_lo),
-            })
+            }).wrap()
         }
     }
 
     fn serialize_f32(self, v: f32) -> Result<Self::Ok, Self::Error> {
-        self.serializer.serialize_f32(v)
+        self::serde::serde::serde_serializer::Serializer::serialize_f32(self.serializer, v).wrap()
     }
 
     fn serialize_f64(self, v: f64) -> Result<Self::Ok, Self::Error> {
-        self.serializer.serialize_f64(v)
+        self::serde::serde::serde_serializer::Serializer::serialize_f64(self.serializer, v).wrap()
     }
 
     fn serialize_char(self, v: char) -> Result<Self::Ok, Self::Error> {
-        self.serializer.serialize_char(v)
+        self::serde::serde::serde_serializer::Serializer::serialize_char(self.serializer, v).wrap()
     }
 
     fn serialize_str(self, v: &str) -> Result<Self::Ok, Self::Error> {
-        self.serializer.serialize_str(v)
+        self::serde::serde::serde_serializer::Serializer::serialize_str(self.serializer, v).wrap()
     }
 
     fn serialize_bytes(self, v: &[u8]) -> Result<Self::Ok, Self::Error> {
-        self.serializer.serialize_bytes(v)
+        self::serde::serde::serde_serializer::Serializer::serialize_bytes(self.serializer, v).wrap()
     }
 
     fn serialize_none(self) -> Result<Self::Ok, Self::Error> {
-        self.serializer.serialize_none()
+        self::serde::serde::serde_serializer::Serializer::serialize_none(self.serializer).wrap()
     }
 
-    fn serialize_some<V: ?Sized + serde::Serialize>(
+    fn serialize_some<V: ?Sized + ::serde::Serialize>(
         self,
         value: &V,
     ) -> Result<Self::Ok, Self::Error> {
-        GuestsideSerializerClient::with_new(value, |value| self.serializer.serialize_some(value))
+        GuestsideSerializerClient::with_new(value, |value| {
+            let borrowed_handle =
+                unsafe { core::mem::transmute::<&GuestsideSerializerClient, isize>(value) } as i32;
+            let value = serde::serde::serde_serializer::BorrowedSerializeHandle { borrowed_handle };
+            self::serde::serde::serde_serializer::Serializer::serialize_some(self.serializer, value)
+        })
+        .wrap()
     }
 
     fn serialize_unit(self) -> Result<Self::Ok, Self::Error> {
-        self.serializer.serialize_unit()
+        self::serde::serde::serde_serializer::Serializer::serialize_unit(self.serializer).wrap()
     }
 
     fn serialize_unit_struct(self, name: &'static str) -> Result<Self::Ok, Self::Error> {
-        self.serializer.serialize_unit_struct(name)
+        self::serde::serde::serde_serializer::Serializer::serialize_unit_struct(
+            self.serializer,
+            name,
+        )
+        .wrap()
     }
 
     fn serialize_unit_variant(
@@ -199,21 +266,34 @@ impl serde::Serializer for SerializerableSerializer {
         variant_index: u32,
         variant: &'static str,
     ) -> Result<Self::Ok, Self::Error> {
-        self.serializer
-            .serialize_unit_variant(name, variant_index, variant)
+        self::serde::serde::serde_serializer::Serializer::serialize_unit_variant(
+            self.serializer,
+            name,
+            variant_index,
+            variant,
+        )
+        .wrap()
     }
 
-    fn serialize_newtype_struct<V: ?Sized + serde::Serialize>(
+    fn serialize_newtype_struct<V: ?Sized + ::serde::Serialize>(
         self,
         name: &'static str,
         value: &V,
     ) -> Result<Self::Ok, Self::Error> {
         GuestsideSerializerClient::with_new(value, |value| {
-            self.serializer.serialize_newtype_struct(name, value)
+            let borrowed_handle =
+                unsafe { core::mem::transmute::<&GuestsideSerializerClient, isize>(value) } as i32;
+            let value = serde::serde::serde_serializer::BorrowedSerializeHandle { borrowed_handle };
+            self::serde::serde::serde_serializer::Serializer::serialize_newtype_struct(
+                self.serializer,
+                name,
+                value,
+            )
         })
+        .wrap()
     }
 
-    fn serialize_newtype_variant<V: ?Sized + serde::Serialize>(
+    fn serialize_newtype_variant<V: ?Sized + ::serde::Serialize>(
         self,
         name: &'static str,
         variant_index: u32,
@@ -221,17 +301,26 @@ impl serde::Serializer for SerializerableSerializer {
         value: &V,
     ) -> Result<Self::Ok, Self::Error> {
         GuestsideSerializerClient::with_new(value, |value| {
-            self.serializer
-                .serialize_newtype_variant(name, variant_index, variant, value)
+            let borrowed_handle =
+                unsafe { core::mem::transmute::<&GuestsideSerializerClient, isize>(value) } as i32;
+            let value = serde::serde::serde_serializer::BorrowedSerializeHandle { borrowed_handle };
+            self::serde::serde::serde_serializer::Serializer::serialize_newtype_variant(
+                self.serializer,
+                name,
+                variant_index,
+                variant,
+                value,
+            )
         })
+        .wrap()
     }
 
     fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
         let len = match len {
             Some(len) => match u32::try_from(len) {
-                Ok(len) => Some(serde_types::Usize { val: len }),
+                Ok(len) => Some(self::serde::serde::serde_types::Usize { val: len }),
                 Err(_) => {
-                    return Err(serde::ser::Error::custom(
+                    return Err(::serde::ser::Error::custom(
                         "Serializer::serialize_seq len exceeds u32",
                     ))
                 }
@@ -239,25 +328,33 @@ impl serde::Serializer for SerializerableSerializer {
             None => None,
         };
 
-        self.serializer
-            .serialize_seq(len)
-            .map(|serialize_seq| SerializerableSerializeSeq {
+        match self::serde::serde::serde_serializer::Serializer::serialize_seq(self.serializer, len)
+        {
+            Ok(serialize_seq) => Ok(SerializerableSerializeSeq {
                 serialize_seq: Some(serialize_seq),
-            })
+            }),
+            Err(error) => Err(SerError { error }),
+        }
     }
 
     fn serialize_tuple(self, len: usize) -> Result<Self::SerializeTuple, Self::Error> {
         let Ok(len) = u32::try_from(len) else {
-            return Err(serde::ser::Error::custom(
+            return Err(::serde::ser::Error::custom(
                 "Serializer::serialize_tuple len exceeds u32",
             ));
         };
 
-        self.serializer
-            .serialize_tuple(serde_types::Usize { val: len })
-            .map(|serialize_tuple| SerializerableSerializeTuple {
+        let len = self::serde::serde::serde_types::Usize { val: len };
+
+        match self::serde::serde::serde_serializer::Serializer::serialize_tuple(
+            self.serializer,
+            len,
+        ) {
+            Ok(serialize_tuple) => Ok(SerializerableSerializeTuple {
                 serialize_tuple: Some(serialize_tuple),
-            })
+            }),
+            Err(error) => Err(SerError { error }),
+        }
     }
 
     fn serialize_tuple_struct(
@@ -266,18 +363,23 @@ impl serde::Serializer for SerializerableSerializer {
         len: usize,
     ) -> Result<Self::SerializeTupleStruct, Self::Error> {
         let Ok(len) = u32::try_from(len) else {
-            return Err(serde::ser::Error::custom(
+            return Err(::serde::ser::Error::custom(
                 "Serializer::serialize_tuple_struct len exceeds u32",
             ));
         };
 
-        self.serializer
-            .serialize_tuple_struct(name, serde_types::Usize { val: len })
-            .map(
-                |serialize_tuple_struct| SerializerableSerializeTupleStruct {
-                    serialize_tuple_struct: Some(serialize_tuple_struct),
-                },
-            )
+        let len = self::serde::serde::serde_types::Usize { val: len };
+
+        match self::serde::serde::serde_serializer::Serializer::serialize_tuple_struct(
+            self.serializer,
+            name,
+            len,
+        ) {
+            Ok(serialize_tuple_struct) => Ok(SerializerableSerializeTupleStruct {
+                serialize_tuple_struct: Some(serialize_tuple_struct),
+            }),
+            Err(error) => Err(SerError { error }),
+        }
     }
 
     fn serialize_tuple_variant(
@@ -288,31 +390,33 @@ impl serde::Serializer for SerializerableSerializer {
         len: usize,
     ) -> Result<Self::SerializeTupleVariant, Self::Error> {
         let Ok(len) = u32::try_from(len) else {
-            return Err(serde::ser::Error::custom(
+            return Err(::serde::ser::Error::custom(
                 "Serializer::serialize_tuple_variant len exceeds u32",
             ));
         };
 
-        self.serializer
-            .serialize_tuple_variant(
-                name,
-                variant_index,
-                variant,
-                serde_types::Usize { val: len },
-            )
-            .map(
-                |serialize_tuple_variant| SerializerableSerializeTupleVariant {
-                    serialize_tuple_variant: Some(serialize_tuple_variant),
-                },
-            )
+        let len = self::serde::serde::serde_types::Usize { val: len };
+
+        match self::serde::serde::serde_serializer::Serializer::serialize_tuple_variant(
+            self.serializer,
+            name,
+            variant_index,
+            variant,
+            len,
+        ) {
+            Ok(serialize_tuple_variant) => Ok(SerializerableSerializeTupleVariant {
+                serialize_tuple_variant: Some(serialize_tuple_variant),
+            }),
+            Err(error) => Err(SerError { error }),
+        }
     }
 
     fn serialize_map(self, len: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
         let len = match len {
             Some(len) => match u32::try_from(len) {
-                Ok(len) => Some(serde_types::Usize { val: len }),
+                Ok(len) => Some(self::serde::serde::serde_types::Usize { val: len }),
                 Err(_) => {
-                    return Err(serde::ser::Error::custom(
+                    return Err(::serde::ser::Error::custom(
                         "Serializer::serialize_map len exceeds u32",
                     ))
                 }
@@ -320,11 +424,13 @@ impl serde::Serializer for SerializerableSerializer {
             None => None,
         };
 
-        self.serializer
-            .serialize_map(len)
-            .map(|serialize_map| SerializerableSerializeMap {
+        match self::serde::serde::serde_serializer::Serializer::serialize_map(self.serializer, len)
+        {
+            Ok(serialize_map) => Ok(SerializerableSerializeMap {
                 serialize_map: Some(serialize_map),
-            })
+            }),
+            Err(error) => Err(SerError { error }),
+        }
     }
 
     fn serialize_struct(
@@ -333,13 +439,13 @@ impl serde::Serializer for SerializerableSerializer {
         len: usize,
     ) -> Result<Self::SerializeStruct, Self::Error> {
         let Ok(len) = u32::try_from(len) else {
-            return Err(serde::ser::Error::custom(
+            return Err(::serde::ser::Error::custom(
                 "Serializer::serialize_struct len exceeds u32",
             ));
         };
 
-        self.serializer
-            .serialize_struct(name, serde_types::Usize { val: len })
+        self.serializer_placeholder
+            .serialize_struct(name, self::serde::serde::serde_types::Usize { val: len })
             .map(|serialize_struct| SerializerableSerializeStruct {
                 serialize_struct: Some(serialize_struct),
             })
@@ -353,17 +459,17 @@ impl serde::Serializer for SerializerableSerializer {
         len: usize,
     ) -> Result<Self::SerializeStructVariant, Self::Error> {
         let Ok(len) = u32::try_from(len) else {
-            return Err(serde::ser::Error::custom(
+            return Err(::serde::ser::Error::custom(
                 "Serializer::serialize_struct_variant len exceeds u32",
             ));
         };
 
-        self.serializer
+        self.serializer_placeholder
             .serialize_struct_variant(
                 name,
                 variant_index,
                 variant,
-                serde_types::Usize { val: len },
+                self::serde::serde::serde_types::Usize { val: len },
             )
             .map(
                 |serialize_struct_variant| SerializerableSerializeStructVariant {
@@ -373,211 +479,264 @@ impl serde::Serializer for SerializerableSerializer {
     }
 
     fn is_human_readable(&self) -> bool {
-        self.serializer.is_human_readable()
+        self::serde::serde::serde_serializer::Serializer::is_human_readable(&self.serializer)
     }
 }
 
 struct SerializerableSerializeSeq {
-    serialize_seq: Option<SerializeSeq>,
+    serialize_seq: Option<self::serde::serde::serde_serializer::SerializeSeq>,
 }
 
-impl serde::ser::SerializeSeq for SerializerableSerializeSeq {
+impl ::serde::ser::SerializeSeq for SerializerableSerializeSeq {
     type Ok = SerOk;
     type Error = SerError;
 
-    fn serialize_element<V: ?Sized + serde::Serialize>(
+    fn serialize_element<V: ?Sized + ::serde::Serialize>(
         &mut self,
         value: &V,
     ) -> Result<(), Self::Error> {
         let Some(serialize_seq) = self.serialize_seq.take() else {
-            return Err(serde::ser::Error::custom("bug: SerializeSeq::serialize_element after free"));
+            return Err(::serde::ser::Error::custom("bug: SerializeSeq::serialize_element after free"));
         };
 
         let (serialize_seq, result) = GuestsideSerializerClient::with_new(value, |value| {
-            serialize_seq.serialize_element(value)
+            let borrowed_handle =
+                unsafe { core::mem::transmute::<&GuestsideSerializerClient, isize>(value) } as i32;
+            let value = serde::serde::serde_serializer::BorrowedSerializeHandle { borrowed_handle };
+            self::serde::serde::serde_serializer::SerializeSeq::serialize_element(
+                serialize_seq,
+                value,
+            )
         });
         self.serialize_seq = Some(serialize_seq);
 
-        result
+        result.wrap()
     }
 
     fn end(mut self) -> Result<Self::Ok, Self::Error> {
         let Some(serialize_seq) = self.serialize_seq.take() else {
-            return Err(serde::ser::Error::custom("bug: SerializeSeq::end after free"));
+            return Err(::serde::ser::Error::custom("bug: SerializeSeq::end after free"));
         };
 
-        serialize_seq.end()
+        self::serde::serde::serde_serializer::SerializeSeq::end(serialize_seq).wrap()
     }
 }
 
 struct SerializerableSerializeTuple {
-    serialize_tuple: Option<SerializeTuple>,
+    serialize_tuple: Option<self::serde::serde::serde_serializer::SerializeTuple>,
 }
 
-impl serde::ser::SerializeTuple for SerializerableSerializeTuple {
+impl ::serde::ser::SerializeTuple for SerializerableSerializeTuple {
     type Ok = SerOk;
     type Error = SerError;
 
-    fn serialize_element<V: ?Sized + serde::Serialize>(
+    fn serialize_element<V: ?Sized + ::serde::Serialize>(
         &mut self,
         value: &V,
     ) -> Result<(), Self::Error> {
         let Some(serialize_tuple) = self.serialize_tuple.take() else {
-            return Err(serde::ser::Error::custom("bug: SerializeTuple::serialize_element after free"));
+            return Err(::serde::ser::Error::custom("bug: SerializeTuple::serialize_element after free"));
         };
 
         let (serialize_tuple, result) = GuestsideSerializerClient::with_new(value, |value| {
-            serialize_tuple.serialize_element(value)
+            let borrowed_handle =
+                unsafe { core::mem::transmute::<&GuestsideSerializerClient, isize>(value) } as i32;
+            let value = serde::serde::serde_serializer::BorrowedSerializeHandle { borrowed_handle };
+            self::serde::serde::serde_serializer::SerializeTuple::serialize_element(
+                serialize_tuple,
+                value,
+            )
         });
         self.serialize_tuple = Some(serialize_tuple);
 
-        result
+        result.wrap()
     }
 
     fn end(mut self) -> Result<Self::Ok, Self::Error> {
         let Some(serialize_tuple) = self.serialize_tuple.take() else {
-            return Err(serde::ser::Error::custom("bug: SerializeTuple::end after free"));
+            return Err(::serde::ser::Error::custom("bug: SerializeTuple::end after free"));
         };
 
-        serialize_tuple.end()
+        self::serde::serde::serde_serializer::SerializeTuple::end(serialize_tuple).wrap()
     }
 }
 
 struct SerializerableSerializeTupleStruct {
-    serialize_tuple_struct: Option<SerializeTupleStruct>,
+    serialize_tuple_struct: Option<self::serde::serde::serde_serializer::SerializeTupleStruct>,
 }
 
-impl serde::ser::SerializeTupleStruct for SerializerableSerializeTupleStruct {
+impl ::serde::ser::SerializeTupleStruct for SerializerableSerializeTupleStruct {
     type Ok = SerOk;
     type Error = SerError;
 
-    fn serialize_field<V: ?Sized + serde::Serialize>(
+    fn serialize_field<V: ?Sized + ::serde::Serialize>(
         &mut self,
         value: &V,
     ) -> Result<(), Self::Error> {
         let Some(serialize_tuple_struct) = self.serialize_tuple_struct.take() else {
-            return Err(serde::ser::Error::custom("bug: SerializeTupleStruct::serialize_field after free"));
+            return Err(::serde::ser::Error::custom("bug: SerializeTupleStruct::serialize_field after free"));
         };
 
         let (serialize_tuple_struct, result) =
             GuestsideSerializerClient::with_new(value, |value| {
-                serialize_tuple_struct.serialize_field(value)
+                let borrowed_handle =
+                    unsafe { core::mem::transmute::<&GuestsideSerializerClient, isize>(value) }
+                        as i32;
+                let value =
+                    serde::serde::serde_serializer::BorrowedSerializeHandle { borrowed_handle };
+                self::serde::serde::serde_serializer::SerializeTupleStruct::serialize_field(
+                    serialize_tuple_struct,
+                    value,
+                )
             });
         self.serialize_tuple_struct = Some(serialize_tuple_struct);
 
-        result
+        result.wrap()
     }
 
     fn end(mut self) -> Result<Self::Ok, Self::Error> {
         let Some(serialize_tuple_struct) = self.serialize_tuple_struct.take() else {
-            return Err(serde::ser::Error::custom("bug: SerializeTupleStruct::end after free"));
+            return Err(::serde::ser::Error::custom("bug: SerializeTupleStruct::end after free"));
         };
 
-        serialize_tuple_struct.end()
+        self::serde::serde::serde_serializer::SerializeTupleStruct::end(serialize_tuple_struct)
+            .wrap()
     }
 }
 
 struct SerializerableSerializeTupleVariant {
-    serialize_tuple_variant: Option<SerializeTupleVariant>,
+    serialize_tuple_variant: Option<self::serde::serde::serde_serializer::SerializeTupleVariant>,
 }
 
-impl serde::ser::SerializeTupleVariant for SerializerableSerializeTupleVariant {
+impl ::serde::ser::SerializeTupleVariant for SerializerableSerializeTupleVariant {
     type Ok = SerOk;
     type Error = SerError;
 
-    fn serialize_field<V: ?Sized + serde::Serialize>(
+    fn serialize_field<V: ?Sized + ::serde::Serialize>(
         &mut self,
         value: &V,
     ) -> Result<(), Self::Error> {
         let Some(serialize_tuple_variant) = self.serialize_tuple_variant.take() else {
-            return Err(serde::ser::Error::custom("bug: SerializeTupleVariant::serialize_field after free"));
+            return Err(::serde::ser::Error::custom("bug: SerializeTupleVariant::serialize_field after free"));
         };
 
         let (serialize_tuple_variant, result) =
             GuestsideSerializerClient::with_new(value, |value| {
-                serialize_tuple_variant.serialize_field(value)
+                let borrowed_handle =
+                    unsafe { core::mem::transmute::<&GuestsideSerializerClient, isize>(value) }
+                        as i32;
+                let value =
+                    serde::serde::serde_serializer::BorrowedSerializeHandle { borrowed_handle };
+                self::serde::serde::serde_serializer::SerializeTupleVariant::serialize_field(
+                    serialize_tuple_variant,
+                    value,
+                )
             });
         self.serialize_tuple_variant = Some(serialize_tuple_variant);
 
-        result
+        result.wrap()
     }
 
     fn end(mut self) -> Result<Self::Ok, Self::Error> {
         let Some(serialize_tuple_variant) = self.serialize_tuple_variant.take() else {
-            return Err(serde::ser::Error::custom("bug: SerializeTupleVariant::end after free"));
+            return Err(::serde::ser::Error::custom("bug: SerializeTupleVariant::end after free"));
         };
 
-        serialize_tuple_variant.end()
+        self::serde::serde::serde_serializer::SerializeTupleVariant::end(serialize_tuple_variant)
+            .wrap()
     }
 }
 
 struct SerializerableSerializeMap {
-    serialize_map: Option<SerializeMap>,
+    serialize_map: Option<self::serde::serde::serde_serializer::SerializeMap>,
 }
 
-impl serde::ser::SerializeMap for SerializerableSerializeMap {
+impl ::serde::ser::SerializeMap for SerializerableSerializeMap {
     type Ok = SerOk;
     type Error = SerError;
 
-    fn serialize_key<K: ?Sized + serde::Serialize>(&mut self, key: &K) -> Result<(), Self::Error> {
+    fn serialize_key<K: ?Sized + ::serde::Serialize>(
+        &mut self,
+        key: &K,
+    ) -> Result<(), Self::Error> {
         let Some(serialize_map) = self.serialize_map.take() else {
-            return Err(serde::ser::Error::custom("bug: SerializeMap::serialize_key after free"));
+            return Err(::serde::ser::Error::custom("bug: SerializeMap::serialize_key after free"));
         };
 
-        let (serialize_map, result) =
-            GuestsideSerializerClient::with_new(key, |key| serialize_map.serialize_key(key));
+        let (serialize_map, result) = GuestsideSerializerClient::with_new(key, |key| {
+            let borrowed_handle =
+                unsafe { core::mem::transmute::<&GuestsideSerializerClient, isize>(key) } as i32;
+            let key = serde::serde::serde_serializer::BorrowedSerializeHandle { borrowed_handle };
+            self::serde::serde::serde_serializer::SerializeMap::serialize_key(serialize_map, key)
+        });
         self.serialize_map = Some(serialize_map);
 
-        result
+        result.wrap()
     }
 
-    fn serialize_value<V: ?Sized + serde::Serialize>(
+    fn serialize_value<V: ?Sized + ::serde::Serialize>(
         &mut self,
         value: &V,
     ) -> Result<(), Self::Error> {
         let Some(serialize_map) = self.serialize_map.take() else {
-            return Err(serde::ser::Error::custom("bug: SerializeMap::serialize_value after free"));
+            return Err(::serde::ser::Error::custom("bug: SerializeMap::serialize_value after free"));
         };
 
         let (serialize_map, result) = GuestsideSerializerClient::with_new(value, |value| {
-            serialize_map.serialize_value(value)
+            let borrowed_handle =
+                unsafe { core::mem::transmute::<&GuestsideSerializerClient, isize>(value) } as i32;
+            let value = serde::serde::serde_serializer::BorrowedSerializeHandle { borrowed_handle };
+            self::serde::serde::serde_serializer::SerializeMap::serialize_value(
+                serialize_map,
+                value,
+            )
         });
         self.serialize_map = Some(serialize_map);
 
-        result
+        result.wrap()
     }
 
     fn end(mut self) -> Result<Self::Ok, Self::Error> {
         let Some(serialize_map) = self.serialize_map.take() else {
-            return Err(serde::ser::Error::custom("bug: SerializeMap::end after free"));
+            return Err(::serde::ser::Error::custom("bug: SerializeMap::end after free"));
         };
 
-        serialize_map.end()
+        self::serde::serde::serde_serializer::SerializeMap::end(serialize_map).wrap()
     }
 
-    fn serialize_entry<K: ?Sized + serde::Serialize, V: ?Sized + serde::Serialize>(
+    fn serialize_entry<K: ?Sized + ::serde::Serialize, V: ?Sized + ::serde::Serialize>(
         &mut self,
         key: &K,
         value: &V,
     ) -> Result<(), Self::Error> {
         let Some(serialize_map) = self.serialize_map.take() else {
-            return Err(serde::ser::Error::custom("bug: SerializeMap::serialize_map after free"));
+            return Err(::serde::ser::Error::custom("bug: SerializeMap::serialize_map after free"));
         };
 
-        let (serialize_map, result) =
-            GuestsideSerializerClient::with_new(key, |key| serialize_map.serialize_key(key));
+        let (serialize_map, result) = GuestsideSerializerClient::with_new(key, |key| {
+            let borrowed_handle =
+                unsafe { core::mem::transmute::<&GuestsideSerializerClient, isize>(key) } as i32;
+            let key = serde::serde::serde_serializer::BorrowedSerializeHandle { borrowed_handle };
+            self::serde::serde::serde_serializer::SerializeMap::serialize_key(serialize_map, key)
+        });
 
-        if let Err(err) = result {
+        if let Err(err) = result.wrap() {
             self.serialize_map = Some(serialize_map);
             return Err(err);
         }
 
         let (serialize_map, result) = GuestsideSerializerClient::with_new(value, |value| {
-            serialize_map.serialize_value(value)
+            let borrowed_handle =
+                unsafe { core::mem::transmute::<&GuestsideSerializerClient, isize>(value) } as i32;
+            let value = serde::serde::serde_serializer::BorrowedSerializeHandle { borrowed_handle };
+            self::serde::serde::serde_serializer::SerializeMap::serialize_value(
+                serialize_map,
+                value,
+            )
         });
         self.serialize_map = Some(serialize_map);
 
-        result
+        result.wrap()
     }
 }
 
@@ -585,17 +744,17 @@ struct SerializerableSerializeStruct {
     serialize_struct: Option<SerializeStruct>,
 }
 
-impl serde::ser::SerializeStruct for SerializerableSerializeStruct {
+impl ::serde::ser::SerializeStruct for SerializerableSerializeStruct {
     type Ok = SerOk;
     type Error = SerError;
 
-    fn serialize_field<V: ?Sized + serde::Serialize>(
+    fn serialize_field<V: ?Sized + ::serde::Serialize>(
         &mut self,
         key: &'static str,
         value: &V,
     ) -> Result<(), Self::Error> {
         let Some(serialize_struct) = self.serialize_struct.take() else {
-            return Err(serde::ser::Error::custom("bug: SerializeStruct::serialize_field after free"));
+            return Err(::serde::ser::Error::custom("bug: SerializeStruct::serialize_field after free"));
         };
 
         let (serialize_struct, result) = GuestsideSerializerClient::with_new(value, |value| {
@@ -608,7 +767,7 @@ impl serde::ser::SerializeStruct for SerializerableSerializeStruct {
 
     fn end(mut self) -> Result<Self::Ok, Self::Error> {
         let Some(serialize_struct) = self.serialize_struct.take() else {
-            return Err(serde::ser::Error::custom("bug: SerializeStruct::end after free"));
+            return Err(::serde::ser::Error::custom("bug: SerializeStruct::end after free"));
         };
 
         serialize_struct.end()
@@ -616,7 +775,7 @@ impl serde::ser::SerializeStruct for SerializerableSerializeStruct {
 
     fn skip_field(&mut self, key: &'static str) -> Result<(), Self::Error> {
         let Some(serialize_struct) = self.serialize_struct.take() else {
-            return Err(serde::ser::Error::custom("bug: SerializeStruct::skip_field after free"));
+            return Err(::serde::ser::Error::custom("bug: SerializeStruct::skip_field after free"));
         };
 
         let (serialize_struct, result) = serialize_struct.skip_field(key);
@@ -630,17 +789,17 @@ struct SerializerableSerializeStructVariant {
     serialize_struct_variant: Option<SerializeStructVariant>,
 }
 
-impl serde::ser::SerializeStructVariant for SerializerableSerializeStructVariant {
+impl ::serde::ser::SerializeStructVariant for SerializerableSerializeStructVariant {
     type Ok = SerOk;
     type Error = SerError;
 
-    fn serialize_field<V: ?Sized + serde::Serialize>(
+    fn serialize_field<V: ?Sized + ::serde::Serialize>(
         &mut self,
         key: &'static str,
         value: &V,
     ) -> Result<(), Self::Error> {
         let Some(serialize_struct_variant) = self.serialize_struct_variant.take() else {
-            return Err(serde::ser::Error::custom("bug: SerializeStructVariant::serialize_field after free"));
+            return Err(::serde::ser::Error::custom("bug: SerializeStructVariant::serialize_field after free"));
         };
 
         let (serialize_struct_variant, result) =
@@ -654,7 +813,7 @@ impl serde::ser::SerializeStructVariant for SerializerableSerializeStructVariant
 
     fn end(mut self) -> Result<Self::Ok, Self::Error> {
         let Some(serialize_struct_variant) = self.serialize_struct_variant.take() else {
-            return Err(serde::ser::Error::custom("bug: SerializeStructVariant::end after free"));
+            return Err(::serde::ser::Error::custom("bug: SerializeStructVariant::end after free"));
         };
 
         serialize_struct_variant.end()
@@ -662,7 +821,7 @@ impl serde::ser::SerializeStructVariant for SerializerableSerializeStructVariant
 
     fn skip_field(&mut self, key: &'static str) -> Result<(), Self::Error> {
         let Some(serialize_struct_variant) = self.serialize_struct_variant.take() else {
-            return Err(serde::ser::Error::custom("bug: SerializeStructVariant::skip_field after free"));
+            return Err(::serde::ser::Error::custom("bug: SerializeStructVariant::skip_field after free"));
         };
 
         let (serialize_struct_variant, result) = serialize_struct_variant.skip_field(key);
@@ -672,47 +831,33 @@ impl serde::ser::SerializeStructVariant for SerializerableSerializeStructVariant
     }
 }
 
-// serializer::SerOk
 struct SerOk {
-    _private: (),
+    ok: self::serde::serde::serde_serializer::SerOk,
 }
 
-// serializer::SerError
 struct SerError {
-    _private: (),
+    error: self::serde::serde::serde_serializer::SerError,
 }
 
-impl SerError {
-    fn display(&self) -> String {
-        todo!("wit-bindgen")
-    }
-
-    fn debug(&self) -> String {
-        todo!("wit-bindgen")
-    }
-
-    fn custom(_msg: &str) -> Self {
-        todo!("wit-bindgen")
-    }
-}
-
-impl serde::ser::Error for SerError {
+impl ::serde::ser::Error for SerError {
     fn custom<T: fmt::Display>(msg: T) -> Self {
-        Self::custom(&format!("{msg}"))
+        Self {
+            error: self::serde::serde::serde_serializer::SerError::custom(&format!("{msg}")),
+        }
     }
 }
 
-impl serde::ser::StdError for SerError {}
+impl ::serde::ser::StdError for SerError {}
 
 impl fmt::Debug for SerError {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt.write_str(&self.debug())
+        fmt.write_str(&self.error.debug())
     }
 }
 
 impl fmt::Display for SerError {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt.write_str(&self.display())
+        fmt.write_str(&self.error.display())
     }
 }
 
@@ -722,151 +867,10 @@ struct Serializer {
 
 // TODO: remove
 impl Serializer {
-    fn serialize_bool(self, _v: bool) -> Result<SerOk, SerError> {
-        todo!("wit-bindgen")
-    }
-
-    fn serialize_i8(self, _v: i8) -> Result<SerOk, SerError> {
-        todo!("wit-bindgen")
-    }
-
-    fn serialize_i16(self, _v: i16) -> Result<SerOk, SerError> {
-        todo!("wit-bindgen")
-    }
-
-    fn serialize_i32(self, _v: i32) -> Result<SerOk, SerError> {
-        todo!("wit-bindgen")
-    }
-
-    fn serialize_i64(self, _v: i64) -> Result<SerOk, SerError> {
-        todo!("wit-bindgen")
-    }
-
-    serde_if_integer128! {
-        fn serialize_i128(self, _v: serde_types::S128) -> Result<SerOk, SerError> {
-            todo!("wit-bindgen")
-        }
-    }
-
-    fn serialize_u8(self, _v: u8) -> Result<SerOk, SerError> {
-        todo!("wit-bindgen")
-    }
-
-    fn serialize_u16(self, _v: u16) -> Result<SerOk, SerError> {
-        todo!("wit-bindgen")
-    }
-
-    fn serialize_u32(self, _v: u32) -> Result<SerOk, SerError> {
-        todo!("wit-bindgen")
-    }
-
-    fn serialize_u64(self, _v: u64) -> Result<SerOk, SerError> {
-        todo!("wit-bindgen")
-    }
-
-    serde_if_integer128! {
-        fn serialize_u128(self, _v: serde_types::U128) -> Result<SerOk, SerError> {
-            todo!("wit-bindgen")
-        }
-    }
-
-    fn serialize_f32(self, _v: f32) -> Result<SerOk, SerError> {
-        todo!("wit-bindgen")
-    }
-
-    fn serialize_f64(self, _v: f64) -> Result<SerOk, SerError> {
-        todo!("wit-bindgen")
-    }
-
-    fn serialize_char(self, _v: char) -> Result<SerOk, SerError> {
-        todo!("wit-bindgen")
-    }
-
-    fn serialize_str(self, _v: &str) -> Result<SerOk, SerError> {
-        todo!("wit-bindgen")
-    }
-
-    fn serialize_bytes(self, _v: &[u8]) -> Result<SerOk, SerError> {
-        todo!("wit-bindgen")
-    }
-
-    fn serialize_none(self) -> Result<SerOk, SerError> {
-        todo!("wit-bindgen")
-    }
-
-    fn serialize_some(self, _value: &GuestsideSerializerClient) -> Result<SerOk, SerError> {
-        todo!("wit-bindgen")
-    }
-
-    fn serialize_unit(self) -> Result<SerOk, SerError> {
-        todo!("wit-bindgen")
-    }
-
-    fn serialize_unit_struct(self, _name: &str) -> Result<SerOk, SerError> {
-        todo!("wit-bindgen")
-    }
-
-    fn serialize_unit_variant(
-        self,
-        _name: &str,
-        _variant_index: u32,
-        _variant: &str,
-    ) -> Result<SerOk, SerError> {
-        todo!("wit-bindgen")
-    }
-
-    fn serialize_newtype_struct(
-        self,
-        _name: &str,
-        _value: &GuestsideSerializerClient,
-    ) -> Result<SerOk, SerError> {
-        todo!("wit-bindgen")
-    }
-
-    fn serialize_newtype_variant(
-        self,
-        _name: &str,
-        _variant_index: u32,
-        _variant: &str,
-        _value: &GuestsideSerializerClient,
-    ) -> Result<SerOk, SerError> {
-        todo!("wit-bindgen")
-    }
-
-    fn serialize_seq(self, _len: Option<serde_types::Usize>) -> Result<SerializeSeq, SerError> {
-        todo!("wit-bindgen")
-    }
-
-    fn serialize_tuple(self, _len: serde_types::Usize) -> Result<SerializeTuple, SerError> {
-        todo!("wit-bindgen")
-    }
-
-    fn serialize_tuple_struct(
-        self,
-        _name: &str,
-        _len: serde_types::Usize,
-    ) -> Result<SerializeTupleStruct, SerError> {
-        todo!("wit-bindgen")
-    }
-
-    fn serialize_tuple_variant(
-        self,
-        _name: &str,
-        _variant_index: u32,
-        _variant: &str,
-        _len: serde_types::Usize,
-    ) -> Result<SerializeTupleVariant, SerError> {
-        todo!("wit-bindgen")
-    }
-
-    fn serialize_map(self, _len: Option<serde_types::Usize>) -> Result<SerializeMap, SerError> {
-        todo!("wit-bindgen")
-    }
-
     fn serialize_struct(
         self,
         _name: &str,
-        _len: serde_types::Usize,
+        _len: self::serde::serde::serde_types::Usize,
     ) -> Result<SerializeStruct, SerError> {
         todo!("wit-bindgen")
     }
@@ -876,34 +880,10 @@ impl Serializer {
         _name: &str,
         _variant_index: u32,
         _variant: &str,
-        _len: serde_types::Usize,
+        _len: self::serde::serde::serde_types::Usize,
     ) -> Result<SerializeStructVariant, SerError> {
         todo!("wit-bindgen")
     }
-
-    fn is_human_readable(&self) -> bool {
-        todo!("wit-bindgen")
-    }
-}
-
-struct SerializeSeq {
-    _private: (),
-}
-
-struct SerializeTuple {
-    _private: (),
-}
-
-struct SerializeTupleStruct {
-    _private: (),
-}
-
-struct SerializeTupleVariant {
-    _private: (),
-}
-
-struct SerializeMap {
-    _private: (),
 }
 
 struct SerializeStruct {
@@ -912,60 +892,6 @@ struct SerializeStruct {
 
 struct SerializeStructVariant {
     _private: (),
-}
-
-impl SerializeSeq {
-    fn serialize_element(self, _value: &GuestsideSerializerClient) -> (Self, Result<(), SerError>) {
-        todo!("wit-bindgen")
-    }
-
-    fn end(self) -> Result<SerOk, SerError> {
-        todo!("wit-bindgen")
-    }
-}
-
-impl SerializeTuple {
-    fn serialize_element(self, _value: &GuestsideSerializerClient) -> (Self, Result<(), SerError>) {
-        todo!("wit-bindgen")
-    }
-
-    fn end(self) -> Result<SerOk, SerError> {
-        todo!("wit-bindgen")
-    }
-}
-
-impl SerializeTupleStruct {
-    fn serialize_field(self, _value: &GuestsideSerializerClient) -> (Self, Result<(), SerError>) {
-        todo!("wit-bindgen")
-    }
-
-    fn end(self) -> Result<SerOk, SerError> {
-        todo!("wit-bindgen")
-    }
-}
-
-impl SerializeTupleVariant {
-    fn serialize_field(self, _value: &GuestsideSerializerClient) -> (Self, Result<(), SerError>) {
-        todo!("wit-bindgen")
-    }
-
-    fn end(self) -> Result<SerOk, SerError> {
-        todo!("wit-bindgen")
-    }
-}
-
-impl SerializeMap {
-    fn serialize_key(self, _key: &GuestsideSerializerClient) -> (Self, Result<(), SerError>) {
-        todo!("wit-bindgen")
-    }
-
-    fn serialize_value(self, _value: &GuestsideSerializerClient) -> (Self, Result<(), SerError>) {
-        todo!("wit-bindgen")
-    }
-
-    fn end(self) -> Result<SerOk, SerError> {
-        todo!("wit-bindgen")
-    }
 }
 
 impl SerializeStruct {
