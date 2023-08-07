@@ -1,135 +1,405 @@
-use alloc::{boxed::Box, string::String, vec::Vec, format};
+use core::cell::RefCell;
 
-use scoped_reference::{ScopedBorrowMut, ScopedReference};
-use serde::{
-    ser::{
-        SerializeMap, SerializeSeq, SerializeStruct, SerializeStructVariant, SerializeTuple,
-        SerializeTupleStruct, SerializeTupleVariant,
-    },
-    serde_if_integer128,
+use alloc::{boxed::Box, format, string::String, vec::Vec};
+
+use ::serde::ser::{
+    SerializeMap, SerializeSeq, SerializeStruct, SerializeStructVariant, SerializeTuple,
+    SerializeTupleStruct, SerializeTupleVariant,
 };
+use scoped_reference::{ScopedBorrowMut, ScopedReference};
 
-// wit_bindgen_guest_rust::generate!({ world: "serde-serializer-provider", no_std });
-// export_serde_serializer_provider!(GuestsideSerializerProvider);
+wit_bindgen::generate!({ world: "serde-serializer-provider", exports: {
+    "serde:serde/serde-serializer/serializer": GuestsideSerializerProvider,
+    "serde:serde/serde-serializer/ser-ok": SerOk,
+    "serde:serde/serde-serializer/ser-error": SerError,
+    "serde:serde/serde-serializer/serialize-seq": GuestsideSerializeSeqProvider,
+    "serde:serde/serde-serializer/serialize-tuple": GuestsideSerializeTupleProvider,
+    "serde:serde/serde-serializer/serialize-tuple-struct": GuestsideSerializeTupleStructProvider,
+    "serde:serde/serde-serializer/serialize-tuple-variant": GuestsideSerializeTupleVariantProvider,
+    "serde:serde/serde-serializer/serialize-map": GuestsideSerializeMapProvider,
+    "serde:serde/serde-serializer/serialize-struct": GuestsideSerializeStructProvider,
+    "serde:serde/serde-serializer/serialize-struct-variant": GuestsideSerializeStructVariantProvider,
+}, std_feature });
 
-use crate::{any::Any, intern::intern_string};
+use crate::any::Any;
+use crate::intern::intern_string;
 
 pub struct GuestsideSerializerProvider {
-    serializer: Box<dyn ErasedSerializer>,
+    serializer: RefCell<Option<Box<dyn ErasedSerializer>>>,
+    is_human_readable: bool,
     scope: ScopedBorrowMut<()>,
 }
 
-// impl serializer::Serializer for GuestsideSerializerProvider {
-//     fn test(
-//         x: serde_types::S128,
-//         y: serde_types::Usize,
-//     ) -> (serde_types::U128, serde_types::Usize) {
-//         serialize::test(x, y)
-//     }
-// }
+trait WrapSerResult {
+    type Ok;
 
-impl super::exports::serde::serde::serde_ser::Serializer for GuestsideSerializerProvider {
-    fn serialize_bool(this: super::exports::serde::serde::serde_ser::OwnSerializer, v: bool) -> Result<super::exports::serde::serde::serde_ser::OwnSerOk, super::exports::serde::serde::serde_ser::OwnSerError> {
-        todo!("LOOK FOR ME")
-        
-        // this.serializer.erased_serialize_bool(v)
-        
-        // self.serializer.erased_serialize_bool(v)
+    fn wrap(self) -> Result<Self::Ok, self::exports::serde::serde::serde_serializer::OwnSerError>;
+}
+
+impl WrapSerResult for Result<SerOk, SerError> {
+    type Ok = self::exports::serde::serde::serde_serializer::OwnSerOk;
+
+    fn wrap(
+        self,
+    ) -> Result<
+        self::exports::serde::serde::serde_serializer::OwnSerOk,
+        self::exports::serde::serde::serde_serializer::OwnSerError,
+    > {
+        match self {
+            Ok(ok) => Ok(self::exports::serde::serde::serde_serializer::OwnSerOk::new(ok)),
+            Err(error) => {
+                Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(error))
+            }
+        }
+    }
+}
+
+impl WrapSerResult for Result<(), SerError> {
+    type Ok = ();
+
+    fn wrap(self) -> Result<(), self::exports::serde::serde::serde_serializer::OwnSerError> {
+        self.map_err(self::exports::serde::serde::serde_serializer::OwnSerError::new)
+    }
+}
+
+impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSerializerProvider {
+    fn serialize_bool(
+        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        v: bool,
+    ) -> Result<
+        self::exports::serde::serde::serde_serializer::OwnSerOk,
+        self::exports::serde::serde::serde_serializer::OwnSerError,
+    > {
+        Self::try_extract_serializer(&this, "serialize_bool")?
+            .erased_serialize_bool(v)
+            .wrap()
     }
 
-    // fn serialize_i8(self, v: i8) -> Result<SerOk, SerError> {
-    //     self.serializer.erased_serialize_i8(v)
-    // }
+    fn serialize_i8(
+        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        v: i8,
+    ) -> Result<
+        self::exports::serde::serde::serde_serializer::OwnSerOk,
+        self::exports::serde::serde::serde_serializer::OwnSerError,
+    > {
+        Self::try_extract_serializer(&this, "serialize_i8")?
+            .erased_serialize_i8(v)
+            .wrap()
+    }
 
-    // fn serialize_i16(self, v: i16) -> Result<SerOk, SerError> {
-    //     self.serializer.erased_serialize_i16(v)
-    // }
+    fn serialize_i16(
+        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        v: i16,
+    ) -> Result<
+        self::exports::serde::serde::serde_serializer::OwnSerOk,
+        self::exports::serde::serde::serde_serializer::OwnSerError,
+    > {
+        Self::try_extract_serializer(&this, "serialize_i16")?
+            .erased_serialize_i16(v)
+            .wrap()
+    }
 
-    // fn serialize_i32(self, v: i32) -> Result<SerOk, SerError> {
-    //     self.serializer.erased_serialize_i32(v)
-    // }
+    fn serialize_i32(
+        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        v: i32,
+    ) -> Result<
+        self::exports::serde::serde::serde_serializer::OwnSerOk,
+        self::exports::serde::serde::serde_serializer::OwnSerError,
+    > {
+        Self::try_extract_serializer(&this, "serialize_i32")?
+            .erased_serialize_i32(v)
+            .wrap()
+    }
 
-    // fn serialize_i64(self, v: i64) -> Result<SerOk, SerError> {
-    //     self.serializer.erased_serialize_i64(v)
-    // }
+    fn serialize_i64(
+        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        v: i64,
+    ) -> Result<
+        self::exports::serde::serde::serde_serializer::OwnSerOk,
+        self::exports::serde::serde::serde_serializer::OwnSerError,
+    > {
+        Self::try_extract_serializer(&this, "serialize_i64")?
+            .erased_serialize_i64(v)
+            .wrap()
+    }
 
-    // serde_if_integer128! {
-    //     fn serialize_i128(self, v: serde_types::S128) -> Result<SerOk, SerError> {
-    //         let le_hi = v.le_hi.to_le_bytes();
-    //         let le_lo = v.le_lo.to_le_bytes();
+    fn serialize_i128(
+        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        v: self::serde::serde::serde_types::S128,
+    ) -> Result<
+        self::exports::serde::serde::serde_serializer::OwnSerOk,
+        self::exports::serde::serde::serde_serializer::OwnSerError,
+    > {
+        let le_hi = v.le_hi.to_le_bytes();
+        let le_lo = v.le_lo.to_le_bytes();
 
-    //         let bytes = [
-    //             le_hi[0], le_hi[1], le_hi[2], le_hi[3], le_hi[4], le_hi[5], le_hi[6], le_hi[7],
-    //             le_lo[0], le_lo[1], le_lo[2], le_lo[3], le_lo[4], le_lo[5], le_lo[6], le_lo[7],
-    //         ];
+        let bytes = [
+            le_hi[0], le_hi[1], le_hi[2], le_hi[3], le_hi[4], le_hi[5], le_hi[6], le_hi[7],
+            le_lo[0], le_lo[1], le_lo[2], le_lo[3], le_lo[4], le_lo[5], le_lo[6], le_lo[7],
+        ];
 
-    //         self.serializer.erased_serialize_i128(i128::from_le_bytes(bytes))
-    //     }
-    // }
+        Self::try_extract_serializer(&this, "serialize_i128")?
+            .erased_serialize_i128(i128::from_le_bytes(bytes))
+            .wrap()
+    }
 
-    // fn serialize_u8(self, v: u8) -> Result<SerOk, SerError> {
-    //     self.serializer.erased_serialize_u8(v)
-    // }
+    fn serialize_u8(
+        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        v: u8,
+    ) -> Result<
+        self::exports::serde::serde::serde_serializer::OwnSerOk,
+        self::exports::serde::serde::serde_serializer::OwnSerError,
+    > {
+        Self::try_extract_serializer(&this, "serialize_u8")?
+            .erased_serialize_u8(v)
+            .wrap()
+    }
 
-    // fn serialize_u16(self, v: u16) -> Result<SerOk, SerError> {
-    //     self.serializer.erased_serialize_u16(v)
-    // }
+    fn serialize_u16(
+        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        v: u16,
+    ) -> Result<
+        self::exports::serde::serde::serde_serializer::OwnSerOk,
+        self::exports::serde::serde::serde_serializer::OwnSerError,
+    > {
+        Self::try_extract_serializer(&this, "serialize_u16")?
+            .erased_serialize_u16(v)
+            .wrap()
+    }
 
-    // fn serialize_u32(self, v: u32) -> Result<SerOk, SerError> {
-    //     self.serializer.erased_serialize_u32(v)
-    // }
+    fn serialize_u32(
+        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        v: u32,
+    ) -> Result<
+        self::exports::serde::serde::serde_serializer::OwnSerOk,
+        self::exports::serde::serde::serde_serializer::OwnSerError,
+    > {
+        Self::try_extract_serializer(&this, "serialize_u32")?
+            .erased_serialize_u32(v)
+            .wrap()
+    }
 
-    // fn serialize_u64(self, v: u64) -> Result<SerOk, SerError> {
-    //     self.serializer.erased_serialize_u64(v)
-    // }
+    fn serialize_u64(
+        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        v: u64,
+    ) -> Result<
+        self::exports::serde::serde::serde_serializer::OwnSerOk,
+        self::exports::serde::serde::serde_serializer::OwnSerError,
+    > {
+        Self::try_extract_serializer(&this, "serialize_u64")?
+            .erased_serialize_u64(v)
+            .wrap()
+    }
 
-    // serde_if_integer128! {
-    //     fn serialize_u128(self, v: serde_types::U128) -> Result<SerOk, SerError> {
-    //         let le_hi = v.le_hi.to_le_bytes();
-    //         let le_lo = v.le_lo.to_le_bytes();
+    fn serialize_u128(
+        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        v: self::serde::serde::serde_types::U128,
+    ) -> Result<
+        self::exports::serde::serde::serde_serializer::OwnSerOk,
+        self::exports::serde::serde::serde_serializer::OwnSerError,
+    > {
+        let le_hi = v.le_hi.to_le_bytes();
+        let le_lo = v.le_lo.to_le_bytes();
 
-    //         let bytes = [
-    //             le_hi[0], le_hi[1], le_hi[2], le_hi[3], le_hi[4], le_hi[5], le_hi[6], le_hi[7],
-    //             le_lo[0], le_lo[1], le_lo[2], le_lo[3], le_lo[4], le_lo[5], le_lo[6], le_lo[7],
-    //         ];
+        let bytes = [
+            le_hi[0], le_hi[1], le_hi[2], le_hi[3], le_hi[4], le_hi[5], le_hi[6], le_hi[7],
+            le_lo[0], le_lo[1], le_lo[2], le_lo[3], le_lo[4], le_lo[5], le_lo[6], le_lo[7],
+        ];
 
-    //         self.serializer.erased_serialize_u128(u128::from_le_bytes(bytes))
-    //     }
-    // }
+        Self::try_extract_serializer(&this, "serialize_u128")?
+            .erased_serialize_u128(u128::from_le_bytes(bytes))
+            .wrap()
+    }
 
-    // fn serialize_f32(self, v: f32) -> Result<SerOk, SerError> {
-    //     self.serializer.erased_serialize_f32(v)
-    // }
+    fn serialize_f32(
+        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        v: f32,
+    ) -> Result<
+        self::exports::serde::serde::serde_serializer::OwnSerOk,
+        self::exports::serde::serde::serde_serializer::OwnSerError,
+    > {
+        Self::try_extract_serializer(&this, "serialize_f32")?
+            .erased_serialize_f32(v)
+            .wrap()
+    }
 
-    // fn serialize_f64(self, v: f64) -> Result<SerOk, SerError> {
-    //     self.serializer.erased_serialize_f64(v)
-    // }
+    fn serialize_f64(
+        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        v: f64,
+    ) -> Result<
+        self::exports::serde::serde::serde_serializer::OwnSerOk,
+        self::exports::serde::serde::serde_serializer::OwnSerError,
+    > {
+        Self::try_extract_serializer(&this, "serialize_f64")?
+            .erased_serialize_f64(v)
+            .wrap()
+    }
 
-    // fn serialize_char(self, v: char) -> Result<SerOk, SerError> {
-    //     self.serializer.erased_serialize_char(v)
-    // }
+    fn serialize_char(
+        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        v: char,
+    ) -> Result<
+        self::exports::serde::serde::serde_serializer::OwnSerOk,
+        self::exports::serde::serde::serde_serializer::OwnSerError,
+    > {
+        Self::try_extract_serializer(&this, "serialize_char")?
+            .erased_serialize_char(v)
+            .wrap()
+    }
 
-    // fn serialize_str(self, v: String) -> Result<SerOk, SerError> {
-    //     self.serializer.erased_serialize_str(&v)
-    // }
+    fn serialize_str(
+        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        v: String,
+    ) -> Result<
+        self::exports::serde::serde::serde_serializer::OwnSerOk,
+        self::exports::serde::serde::serde_serializer::OwnSerError,
+    > {
+        Self::try_extract_serializer(&this, "serialize_str")?
+            .erased_serialize_str(&v)
+            .wrap()
+    }
 
-    // fn serialize_bytes(self, v: Vec<u8>) -> Result<SerOk, SerError> {
-    //     self.serializer.erased_serialize_bytes(&v)
-    // }
+    fn serialize_bytes(
+        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        v: Vec<u8>,
+    ) -> Result<
+        self::exports::serde::serde::serde_serializer::OwnSerOk,
+        self::exports::serde::serde::serde_serializer::OwnSerError,
+    > {
+        Self::try_extract_serializer(&this, "serialize_bytes")?
+            .erased_serialize_bytes(&v)
+            .wrap()
+    }
 
-    // fn serialize_none(self) -> Result<SerOk, SerError> {
-    //     self.serializer.erased_serialize_none()
-    // }
+    fn serialize_none(
+        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+    ) -> Result<
+        self::exports::serde::serde::serde_serializer::OwnSerOk,
+        self::exports::serde::serde::serde_serializer::OwnSerError,
+    > {
+        Self::try_extract_serializer(&this, "serialize_none")?
+            .erased_serialize_none()
+            .wrap()
+    }
 
-    // fn serialize_some(self, value: &Serialize) -> Result<SerOk, SerError> {
-    //     self.serializer
-    //         .erased_serialize_some(&SerializableSerialize::new(value))
-    // }
+    fn serialize_some(
+        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        value: self::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
+    ) -> Result<
+        self::exports::serde::serde::serde_serializer::OwnSerOk,
+        self::exports::serde::serde::serde_serializer::OwnSerError,
+    > {
+        // TODO: Safety
+        let value = unsafe {
+            self::serde::serde::serde_serialize::Serialize::from_handle(
+                value.borrowed_handle,
+                false,
+            )
+        };
+        Self::try_extract_serializer(&this, "serialize_some")?
+            .erased_serialize_some(&SerializableSerialize::new(&value))
+            .wrap()
+    }
+
+    fn serialize_unit(
+        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+    ) -> Result<
+        self::exports::serde::serde::serde_serializer::OwnSerOk,
+        self::exports::serde::serde::serde_serializer::OwnSerError,
+    > {
+        Self::try_extract_serializer(&this, "serialize_unit")?
+            .erased_serialize_unit()
+            .wrap()
+    }
+
+    fn serialize_unit_struct(
+        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        name: String,
+    ) -> Result<
+        self::exports::serde::serde::serde_serializer::OwnSerOk,
+        self::exports::serde::serde::serde_serializer::OwnSerError,
+    > {
+        Self::try_extract_serializer(&this, "serialize_unit_struct")?
+            .erased_serialize_unit_struct(intern_string(name))
+            .wrap()
+    }
+
+    fn serialize_unit_variant(
+        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        name: String,
+        variant_index: u32,
+        variant: String,
+    ) -> Result<
+        self::exports::serde::serde::serde_serializer::OwnSerOk,
+        self::exports::serde::serde::serde_serializer::OwnSerError,
+    > {
+        Self::try_extract_serializer(&this, "serialize_unit_variant")?
+            .erased_serialize_unit_variant(
+                intern_string(name),
+                variant_index,
+                intern_string(variant),
+            )
+            .wrap()
+    }
+
+    fn serialize_newtype_struct(
+        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        name: String,
+        value: self::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
+    ) -> Result<
+        self::exports::serde::serde::serde_serializer::OwnSerOk,
+        self::exports::serde::serde::serde_serializer::OwnSerError,
+    > {
+        // TODO: Safety
+        let value = unsafe {
+            self::serde::serde::serde_serialize::Serialize::from_handle(
+                value.borrowed_handle,
+                false,
+            )
+        };
+        Self::try_extract_serializer(&this, "serialize_newtype_struct")?
+            .erased_serialize_newtype_struct(
+                intern_string(name),
+                &SerializableSerialize::new(&value),
+            )
+            .wrap()
+    }
+
+    fn serialize_newtype_variant(
+        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        name: String,
+        variant_index: u32,
+        variant: String,
+        value: self::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
+    ) -> Result<
+        self::exports::serde::serde::serde_serializer::OwnSerOk,
+        self::exports::serde::serde::serde_serializer::OwnSerError,
+    > {
+        // TODO: Safety
+        let value = unsafe {
+            self::serde::serde::serde_serialize::Serialize::from_handle(
+                value.borrowed_handle,
+                false,
+            )
+        };
+        Self::try_extract_serializer(&this, "serialize_newtype_variant")?
+            .erased_serialize_newtype_variant(
+                intern_string(name),
+                variant_index,
+                intern_string(variant),
+                &SerializableSerialize::new(&value),
+            )
+            .wrap()
+    }
+
+    fn is_human_readable(this: &Self) -> bool {
+        this.is_human_readable
+    }
 }
 
 impl GuestsideSerializerProvider {
     #[must_use]
-    pub fn with_new<'a, S: serde::Serializer + 'a, F: FnOnce(Self) -> Q, Q>(
+    pub fn with_new<'a, S: ::serde::Serializer + 'a, F: FnOnce(Self) -> Q, Q>(
         serializer: S,
         inner: F,
     ) -> Q {
@@ -143,7 +413,8 @@ impl GuestsideSerializerProvider {
                 unsafe { core::mem::transmute(serializer) };
 
             inner(Self {
-                serializer,
+                is_human_readable: serializer.erased_is_human_readable(),
+                serializer: RefCell::new(Some(serializer)),
                 scope: scope.borrow_mut(),
             })
         };
@@ -154,144 +425,25 @@ impl GuestsideSerializerProvider {
         result
     }
 
-    /*fn serialize_bool(self, v: bool) -> Result<SerOk, SerError> {
-        self.serializer.erased_serialize_bool(v)
+    fn try_extract_serializer(
+        &self,
+        method: &'static str,
+    ) -> Result<Box<dyn ErasedSerializer>, self::exports::serde::serde::serde_serializer::OwnSerError>
+    {
+        let Ok(mut serializer) = self.serializer.try_borrow_mut() else {
+            return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
+                inner: SerErrorOrCustom::Custom(format!("bug: could not mutably borrow the owned Serializer in Serializer::{method}"))
+            }));
+        };
+        let Some(serializer) = serializer.take() else {
+            return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
+                inner: SerErrorOrCustom::Custom(format!("bug: SerializeTuple::{method} after free"))
+            }));
+        };
+        Ok(serializer)
     }
 
-    fn serialize_i8(self, v: i8) -> Result<SerOk, SerError> {
-        self.serializer.erased_serialize_i8(v)
-    }
-
-    fn serialize_i16(self, v: i16) -> Result<SerOk, SerError> {
-        self.serializer.erased_serialize_i16(v)
-    }
-
-    fn serialize_i32(self, v: i32) -> Result<SerOk, SerError> {
-        self.serializer.erased_serialize_i32(v)
-    }
-
-    fn serialize_i64(self, v: i64) -> Result<SerOk, SerError> {
-        self.serializer.erased_serialize_i64(v)
-    }
-
-    serde_if_integer128! {
-        fn serialize_i128(self, v: serde_types::S128) -> Result<SerOk, SerError> {
-            let le_hi = v.le_hi.to_le_bytes();
-            let le_lo = v.le_lo.to_le_bytes();
-
-            let bytes = [
-                le_hi[0], le_hi[1], le_hi[2], le_hi[3], le_hi[4], le_hi[5], le_hi[6], le_hi[7],
-                le_lo[0], le_lo[1], le_lo[2], le_lo[3], le_lo[4], le_lo[5], le_lo[6], le_lo[7],
-            ];
-
-            self.serializer.erased_serialize_i128(i128::from_le_bytes(bytes))
-        }
-    }
-
-    fn serialize_u8(self, v: u8) -> Result<SerOk, SerError> {
-        self.serializer.erased_serialize_u8(v)
-    }
-
-    fn serialize_u16(self, v: u16) -> Result<SerOk, SerError> {
-        self.serializer.erased_serialize_u16(v)
-    }
-
-    fn serialize_u32(self, v: u32) -> Result<SerOk, SerError> {
-        self.serializer.erased_serialize_u32(v)
-    }
-
-    fn serialize_u64(self, v: u64) -> Result<SerOk, SerError> {
-        self.serializer.erased_serialize_u64(v)
-    }
-
-    serde_if_integer128! {
-        fn serialize_u128(self, v: serde_types::U128) -> Result<SerOk, SerError> {
-            let le_hi = v.le_hi.to_le_bytes();
-            let le_lo = v.le_lo.to_le_bytes();
-
-            let bytes = [
-                le_hi[0], le_hi[1], le_hi[2], le_hi[3], le_hi[4], le_hi[5], le_hi[6], le_hi[7],
-                le_lo[0], le_lo[1], le_lo[2], le_lo[3], le_lo[4], le_lo[5], le_lo[6], le_lo[7],
-            ];
-
-            self.serializer.erased_serialize_u128(u128::from_le_bytes(bytes))
-        }
-    }
-
-    fn serialize_f32(self, v: f32) -> Result<SerOk, SerError> {
-        self.serializer.erased_serialize_f32(v)
-    }
-
-    fn serialize_f64(self, v: f64) -> Result<SerOk, SerError> {
-        self.serializer.erased_serialize_f64(v)
-    }
-
-    fn serialize_char(self, v: char) -> Result<SerOk, SerError> {
-        self.serializer.erased_serialize_char(v)
-    }
-
-    fn serialize_str(self, v: String) -> Result<SerOk, SerError> {
-        self.serializer.erased_serialize_str(&v)
-    }
-
-    fn serialize_bytes(self, v: Vec<u8>) -> Result<SerOk, SerError> {
-        self.serializer.erased_serialize_bytes(&v)
-    }
-
-    fn serialize_none(self) -> Result<SerOk, SerError> {
-        self.serializer.erased_serialize_none()
-    }
-
-    fn serialize_some(self, value: &Serialize) -> Result<SerOk, SerError> {
-        self.serializer
-            .erased_serialize_some(&SerializableSerialize::new(value))
-    }*/
-
-    /*fn serialize_unit(self) -> Result<SerOk, SerError> {
-        self.serializer.erased_serialize_unit()
-    }
-
-    fn serialize_unit_struct(self, name: String) -> Result<SerOk, SerError> {
-        self.serializer
-            .erased_serialize_unit_struct(intern_string(name))
-    }
-
-    fn serialize_unit_variant(
-        self,
-        name: String,
-        variant_index: u32,
-        variant: String,
-    ) -> Result<SerOk, SerError> {
-        self.serializer.erased_serialize_unit_variant(
-            intern_string(name),
-            variant_index,
-            intern_string(variant),
-        )
-    }
-
-    fn serialize_newtype_struct(self, name: String, value: &Serialize) -> Result<SerOk, SerError> {
-        self.serializer.erased_serialize_newtype_struct(
-            intern_string(name),
-            &SerializableSerialize::new(value),
-        )
-    }
-
-    fn serialize_newtype_variant(
-        self,
-        name: String,
-        variant_index: u32,
-        variant: String,
-        value: &Serialize,
-    ) -> Result<SerOk, SerError> {
-        self.serializer.erased_serialize_newtype_variant(
-            intern_string(name),
-            variant_index,
-            intern_string(variant),
-            &SerializableSerialize::new(value),
-        )
-    }
-
-    fn serialize_seq(
+    /*fn serialize_seq(
         self,
         len: Option<serde_types::Usize>,
     ) -> Result<GuestsideSerializeSeqProvider, SerError> {
@@ -399,56 +551,50 @@ impl GuestsideSerializerProvider {
             serialize_struct_variant,
             scope: self.scope,
         })
-    }
-
-    fn is_human_readable(&self) -> bool {
-        self.serializer.erased_is_human_readable()
     }*/
 }
 
 trait ErasedSerializer {
-    fn erased_serialize_bool(self: Box<Self>, v: bool) -> Result<super::exports::serde::serde::serde_ser::OwnSerOk, super::exports::serde::serde::serde_ser::OwnSerError>;
-    // fn erased_serialize_i8(self: Box<Self>, v: i8) -> Result<SerOk, SerError>;
-    // fn erased_serialize_i16(self: Box<Self>, v: i16) -> Result<SerOk, SerError>;
-    // fn erased_serialize_i32(self: Box<Self>, v: i32) -> Result<SerOk, SerError>;
-    // fn erased_serialize_i64(self: Box<Self>, v: i64) -> Result<SerOk, SerError>;
-    // fn erased_serialize_u8(self: Box<Self>, v: u8) -> Result<SerOk, SerError>;
-    // fn erased_serialize_u16(self: Box<Self>, v: u16) -> Result<SerOk, SerError>;
-    // fn erased_serialize_u32(self: Box<Self>, v: u32) -> Result<SerOk, SerError>;
-    // fn erased_serialize_u64(self: Box<Self>, v: u64) -> Result<SerOk, SerError>;
-    // serde_if_integer128! {
-    //     fn erased_serialize_i128(self: Box<Self>, v: i128) -> Result<SerOk, SerError>;
-    //     fn erased_serialize_u128(self: Box<Self>, v: u128) -> Result<SerOk, SerError>;
-    // }
-    // fn erased_serialize_f32(self: Box<Self>, v: f32) -> Result<SerOk, SerError>;
-    // fn erased_serialize_f64(self: Box<Self>, v: f64) -> Result<SerOk, SerError>;
-    // fn erased_serialize_char(self: Box<Self>, v: char) -> Result<SerOk, SerError>;
-    // fn erased_serialize_str(self: Box<Self>, v: &str) -> Result<SerOk, SerError>;
-    // fn erased_serialize_bytes(self: Box<Self>, v: &[u8]) -> Result<SerOk, SerError>;
-    // fn erased_serialize_none(self: Box<Self>) -> Result<SerOk, SerError>;
-    // fn erased_serialize_some(self: Box<Self>, v: &SerializableSerialize)
-    //     -> Result<SerOk, SerError>;
-    // fn erased_serialize_unit(self: Box<Self>) -> Result<SerOk, SerError>;
-    // fn erased_serialize_unit_struct(self: Box<Self>, name: &'static str)
-    //     -> Result<SerOk, SerError>;
-    // fn erased_serialize_unit_variant(
-    //     self: Box<Self>,
-    //     name: &'static str,
-    //     variant_index: u32,
-    //     variant: &'static str,
-    // ) -> Result<SerOk, SerError>;
-    // fn erased_serialize_newtype_struct(
-    //     self: Box<Self>,
-    //     name: &'static str,
-    //     v: &SerializableSerialize,
-    // ) -> Result<SerOk, SerError>;
-    // fn erased_serialize_newtype_variant(
-    //     self: Box<Self>,
-    //     name: &'static str,
-    //     variant_index: u32,
-    //     variant: &'static str,
-    //     v: &SerializableSerialize,
-    // ) -> Result<SerOk, SerError>;
+    fn erased_serialize_bool(self: Box<Self>, v: bool) -> Result<SerOk, SerError>;
+    fn erased_serialize_i8(self: Box<Self>, v: i8) -> Result<SerOk, SerError>;
+    fn erased_serialize_i16(self: Box<Self>, v: i16) -> Result<SerOk, SerError>;
+    fn erased_serialize_i32(self: Box<Self>, v: i32) -> Result<SerOk, SerError>;
+    fn erased_serialize_i64(self: Box<Self>, v: i64) -> Result<SerOk, SerError>;
+    fn erased_serialize_u8(self: Box<Self>, v: u8) -> Result<SerOk, SerError>;
+    fn erased_serialize_u16(self: Box<Self>, v: u16) -> Result<SerOk, SerError>;
+    fn erased_serialize_u32(self: Box<Self>, v: u32) -> Result<SerOk, SerError>;
+    fn erased_serialize_u64(self: Box<Self>, v: u64) -> Result<SerOk, SerError>;
+    fn erased_serialize_i128(self: Box<Self>, v: i128) -> Result<SerOk, SerError>;
+    fn erased_serialize_u128(self: Box<Self>, v: u128) -> Result<SerOk, SerError>;
+    fn erased_serialize_f32(self: Box<Self>, v: f32) -> Result<SerOk, SerError>;
+    fn erased_serialize_f64(self: Box<Self>, v: f64) -> Result<SerOk, SerError>;
+    fn erased_serialize_char(self: Box<Self>, v: char) -> Result<SerOk, SerError>;
+    fn erased_serialize_str(self: Box<Self>, v: &str) -> Result<SerOk, SerError>;
+    fn erased_serialize_bytes(self: Box<Self>, v: &[u8]) -> Result<SerOk, SerError>;
+    fn erased_serialize_none(self: Box<Self>) -> Result<SerOk, SerError>;
+    fn erased_serialize_some(self: Box<Self>, v: &SerializableSerialize)
+        -> Result<SerOk, SerError>;
+    fn erased_serialize_unit(self: Box<Self>) -> Result<SerOk, SerError>;
+    fn erased_serialize_unit_struct(self: Box<Self>, name: &'static str)
+        -> Result<SerOk, SerError>;
+    fn erased_serialize_unit_variant(
+        self: Box<Self>,
+        name: &'static str,
+        variant_index: u32,
+        variant: &'static str,
+    ) -> Result<SerOk, SerError>;
+    fn erased_serialize_newtype_struct(
+        self: Box<Self>,
+        name: &'static str,
+        v: &SerializableSerialize,
+    ) -> Result<SerOk, SerError>;
+    fn erased_serialize_newtype_variant(
+        self: Box<Self>,
+        name: &'static str,
+        variant_index: u32,
+        variant: &'static str,
+        v: &SerializableSerialize,
+    ) -> Result<SerOk, SerError>;
     // fn erased_serialize_seq<'a>(
     //     self: Box<Self>,
     //     len: Option<usize>,
@@ -499,7 +645,7 @@ trait ErasedSerializer {
     // ) -> Result<Box<dyn ErasedSerializeStructVariant + 'a>, SerError>
     // where
     //     Self: 'a;
-    // fn erased_is_human_readable(&self) -> bool;
+    fn erased_is_human_readable(&self) -> bool;
 }
 
 trait ErasedSerializeSeq {
@@ -548,166 +694,165 @@ trait ErasedSerializeStructVariant {
     fn erased_skip_field(&mut self, key: &'static str) -> Result<(), SerError>;
 }
 
-impl<T: serde::Serializer> ErasedSerializer for T {
-    fn erased_serialize_bool(self: Box<Self>, v: bool) -> Result<super::exports::serde::serde::serde_ser::OwnSerOk, super::exports::serde::serde::serde_ser::OwnSerError> {
-        todo!()
-        // self.serialize_bool(v)
-        //     .map(SerOk::wrap)
-        //     .map_err(SerError::wrap)
+impl<T: ::serde::Serializer> ErasedSerializer for T {
+    fn erased_serialize_bool(self: Box<Self>, v: bool) -> Result<SerOk, SerError> {
+        self.serialize_bool(v)
+            .map(SerOk::wrap)
+            .map_err(SerError::wrap)
     }
 
-    // fn erased_serialize_i8(self: Box<Self>, v: i8) -> Result<SerOk, SerError> {
-    //     self.serialize_i8(v)
-    //         .map(SerOk::wrap)
-    //         .map_err(SerError::wrap)
-    // }
+    fn erased_serialize_i8(self: Box<Self>, v: i8) -> Result<SerOk, SerError> {
+        self.serialize_i8(v)
+            .map(SerOk::wrap)
+            .map_err(SerError::wrap)
+    }
 
-    // fn erased_serialize_i16(self: Box<Self>, v: i16) -> Result<SerOk, SerError> {
-    //     self.serialize_i16(v)
-    //         .map(SerOk::wrap)
-    //         .map_err(SerError::wrap)
-    // }
+    fn erased_serialize_i16(self: Box<Self>, v: i16) -> Result<SerOk, SerError> {
+        self.serialize_i16(v)
+            .map(SerOk::wrap)
+            .map_err(SerError::wrap)
+    }
 
-    // fn erased_serialize_i32(self: Box<Self>, v: i32) -> Result<SerOk, SerError> {
-    //     self.serialize_i32(v)
-    //         .map(SerOk::wrap)
-    //         .map_err(SerError::wrap)
-    // }
+    fn erased_serialize_i32(self: Box<Self>, v: i32) -> Result<SerOk, SerError> {
+        self.serialize_i32(v)
+            .map(SerOk::wrap)
+            .map_err(SerError::wrap)
+    }
 
-    // fn erased_serialize_i64(self: Box<Self>, v: i64) -> Result<SerOk, SerError> {
-    //     self.serialize_i64(v)
-    //         .map(SerOk::wrap)
-    //         .map_err(SerError::wrap)
-    // }
+    fn erased_serialize_i64(self: Box<Self>, v: i64) -> Result<SerOk, SerError> {
+        self.serialize_i64(v)
+            .map(SerOk::wrap)
+            .map_err(SerError::wrap)
+    }
 
-    // serde_if_integer128! {
-    //     fn erased_serialize_i128(self:Box<Self>,v:i128) -> Result<SerOk,SerError> {
-    //         self.serialize_i128(v).map(SerOk::wrap).map_err(SerError::wrap)
-    //     }
-    // }
+    fn erased_serialize_i128(self: Box<Self>, v: i128) -> Result<SerOk, SerError> {
+        self.serialize_i128(v)
+            .map(SerOk::wrap)
+            .map_err(SerError::wrap)
+    }
 
-    // fn erased_serialize_u8(self: Box<Self>, v: u8) -> Result<SerOk, SerError> {
-    //     self.serialize_u8(v)
-    //         .map(SerOk::wrap)
-    //         .map_err(SerError::wrap)
-    // }
+    fn erased_serialize_u8(self: Box<Self>, v: u8) -> Result<SerOk, SerError> {
+        self.serialize_u8(v)
+            .map(SerOk::wrap)
+            .map_err(SerError::wrap)
+    }
 
-    // fn erased_serialize_u16(self: Box<Self>, v: u16) -> Result<SerOk, SerError> {
-    //     self.serialize_u16(v)
-    //         .map(SerOk::wrap)
-    //         .map_err(SerError::wrap)
-    // }
+    fn erased_serialize_u16(self: Box<Self>, v: u16) -> Result<SerOk, SerError> {
+        self.serialize_u16(v)
+            .map(SerOk::wrap)
+            .map_err(SerError::wrap)
+    }
 
-    // fn erased_serialize_u32(self: Box<Self>, v: u32) -> Result<SerOk, SerError> {
-    //     self.serialize_u32(v)
-    //         .map(SerOk::wrap)
-    //         .map_err(SerError::wrap)
-    // }
+    fn erased_serialize_u32(self: Box<Self>, v: u32) -> Result<SerOk, SerError> {
+        self.serialize_u32(v)
+            .map(SerOk::wrap)
+            .map_err(SerError::wrap)
+    }
 
-    // fn erased_serialize_u64(self: Box<Self>, v: u64) -> Result<SerOk, SerError> {
-    //     self.serialize_u64(v)
-    //         .map(SerOk::wrap)
-    //         .map_err(SerError::wrap)
-    // }
+    fn erased_serialize_u64(self: Box<Self>, v: u64) -> Result<SerOk, SerError> {
+        self.serialize_u64(v)
+            .map(SerOk::wrap)
+            .map_err(SerError::wrap)
+    }
 
-    // serde_if_integer128! {
-    //     fn erased_serialize_u128(self:Box<Self>,v:u128) -> Result<SerOk,SerError> {
-    //         self.serialize_u128(v).map(SerOk::wrap).map_err(SerError::wrap)
-    //     }
-    // }
+    fn erased_serialize_u128(self: Box<Self>, v: u128) -> Result<SerOk, SerError> {
+        self.serialize_u128(v)
+            .map(SerOk::wrap)
+            .map_err(SerError::wrap)
+    }
 
-    // fn erased_serialize_f32(self: Box<Self>, v: f32) -> Result<SerOk, SerError> {
-    //     self.serialize_f32(v)
-    //         .map(SerOk::wrap)
-    //         .map_err(SerError::wrap)
-    // }
+    fn erased_serialize_f32(self: Box<Self>, v: f32) -> Result<SerOk, SerError> {
+        self.serialize_f32(v)
+            .map(SerOk::wrap)
+            .map_err(SerError::wrap)
+    }
 
-    // fn erased_serialize_f64(self: Box<Self>, v: f64) -> Result<SerOk, SerError> {
-    //     self.serialize_f64(v)
-    //         .map(SerOk::wrap)
-    //         .map_err(SerError::wrap)
-    // }
+    fn erased_serialize_f64(self: Box<Self>, v: f64) -> Result<SerOk, SerError> {
+        self.serialize_f64(v)
+            .map(SerOk::wrap)
+            .map_err(SerError::wrap)
+    }
 
-    // fn erased_serialize_char(self: Box<Self>, v: char) -> Result<SerOk, SerError> {
-    //     self.serialize_char(v)
-    //         .map(SerOk::wrap)
-    //         .map_err(SerError::wrap)
-    // }
+    fn erased_serialize_char(self: Box<Self>, v: char) -> Result<SerOk, SerError> {
+        self.serialize_char(v)
+            .map(SerOk::wrap)
+            .map_err(SerError::wrap)
+    }
 
-    // fn erased_serialize_str(self: Box<Self>, v: &str) -> Result<SerOk, SerError> {
-    //     self.serialize_str(v)
-    //         .map(SerOk::wrap)
-    //         .map_err(SerError::wrap)
-    // }
+    fn erased_serialize_str(self: Box<Self>, v: &str) -> Result<SerOk, SerError> {
+        self.serialize_str(v)
+            .map(SerOk::wrap)
+            .map_err(SerError::wrap)
+    }
 
-    // fn erased_serialize_bytes(self: Box<Self>, v: &[u8]) -> Result<SerOk, SerError> {
-    //     self.serialize_bytes(v)
-    //         .map(SerOk::wrap)
-    //         .map_err(SerError::wrap)
-    // }
+    fn erased_serialize_bytes(self: Box<Self>, v: &[u8]) -> Result<SerOk, SerError> {
+        self.serialize_bytes(v)
+            .map(SerOk::wrap)
+            .map_err(SerError::wrap)
+    }
 
-    // fn erased_serialize_none(self: Box<Self>) -> Result<SerOk, SerError> {
-    //     self.serialize_none()
-    //         .map(SerOk::wrap)
-    //         .map_err(SerError::wrap)
-    // }
+    fn erased_serialize_none(self: Box<Self>) -> Result<SerOk, SerError> {
+        self.serialize_none()
+            .map(SerOk::wrap)
+            .map_err(SerError::wrap)
+    }
 
-    // fn erased_serialize_some(
-    //     self: Box<Self>,
-    //     v: &SerializableSerialize,
-    // ) -> Result<SerOk, SerError> {
-    //     self.serialize_some(v)
-    //         .map(SerOk::wrap)
-    //         .map_err(SerError::wrap)
-    // }
+    fn erased_serialize_some(
+        self: Box<Self>,
+        v: &SerializableSerialize,
+    ) -> Result<SerOk, SerError> {
+        self.serialize_some(v)
+            .map(SerOk::wrap)
+            .map_err(SerError::wrap)
+    }
 
-    // fn erased_serialize_unit(self: Box<Self>) -> Result<SerOk, SerError> {
-    //     self.serialize_unit()
-    //         .map(SerOk::wrap)
-    //         .map_err(SerError::wrap)
-    // }
+    fn erased_serialize_unit(self: Box<Self>) -> Result<SerOk, SerError> {
+        self.serialize_unit()
+            .map(SerOk::wrap)
+            .map_err(SerError::wrap)
+    }
 
-    // fn erased_serialize_unit_struct(
-    //     self: Box<Self>,
-    //     name: &'static str,
-    // ) -> Result<SerOk, SerError> {
-    //     self.serialize_unit_struct(name)
-    //         .map(SerOk::wrap)
-    //         .map_err(SerError::wrap)
-    // }
+    fn erased_serialize_unit_struct(
+        self: Box<Self>,
+        name: &'static str,
+    ) -> Result<SerOk, SerError> {
+        self.serialize_unit_struct(name)
+            .map(SerOk::wrap)
+            .map_err(SerError::wrap)
+    }
 
-    // fn erased_serialize_unit_variant(
-    //     self: Box<Self>,
-    //     name: &'static str,
-    //     variant_index: u32,
-    //     variant: &'static str,
-    // ) -> Result<SerOk, SerError> {
-    //     self.serialize_unit_variant(name, variant_index, variant)
-    //         .map(SerOk::wrap)
-    //         .map_err(SerError::wrap)
-    // }
+    fn erased_serialize_unit_variant(
+        self: Box<Self>,
+        name: &'static str,
+        variant_index: u32,
+        variant: &'static str,
+    ) -> Result<SerOk, SerError> {
+        self.serialize_unit_variant(name, variant_index, variant)
+            .map(SerOk::wrap)
+            .map_err(SerError::wrap)
+    }
 
-    // fn erased_serialize_newtype_struct(
-    //     self: Box<Self>,
-    //     name: &'static str,
-    //     v: &SerializableSerialize,
-    // ) -> Result<SerOk, SerError> {
-    //     self.serialize_newtype_struct(name, v)
-    //         .map(SerOk::wrap)
-    //         .map_err(SerError::wrap)
-    // }
+    fn erased_serialize_newtype_struct(
+        self: Box<Self>,
+        name: &'static str,
+        v: &SerializableSerialize,
+    ) -> Result<SerOk, SerError> {
+        self.serialize_newtype_struct(name, v)
+            .map(SerOk::wrap)
+            .map_err(SerError::wrap)
+    }
 
-    // fn erased_serialize_newtype_variant(
-    //     self: Box<Self>,
-    //     name: &'static str,
-    //     variant_index: u32,
-    //     variant: &'static str,
-    //     v: &SerializableSerialize,
-    // ) -> Result<SerOk, SerError> {
-    //     self.serialize_newtype_variant(name, variant_index, variant, v)
-    //         .map(SerOk::wrap)
-    //         .map_err(SerError::wrap)
-    // }
+    fn erased_serialize_newtype_variant(
+        self: Box<Self>,
+        name: &'static str,
+        variant_index: u32,
+        variant: &'static str,
+        v: &SerializableSerialize,
+    ) -> Result<SerOk, SerError> {
+        self.serialize_newtype_variant(name, variant_index, variant, v)
+            .map(SerOk::wrap)
+            .map_err(SerError::wrap)
+    }
 
     // fn erased_serialize_seq<'a>(
     //     self: Box<Self>,
@@ -826,9 +971,9 @@ impl<T: serde::Serializer> ErasedSerializer for T {
     //         .map_err(SerError::wrap)
     // }
 
-    // fn erased_is_human_readable(&self) -> bool {
-    //     self.is_human_readable()
-    // }
+    fn erased_is_human_readable(&self) -> bool {
+        self.is_human_readable()
+    }
 }
 
 impl<T: SerializeSeq> ErasedSerializeSeq for T {
@@ -922,20 +1067,15 @@ impl<T: SerializeStructVariant> ErasedSerializeStructVariant for T {
 }
 
 pub struct SerOk {
-    value: Any,
+    value: RefCell<Option<Any>>,
 }
 
 impl SerOk {
     fn wrap<T>(value: T) -> Self {
         // Safety: TODO
         Self {
-            value: unsafe { Any::new(value) },
+            value: unsafe { RefCell::new(Some(Any::new(value))) },
         }
-    }
-
-    fn take<T>(self) -> Option<T> {
-        // Safety: TODO
-        unsafe { self.value.take() }
     }
 }
 
@@ -945,14 +1085,14 @@ pub struct SerError {
 
 enum SerErrorOrCustom {
     Error {
-        err: Any,
+        err: RefCell<Option<Any>>,
         display: String,
         debug: String,
     },
     Custom(String),
 }
 
-impl super::exports::serde::serde::serde_ser::SerError for SerError {
+impl self::exports::serde::serde::serde_serializer::SerError for SerError {
     fn display(&self) -> String {
         match &self.inner {
             SerErrorOrCustom::Error { display, .. } => String::from(display),
@@ -971,68 +1111,62 @@ impl super::exports::serde::serde::serde_ser::SerError for SerError {
         }
     }
 
-    // fn custom(msg: &str) -> Self {
-    //     Self {
-    //         inner: SerErrorOrCustom::Custom(String::from(msg)),
-    //     }
-    // }
+    fn custom(msg: String) -> self::exports::serde::serde::serde_serializer::OwnSerError {
+        let error = Self {
+            inner: SerErrorOrCustom::Custom(msg),
+        };
+
+        self::exports::serde::serde::serde_serializer::OwnSerError::new(error)
+    }
 }
 
 impl SerError {
-    fn wrap<T: serde::ser::Error>(err: T) -> Self {
+    fn wrap<T: ::serde::ser::Error>(err: T) -> Self {
         let display = format!("{err}");
         let debug = format!("{err:?}");
 
         // Safety: TODO
         Self {
             inner: SerErrorOrCustom::Error {
-                err: unsafe { Any::new(err) },
+                err: RefCell::new(Some(unsafe { Any::new(err) })),
                 display,
                 debug,
             },
         }
     }
-
-    fn take<T: serde::ser::Error>(self) -> Option<T> {
-        match self.inner {
-            // Safety: TODO
-            SerErrorOrCustom::Error { err, .. } => unsafe { err.take() },
-            SerErrorOrCustom::Custom(msg) => Some(serde::ser::Error::custom(msg)),
-        }
-    }
 }
 
-struct GuestsideSerializeSeqProvider {
+/*pub struct GuestsideSerializeSeqProvider {
     serialize_seq: Box<dyn ErasedSerializeSeq>,
     scope: ScopedBorrowMut<()>,
 }
 
-struct GuestsideSerializeTupleProvider {
+pub struct GuestsideSerializeTupleProvider {
     serialize_tuple: Box<dyn ErasedSerializeTuple>,
     scope: ScopedBorrowMut<()>,
 }
 
-struct GuestsideSerializeTupleStructProvider {
+pub struct GuestsideSerializeTupleStructProvider {
     serialize_tuple_struct: Box<dyn ErasedSerializeTupleStruct>,
     scope: ScopedBorrowMut<()>,
 }
 
-struct GuestsideSerializeTupleVariantProvider {
+pub struct GuestsideSerializeTupleVariantProvider {
     serialize_tuple_variant: Box<dyn ErasedSerializeTupleVariant>,
     scope: ScopedBorrowMut<()>,
 }
 
-struct GuestsideSerializeMapProvider {
+pub struct GuestsideSerializeMapProvider {
     serialize_map: Box<dyn ErasedSerializeMap>,
     scope: ScopedBorrowMut<()>,
 }
 
-struct GuestsideSerializeStructProvider {
+pub struct GuestsideSerializeStructProvider {
     serialize_struct: Box<dyn ErasedSerializeStruct>,
     scope: ScopedBorrowMut<()>,
 }
 
-struct GuestsideSerializeStructVariantProvider {
+pub struct GuestsideSerializeStructVariantProvider {
     serialize_struct_variant: Box<dyn ErasedSerializeStructVariant>,
     scope: ScopedBorrowMut<()>,
 }
@@ -1155,50 +1289,84 @@ impl GuestsideSerializeStructVariantProvider {
 
         (self, result)
     }
-}
+}*/
 
 struct SerializableSerialize<'a> {
-    serialize: &'a Serialize,
+    serialize: &'a self::serde::serde::serde_serialize::Serialize,
 }
 
 impl<'a> SerializableSerialize<'a> {
-    fn new(serialize: &'a Serialize) -> Self {
+    fn new(serialize: &'a self::serde::serde::serde_serialize::Serialize) -> Self {
         Self { serialize }
     }
 }
 
-impl<'a> serde::Serialize for SerializableSerialize<'a> {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+impl<'a> ::serde::Serialize for SerializableSerialize<'a> {
+    fn serialize<S: ::serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let result = GuestsideSerializerProvider::with_new(serializer, |serializer| {
+            let owned_handle =
+                self::exports::serde::serde::serde_serializer::OwnSerializer::new(serializer)
+                    .into_handle();
+            let serializer =
+                self::serde::serde::serde_serialize::OwnedSerializerHandle { owned_handle };
             self.serialize.serialize(serializer)
         });
 
         match result {
             Ok(value) => {
-                if let Some(value) = value.take() {
-                    return Ok(value);
-                }
+                // TODO: Safety
+                let value = unsafe {
+                    self::exports::serde::serde::serde_serializer::OwnSerOk::from_handle(
+                        value.owned_handle,
+                    )
+                };
+                let Ok(mut value) = value.value.try_borrow_mut() else {
+                    return Err(::serde::ser::Error::custom(
+                        "bug: could not mutably borrow the owned Serializer::Ok result",
+                    ));
+                };
+                let Some(value) = value.take() else {
+                    return Err(::serde::ser::Error::custom(
+                        "bug: use of Serializer::Ok after free",
+                    ));
+                };
+                // TODO: Safety
+                let Some(value): Option<S::Ok> = (unsafe { value.take() }) else {
+                    return Err(::serde::ser::Error::custom(
+                        "bug: Serializer::Ok type mismatch across the wit boundary",
+                    ))
+                };
+                Ok(value)
             }
             Err(err) => {
-                if let Some(err) = err.take() {
-                    return Err(err);
-                }
+                // TODO: Safety
+                let err = unsafe {
+                    self::exports::serde::serde::serde_serializer::OwnSerError::from_handle(
+                        err.owned_handle,
+                    )
+                };
+                let err = match &err.inner {
+                    SerErrorOrCustom::Error { err, .. } => err,
+                    SerErrorOrCustom::Custom(msg) => return Err(::serde::ser::Error::custom(msg)),
+                };
+                let Ok(mut err) = err.try_borrow_mut() else {
+                    return Err(::serde::ser::Error::custom(
+                        "bug: could not mutably borrow the owned Serializer::Error result",
+                    ));
+                };
+                let Some(err) = err.take() else {
+                    return Err(::serde::ser::Error::custom(
+                        "bug: use of Serializer::Error after free",
+                    ));
+                };
+                // TODO: Safety
+                let Some(err): Option<S::Error> = (unsafe { err.take() }) else {
+                    return Err(::serde::ser::Error::custom(
+                        "bug: Serializer::Error type mismatch across the wit boundary",
+                    ))
+                };
+                Err(err)
             }
-        };
-
-        Err(serde::ser::Error::custom(
-            "bug: type mismatch across the wit boundary",
-        ))
-    }
-}
-
-struct Serialize {
-    _private: (),
-}
-
-// TODO: remove
-impl Serialize {
-    fn serialize(&self, _serializer: GuestsideSerializerProvider) -> Result<SerOk, SerError> {
-        todo!("wit-bindgen")
+        }
     }
 }

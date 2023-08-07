@@ -6,8 +6,7 @@ use scoped_reference::{ScopedBorrow, ScopedReference};
 
 wit_bindgen::generate!({ world: "serde-serializer-client", exports: {
     "serde:serde/serde-serialize/serialize": GuestsideSerializerClient,
-    "serde:serde/serde-raw-serialize/serialize": GuestsideSerializerClient,
-} });
+}, std_feature });
 
 pub struct GuestsideSerializerClient {
     serialize: ScopedBorrow<dyn ErasedSerialize>,
