@@ -796,8 +796,15 @@ impl<'de> ::serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        Visitor::with_new_old(visitor, |visitor| {
-            self.old_deserializer.deserialize_bool(visitor)
+        Visitor::with_new(visitor, |visitor| {
+            let visitor = self::exports::serde::serde::serde_deserialize::OwnVisitor::new(visitor);
+
+            self::serde::serde::serde_deserializer::Deserializer::deserialize_bool(
+                self.deserializer,
+                self::serde::serde::serde_deserializer::OwnedVisitorHandle {
+                    owned_handle: visitor.into_handle(),
+                },
+            )
         })
     }
 
@@ -805,8 +812,15 @@ impl<'de> ::serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        Visitor::with_new_old(visitor, |visitor| {
-            self.old_deserializer.deserialize_i8(visitor)
+        Visitor::with_new(visitor, |visitor| {
+            let visitor = self::exports::serde::serde::serde_deserialize::OwnVisitor::new(visitor);
+
+            self::serde::serde::serde_deserializer::Deserializer::deserialize_i8(
+                self.deserializer,
+                self::serde::serde::serde_deserializer::OwnedVisitorHandle {
+                    owned_handle: visitor.into_handle(),
+                },
+            )
         })
     }
 
@@ -814,8 +828,15 @@ impl<'de> ::serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        Visitor::with_new_old(visitor, |visitor| {
-            self.old_deserializer.deserialize_i16(visitor)
+        Visitor::with_new(visitor, |visitor| {
+            let visitor = self::exports::serde::serde::serde_deserialize::OwnVisitor::new(visitor);
+
+            self::serde::serde::serde_deserializer::Deserializer::deserialize_i16(
+                self.deserializer,
+                self::serde::serde::serde_deserializer::OwnedVisitorHandle {
+                    owned_handle: visitor.into_handle(),
+                },
+            )
         })
     }
 
@@ -823,8 +844,15 @@ impl<'de> ::serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        Visitor::with_new_old(visitor, |visitor| {
-            self.old_deserializer.deserialize_i32(visitor)
+        Visitor::with_new(visitor, |visitor| {
+            let visitor = self::exports::serde::serde::serde_deserialize::OwnVisitor::new(visitor);
+
+            self::serde::serde::serde_deserializer::Deserializer::deserialize_i32(
+                self.deserializer,
+                self::serde::serde::serde_deserializer::OwnedVisitorHandle {
+                    owned_handle: visitor.into_handle(),
+                },
+            )
         })
     }
 
@@ -832,8 +860,15 @@ impl<'de> ::serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        Visitor::with_new_old(visitor, |visitor| {
-            self.old_deserializer.deserialize_i64(visitor)
+        Visitor::with_new(visitor, |visitor| {
+            let visitor = self::exports::serde::serde::serde_deserialize::OwnVisitor::new(visitor);
+
+            self::serde::serde::serde_deserializer::Deserializer::deserialize_i64(
+                self.deserializer,
+                self::serde::serde::serde_deserializer::OwnedVisitorHandle {
+                    owned_handle: visitor.into_handle(),
+                },
+            )
         })
     }
 
@@ -842,7 +877,16 @@ impl<'de> ::serde::Deserializer<'de> for DeserializerableDeserializer {
             self,
             visitor: V,
         ) -> Result<V::Value, Self::Error> {
-            Visitor::with_new_old(visitor, |visitor| self.old_deserializer.deserialize_i128(visitor))
+            Visitor::with_new(visitor, |visitor| {
+                let visitor = self::exports::serde::serde::serde_deserialize::OwnVisitor::new(visitor);
+
+                self::serde::serde::serde_deserializer::Deserializer::deserialize_i128(
+                    self.deserializer,
+                    self::serde::serde::serde_deserializer::OwnedVisitorHandle {
+                        owned_handle: visitor.into_handle(),
+                    },
+                )
+            })
         }
     }
 
@@ -850,8 +894,15 @@ impl<'de> ::serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        Visitor::with_new_old(visitor, |visitor| {
-            self.old_deserializer.deserialize_u8(visitor)
+        Visitor::with_new(visitor, |visitor| {
+            let visitor = self::exports::serde::serde::serde_deserialize::OwnVisitor::new(visitor);
+
+            self::serde::serde::serde_deserializer::Deserializer::deserialize_u8(
+                self.deserializer,
+                self::serde::serde::serde_deserializer::OwnedVisitorHandle {
+                    owned_handle: visitor.into_handle(),
+                },
+            )
         })
     }
 
@@ -859,8 +910,15 @@ impl<'de> ::serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        Visitor::with_new_old(visitor, |visitor| {
-            self.old_deserializer.deserialize_u16(visitor)
+        Visitor::with_new(visitor, |visitor| {
+            let visitor = self::exports::serde::serde::serde_deserialize::OwnVisitor::new(visitor);
+
+            self::serde::serde::serde_deserializer::Deserializer::deserialize_u16(
+                self.deserializer,
+                self::serde::serde::serde_deserializer::OwnedVisitorHandle {
+                    owned_handle: visitor.into_handle(),
+                },
+            )
         })
     }
 
@@ -868,8 +926,15 @@ impl<'de> ::serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        Visitor::with_new_old(visitor, |visitor| {
-            self.old_deserializer.deserialize_u32(visitor)
+        Visitor::with_new(visitor, |visitor| {
+            let visitor = self::exports::serde::serde::serde_deserialize::OwnVisitor::new(visitor);
+
+            self::serde::serde::serde_deserializer::Deserializer::deserialize_u32(
+                self.deserializer,
+                self::serde::serde::serde_deserializer::OwnedVisitorHandle {
+                    owned_handle: visitor.into_handle(),
+                },
+            )
         })
     }
 
@@ -877,8 +942,15 @@ impl<'de> ::serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        Visitor::with_new_old(visitor, |visitor| {
-            self.old_deserializer.deserialize_u64(visitor)
+        Visitor::with_new(visitor, |visitor| {
+            let visitor = self::exports::serde::serde::serde_deserialize::OwnVisitor::new(visitor);
+
+            self::serde::serde::serde_deserializer::Deserializer::deserialize_u64(
+                self.deserializer,
+                self::serde::serde::serde_deserializer::OwnedVisitorHandle {
+                    owned_handle: visitor.into_handle(),
+                },
+            )
         })
     }
 
@@ -887,7 +959,16 @@ impl<'de> ::serde::Deserializer<'de> for DeserializerableDeserializer {
             self,
             visitor: V,
         ) -> Result<V::Value, Self::Error> {
-            Visitor::with_new_old(visitor, |visitor| self.old_deserializer.deserialize_u128(visitor))
+            Visitor::with_new(visitor, |visitor| {
+                let visitor = self::exports::serde::serde::serde_deserialize::OwnVisitor::new(visitor);
+
+                self::serde::serde::serde_deserializer::Deserializer::deserialize_u128(
+                    self.deserializer,
+                    self::serde::serde::serde_deserializer::OwnedVisitorHandle {
+                        owned_handle: visitor.into_handle(),
+                    },
+                )
+            })
         }
     }
 
@@ -895,8 +976,15 @@ impl<'de> ::serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        Visitor::with_new_old(visitor, |visitor| {
-            self.old_deserializer.deserialize_f32(visitor)
+        Visitor::with_new(visitor, |visitor| {
+            let visitor = self::exports::serde::serde::serde_deserialize::OwnVisitor::new(visitor);
+
+            self::serde::serde::serde_deserializer::Deserializer::deserialize_f32(
+                self.deserializer,
+                self::serde::serde::serde_deserializer::OwnedVisitorHandle {
+                    owned_handle: visitor.into_handle(),
+                },
+            )
         })
     }
 
@@ -904,8 +992,15 @@ impl<'de> ::serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        Visitor::with_new_old(visitor, |visitor| {
-            self.old_deserializer.deserialize_f64(visitor)
+        Visitor::with_new(visitor, |visitor| {
+            let visitor = self::exports::serde::serde::serde_deserialize::OwnVisitor::new(visitor);
+
+            self::serde::serde::serde_deserializer::Deserializer::deserialize_f64(
+                self.deserializer,
+                self::serde::serde::serde_deserializer::OwnedVisitorHandle {
+                    owned_handle: visitor.into_handle(),
+                },
+            )
         })
     }
 
@@ -913,8 +1008,15 @@ impl<'de> ::serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        Visitor::with_new_old(visitor, |visitor| {
-            self.old_deserializer.deserialize_char(visitor)
+        Visitor::with_new(visitor, |visitor| {
+            let visitor = self::exports::serde::serde::serde_deserialize::OwnVisitor::new(visitor);
+
+            self::serde::serde::serde_deserializer::Deserializer::deserialize_char(
+                self.deserializer,
+                self::serde::serde::serde_deserializer::OwnedVisitorHandle {
+                    owned_handle: visitor.into_handle(),
+                },
+            )
         })
     }
 
@@ -922,8 +1024,15 @@ impl<'de> ::serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        Visitor::with_new_old(visitor, |visitor| {
-            self.old_deserializer.deserialize_str(visitor)
+        Visitor::with_new(visitor, |visitor| {
+            let visitor = self::exports::serde::serde::serde_deserialize::OwnVisitor::new(visitor);
+
+            self::serde::serde::serde_deserializer::Deserializer::deserialize_str(
+                self.deserializer,
+                self::serde::serde::serde_deserializer::OwnedVisitorHandle {
+                    owned_handle: visitor.into_handle(),
+                },
+            )
         })
     }
 
@@ -931,8 +1040,15 @@ impl<'de> ::serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        Visitor::with_new_old(visitor, |visitor| {
-            self.old_deserializer.deserialize_string(visitor)
+        Visitor::with_new(visitor, |visitor| {
+            let visitor = self::exports::serde::serde::serde_deserialize::OwnVisitor::new(visitor);
+
+            self::serde::serde::serde_deserializer::Deserializer::deserialize_string(
+                self.deserializer,
+                self::serde::serde::serde_deserializer::OwnedVisitorHandle {
+                    owned_handle: visitor.into_handle(),
+                },
+            )
         })
     }
 
@@ -940,8 +1056,15 @@ impl<'de> ::serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        Visitor::with_new_old(visitor, |visitor| {
-            self.old_deserializer.deserialize_bytes(visitor)
+        Visitor::with_new(visitor, |visitor| {
+            let visitor = self::exports::serde::serde::serde_deserialize::OwnVisitor::new(visitor);
+
+            self::serde::serde::serde_deserializer::Deserializer::deserialize_bytes(
+                self.deserializer,
+                self::serde::serde::serde_deserializer::OwnedVisitorHandle {
+                    owned_handle: visitor.into_handle(),
+                },
+            )
         })
     }
 
@@ -949,8 +1072,15 @@ impl<'de> ::serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        Visitor::with_new_old(visitor, |visitor| {
-            self.old_deserializer.deserialize_byte_buf(visitor)
+        Visitor::with_new(visitor, |visitor| {
+            let visitor = self::exports::serde::serde::serde_deserialize::OwnVisitor::new(visitor);
+
+            self::serde::serde::serde_deserializer::Deserializer::deserialize_byte_buf(
+                self.deserializer,
+                self::serde::serde::serde_deserializer::OwnedVisitorHandle {
+                    owned_handle: visitor.into_handle(),
+                },
+            )
         })
     }
 
@@ -958,8 +1088,15 @@ impl<'de> ::serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        Visitor::with_new_old(visitor, |visitor| {
-            self.old_deserializer.deserialize_option(visitor)
+        Visitor::with_new(visitor, |visitor| {
+            let visitor = self::exports::serde::serde::serde_deserialize::OwnVisitor::new(visitor);
+
+            self::serde::serde::serde_deserializer::Deserializer::deserialize_option(
+                self.deserializer,
+                self::serde::serde::serde_deserializer::OwnedVisitorHandle {
+                    owned_handle: visitor.into_handle(),
+                },
+            )
         })
     }
 
@@ -967,8 +1104,15 @@ impl<'de> ::serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        Visitor::with_new_old(visitor, |visitor| {
-            self.old_deserializer.deserialize_unit(visitor)
+        Visitor::with_new(visitor, |visitor| {
+            let visitor = self::exports::serde::serde::serde_deserialize::OwnVisitor::new(visitor);
+
+            self::serde::serde::serde_deserializer::Deserializer::deserialize_unit(
+                self.deserializer,
+                self::serde::serde::serde_deserializer::OwnedVisitorHandle {
+                    owned_handle: visitor.into_handle(),
+                },
+            )
         })
     }
 
@@ -977,8 +1121,16 @@ impl<'de> ::serde::Deserializer<'de> for DeserializerableDeserializer {
         name: &'static str,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        Visitor::with_new_old(visitor, |visitor| {
-            self.old_deserializer.deserialize_unit_struct(name, visitor)
+        Visitor::with_new(visitor, |visitor| {
+            let visitor = self::exports::serde::serde::serde_deserialize::OwnVisitor::new(visitor);
+
+            self::serde::serde::serde_deserializer::Deserializer::deserialize_unit_struct(
+                self.deserializer,
+                name,
+                self::serde::serde::serde_deserializer::OwnedVisitorHandle {
+                    owned_handle: visitor.into_handle(),
+                },
+            )
         })
     }
 
@@ -987,9 +1139,16 @@ impl<'de> ::serde::Deserializer<'de> for DeserializerableDeserializer {
         name: &'static str,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        Visitor::with_new_old(visitor, |visitor| {
-            self.old_deserializer
-                .deserialize_newtype_struct(name, visitor)
+        Visitor::with_new(visitor, |visitor| {
+            let visitor = self::exports::serde::serde::serde_deserialize::OwnVisitor::new(visitor);
+
+            self::serde::serde::serde_deserializer::Deserializer::deserialize_newtype_struct(
+                self.deserializer,
+                name,
+                self::serde::serde::serde_deserializer::OwnedVisitorHandle {
+                    owned_handle: visitor.into_handle(),
+                },
+            )
         })
     }
 
@@ -1061,8 +1220,15 @@ impl<'de> ::serde::Deserializer<'de> for DeserializerableDeserializer {
         self,
         visitor: V,
     ) -> Result<V::Value, Self::Error> {
-        Visitor::with_new_old(visitor, |visitor| {
-            self.old_deserializer.deserialize_identifier(visitor)
+        Visitor::with_new(visitor, |visitor| {
+            let visitor = self::exports::serde::serde::serde_deserialize::OwnVisitor::new(visitor);
+
+            self::serde::serde::serde_deserializer::Deserializer::deserialize_identifier(
+                self.deserializer,
+                self::serde::serde::serde_deserializer::OwnedVisitorHandle {
+                    owned_handle: visitor.into_handle(),
+                },
+            )
         })
     }
 
@@ -1088,98 +1254,6 @@ impl<'de> ::serde::Deserializer<'de> for DeserializerableDeserializer {
 }
 
 impl Deserializer {
-    fn deserialize_bool(self, _visitor: Visitor) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
-    fn deserialize_i8(self, _visitor: Visitor) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
-    fn deserialize_i16(self, _visitor: Visitor) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
-    fn deserialize_i32(self, _visitor: Visitor) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
-    fn deserialize_i64(self, _visitor: Visitor) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
-    fn deserialize_i128(self, _visitor: Visitor) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
-    fn deserialize_u8(self, _visitor: Visitor) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
-    fn deserialize_u16(self, _visitor: Visitor) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
-    fn deserialize_u32(self, _visitor: Visitor) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
-    fn deserialize_u64(self, _visitor: Visitor) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
-    fn deserialize_u128(self, _visitor: Visitor) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
-    fn deserialize_f32(self, _visitor: Visitor) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
-    fn deserialize_f64(self, _visitor: Visitor) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
-    fn deserialize_char(self, _visitor: Visitor) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
-    fn deserialize_str(self, _visitor: Visitor) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
-    fn deserialize_string(self, _visitor: Visitor) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
-    fn deserialize_bytes(self, _visitor: Visitor) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
-    fn deserialize_byte_buf(self, _visitor: Visitor) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
-    fn deserialize_option(self, _visitor: Visitor) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
-    fn deserialize_unit(self, _visitor: Visitor) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
-    fn deserialize_unit_struct(self, _name: &str, _visitor: Visitor) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
-    fn deserialize_newtype_struct(
-        self,
-        _name: &str,
-        _visitor: Visitor,
-    ) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
     fn deserialize_seq(self, _visitor: Visitor) -> Result<DeValue, DeError> {
         todo!("wit-bindgen")
     }
@@ -1216,10 +1290,6 @@ impl Deserializer {
         _variants: &[&str],
         _visitor: Visitor,
     ) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
-    fn deserialize_identifier(self, _visitor: Visitor) -> Result<DeValue, DeError> {
         todo!("wit-bindgen")
     }
 }
