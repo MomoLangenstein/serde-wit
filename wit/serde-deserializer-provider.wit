@@ -1,15 +1,6 @@
 package serde:serde
 
 world serde-deserializer-provider {
-    import deserialize: interface {
-        use serde-de.{s128, unexpected, usize, u128}
-
-        test: func(x: s128, y: usize) -> result<tuple<u128, usize>, unexpected>
-    }
-
-    export deserializer: interface {
-        use serde-de.{s128, unexpected, usize, u128}
-
-        test: func(x: s128, y: usize) -> result<tuple<u128, usize>, unexpected>
-    }
+    import serde-deserialize
+    export serde-deserializer
 }
