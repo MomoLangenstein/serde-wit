@@ -42,10 +42,10 @@ interface serde-deserialize {
         visit-string: static func(self: visitor, v: string) -> result<de-value, owned-de-error-handle>
         visit-byte-buf: static func(self: visitor, v: list<u8>) -> result<de-value, owned-de-error-handle>
         visit-none: static func(self: visitor) -> result<de-value, owned-de-error-handle>
-        /*visit-some: static func(self: visitor, deserializer: deserializer) -> result<de-value, owned-de-error-handle>
+        visit-some: static func(self: visitor, deserializer: owned-deserializer-handle) -> result<de-value, owned-de-error-handle>
         visit-unit: static func(self: visitor) -> result<de-value, owned-de-error-handle>
-        visit-newtype-struct: static func(self: visitor, deserializer: deserializer) -> result<de-value, owned-de-error-handle>
-        visit-seq: static func(self: visitor, seq: seq-access) -> result<de-value, owned-de-error-handle>
+        visit-newtype-struct: static func(self: visitor, deserializer: owned-deserializer-handle) -> result<de-value, owned-de-error-handle>
+        /*visit-seq: static func(self: visitor, seq: seq-access) -> result<de-value, owned-de-error-handle>
         visit-map: static func(self: visitor, map: map-access) -> result<de-value, owned-de-error-handle>
         visit-enum: static func(self: visitor, data: enum-access) -> result<de-value, owned-de-error-handle>*/
     }
@@ -54,64 +54,72 @@ interface serde-deserialize {
 interface serde-deserializer {
     use serde-types.{s128, usize, u128}
 
+    record owned-de-value-handle {
+        owned-handle: s32
+    }
+
+    record owned-visitor-handle {
+        owned-handle: s32
+    }
+
     resource deserializer {
         // TODO: remove
         id: static func(self: deserializer) -> deserializer
 
-        /*deserialize-any: static func(self: deserializer, visitor: visitor) -> result<de-value, de-error>
-        deserialize-bool: static func(self: deserializer, visitor: visitor) -> result<de-value, de-error>
-        deserialize-u8: static func(self: deserializer, visitor: visitor) -> result<de-value, de-error>
-        deserialize-u16: static func(self: deserializer, visitor: visitor) -> result<de-value, de-error>
-        deserialize-u32: static func(self: deserializer, visitor: visitor) -> result<de-value, de-error>
-        deserialize-u64: static func(self: deserializer, visitor: visitor) -> result<de-value, de-error>
-        deserialize-i8: static func(self: deserializer, visitor: visitor) -> result<de-value, de-error>
-        deserialize-i16: static func(self: deserializer, visitor: visitor) -> result<de-value, de-error>
-        deserialize-i32: static func(self: deserializer, visitor: visitor) -> result<de-value, de-error>
-        deserialize-i64: static func(self: deserializer, visitor: visitor) -> result<de-value, de-error>
-        deserialize-i128: static func(self: deserializer, visitor: visitor) -> result<de-value, de-error>
-        deserialize-u128: static func(self: deserializer, visitor: visitor) -> result<de-value, de-error>
-        deserialize-f32: static func(self: deserializer, visitor: visitor) -> result<de-value, de-error>
-        deserialize-f64: static func(self: deserializer, visitor: visitor) -> result<de-value, de-error>
-        deserialize-char: static func(self: deserializer, visitor: visitor) -> result<de-value, de-error>
-        deserialize-str: static func(self: deserializer, visitor: visitor) -> result<de-value, de-error>
-        deserialize-string: static func(self: deserializer, visitor: visitor) -> result<de-value, de-error>
-        deserialize-bytes: static func(self: deserializer, visitor: visitor) -> result<de-value, de-error>
-        deserialize-byte-buf: static func(self: deserializer, visitor: visitor) -> result<de-value, de-error>
-        deserialize-option: static func(self: deserializer, visitor: visitor) -> result<de-value, de-error>
-        deserialize-unit: static func(self: deserializer, visitor: visitor) -> result<de-value, de-error>
-        deserialize-unit-struct: static func(self: deserializer, name: string, visitor: visitor) -> result<de-value, de-error>
-        deserialize-newtype-struct: static func(self: deserializer, name: string, visitor: visitor) -> result<de-value, de-error>
-        deserialize-seq: static func(self: deserializer, visitor: visitor) -> result<de-value, de-error>
-        deserialize-tuple: static func(self: deserializer, len: usize, visitor: visitor) -> result<de-value, de-error>
-        deserialize-tuple-struct: static func(self: deserializer, name: string, len: usize, visitor: visitor) -> result<de-value, de-error>
-        deserialize-map: static func(self: deserializer, visitor: visitor) -> result<de-value, de-error>
-        deserialize-struct: static func(self: deserializer, name: string, fields: list<string>, visitor: visitor) -> result<de-value, de-error>
-        deserialize-identifier: static func(self: deserializer, visitor: visitor) -> result<de-value, de-error>
-        deserialize-enum: static func(self: deserializer, name: string, variants: list<string>, visitor: visitor) -> result<de-value, de-error>
-        deserialize-ignored-any: static func(self: deserializer, visitor: visitor) -> result<de-value, de-error>
-        is-human-readable: static func(self: borrow<deserializer>) -> bool*/
+        deserialize-any: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        /*deserialize-bool: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-u8: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-u16: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-u32: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-u64: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-i8: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-i16: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-i32: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-i64: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-i128: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-u128: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-f32: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-f64: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-char: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-str: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-string: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-bytes: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-byte-buf: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-option: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-unit: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-unit-struct: static func(self: deserializer, name: string, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-newtype-struct: static func(self: deserializer, name: string, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-seq: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-tuple: static func(self: deserializer, len: usize, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-tuple-struct: static func(self: deserializer, name: string, len: usize, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-map: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-struct: static func(self: deserializer, name: string, fields: list<string>, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-identifier: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-enum: static func(self: deserializer, name: string, variants: list<string>, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>*/
+        deserialize-ignored-any: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        is-human-readable: static func(self: borrow<deserializer>) -> bool
     }
 
     /*resource seq-access {
-        next-element-seed: static func(self: seq-access, seed: deserialize-seed) -> tuple<seq-access, result<option<de-value>, de-error>>
+        next-element-seed: static func(self: seq-access, seed: deserialize-seed) -> tuple<seq-access, result<option<owned-de-value-handle>, de-error>>
         size-hint: static func(self: borrow<seq-access>) -> option<usize>
     }
 
     resource map-access {
-        next-key-seed: static func(self: map-access, seed: deserialize-seed) -> tuple<map-access, result<option<de-value>, de-error>>
-        next-value-seed: static func(self: map-access, seed: deserialize-seed) -> tuple<map-access, result<de-value, de-error>>
+        next-key-seed: static func(self: map-access, seed: deserialize-seed) -> tuple<map-access, result<option<owned-de-value-handle>, de-error>>
+        next-value-seed: static func(self: map-access, seed: deserialize-seed) -> tuple<map-access, result<owned-de-value-handle, de-error>>
         size-hint: static func(self: borrow<map-access>) -> option<usize>
     }
 
     resource enum-access {
-        variant-seed: static func(self: enum-access, seed: deserialize-seed) -> result<tuple<de-value, variant-access>, de-error>
+        variant-seed: static func(self: enum-access, seed: deserialize-seed) -> result<tuple<owned-de-value-handle, variant-access>, de-error>
     }
 
     resource variant-access {
         unit-variant: static func(self: variant-access) -> result<_, de-error>
-        newtype-variant-seed: static func(self: variant-access, seed: deserialize-seed) -> result<de-value, de-error>
-        tuple-variant: static func(self: variant-access, len: usize, visitor: visitor) -> result<de-value, de-error>
-        struct-variant: static func(self: variant-access, fields: list<string>, visitor: visitor) -> result<de-value, de-error>
+        newtype-variant-seed: static func(self: variant-access, seed: deserialize-seed) -> result<owned-de-value-handle, de-error>
+        tuple-variant: static func(self: variant-access, len: usize, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        struct-variant: static func(self: variant-access, fields: list<string>, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
     }*/
 
     resource de-error {

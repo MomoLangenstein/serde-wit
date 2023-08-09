@@ -15,8 +15,9 @@ use crate::{
 };
 
 pub struct GuestsideDeserializerProvider {
-    deserializer: Box<dyn ErasedDeserializer>,
-    scope: ScopedBorrowMut<()>,
+    deserializer: RefCell<Option<Box<dyn ErasedDeserializer>>>,
+    is_human_readable: bool,
+    _scope: ScopedBorrowMut<()>,
 }
 
 impl GuestsideDeserializerProvider {
@@ -35,8 +36,9 @@ impl GuestsideDeserializerProvider {
                 unsafe { core::mem::transmute(deserializer) };
 
             inner(Self {
-                deserializer,
-                scope: scope.borrow_mut(),
+                is_human_readable: deserializer.erased_is_human_readable(),
+                deserializer: RefCell::new(Some(deserializer)),
+                _scope: scope.borrow_mut(),
             })
         };
 
@@ -46,12 +48,29 @@ impl GuestsideDeserializerProvider {
         result
     }
 
-    /*fn deserialize_any(self, visitor: Visitor) -> Result<DeValue, DeError> {
-        self.deserializer
-            .erased_deserialize_any(VisitableVisitor { visitor })
+    fn try_extract_deserializer(
+        &self,
+        method: &'static str,
+    ) -> Result<
+        Box<dyn ErasedDeserializer>,
+        self::exports::serde::serde::serde_deserializer::OwnDeError,
+    > {
+        let Ok(mut deserializer) = self.deserializer.try_borrow_mut() else {
+            let error = DeError {
+                inner: DeErrorVariants::Custom(format!("bug: could not mutably borrow the owned Visitor in Visitor::{method}")),
+            };
+            return Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error));
+        };
+        let Some(deserializer) = deserializer.take() else {
+            let error = DeError {
+                inner: DeErrorVariants::Custom(format!("bug: Visitor::{method} after free")),
+            };
+            return Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error));
+        };
+        Ok(deserializer)
     }
 
-    fn deserialize_bool(self, visitor: Visitor) -> Result<DeValue, DeError> {
+    /*fn deserialize_bool(self, visitor: Visitor) -> Result<DeValue, DeError> {
         self.deserializer
             .erased_deserialize_bool(VisitableVisitor { visitor })
     }
@@ -237,11 +256,35 @@ impl GuestsideDeserializerProvider {
     fn deserialize_ignored_any(self, visitor: Visitor) -> Result<DeValue, DeError> {
         self.deserializer
             .erased_deserialize_ignored_any(VisitableVisitor { visitor })
-    }
-
-    fn is_human_readable(&self) -> bool {
-        self.deserializer.erased_is_human_readable()
     }*/
+}
+
+trait WrapDeResult {
+    type Ok;
+
+    fn wrap(self) -> Result<Self::Ok, self::exports::serde::serde::serde_deserializer::OwnDeError>;
+}
+
+impl WrapDeResult for Result<DeValue, DeError> {
+    type Ok = self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle;
+
+    fn wrap(
+        self,
+    ) -> Result<
+        self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
+        self::exports::serde::serde::serde_deserializer::OwnDeError,
+    > {
+        match self {
+            Ok(ok) => Ok(
+                self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle {
+                    owned_handle: ok.value.into_handle(),
+                },
+            ),
+            Err(error) => {
+                Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error))
+            }
+        }
+    }
 }
 
 impl self::exports::serde::serde::serde_deserializer::Deserializer
@@ -251,6 +294,50 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
     ) -> self::exports::serde::serde::serde_deserializer::OwnDeserializer {
         this
+    }
+
+    fn deserialize_any(
+        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
+    ) -> Result<
+        self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
+        self::exports::serde::serde::serde_deserializer::OwnDeError,
+    > {
+        // TODO: Safety
+        let visitor = unsafe {
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+        };
+
+        this.try_extract_deserializer("deserialize_any")?
+            .erased_deserialize_any(VisitableVisitor {
+                visitor,
+                old_visitor: Visitor { _private: () },
+            })
+            .wrap()
+    }
+
+    fn deserialize_ignored_any(
+        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
+    ) -> Result<
+        self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
+        self::exports::serde::serde::serde_deserializer::OwnDeError,
+    > {
+        // TODO: Safety
+        let visitor = unsafe {
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+        };
+
+        this.try_extract_deserializer("deserialize_ignored_any")?
+            .erased_deserialize_ignored_any(VisitableVisitor {
+                visitor,
+                old_visitor: Visitor { _private: () },
+            })
+            .wrap()
+    }
+
+    fn is_human_readable(this: &Self) -> bool {
+        this.is_human_readable
     }
 }
 
@@ -629,21 +716,6 @@ struct Visitor {
 }
 
 impl Visitor {
-    fn visit_some(self, _deserializer: GuestsideDeserializerProvider) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
-    fn visit_unit(self) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
-    fn visit_newtype_struct(
-        self,
-        _deserializer: GuestsideDeserializerProvider,
-    ) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
     fn visit_seq(self, _seq: GuestsideSeqAccessProvider) -> Result<DeValue, DeError> {
         todo!("wit-bindgen")
     }
@@ -1013,7 +1085,7 @@ fn unwrap_de_error<E: ::serde::de::Error>(
     >,
 ) -> Result<DeValue, E> {
     match result {
-        Ok(value) => Ok(DeValue { _value: value }),
+        Ok(value) => Ok(DeValue { value }),
         Err(err) => {
             // TODO: Safety
             let err = unsafe {
@@ -1265,23 +1337,49 @@ impl<'de> ::serde::de::Visitor<'de> for VisitableVisitor {
         self,
         deserializer: D,
     ) -> Result<Self::Value, D::Error> {
-        unwrap_de_error_old(GuestsideDeserializerProvider::with_new(
+        unwrap_de_error(GuestsideDeserializerProvider::with_new(
             deserializer,
-            |deserializer| self.old_visitor.visit_some(deserializer),
+            |deserializer| {
+                let deserializer =
+                    self::exports::serde::serde::serde_deserializer::OwnDeserializer::new(
+                        deserializer,
+                    );
+
+                self::serde::serde::serde_deserialize::Visitor::visit_some(
+                    self.visitor,
+                    self::serde::serde::serde_deserialize::OwnedDeserializerHandle {
+                        owned_handle: deserializer.into_handle(),
+                    },
+                )
+            },
         ))
     }
 
     fn visit_unit<E: ::serde::de::Error>(self) -> Result<Self::Value, E> {
-        unwrap_de_error_old(self.old_visitor.visit_unit())
+        unwrap_de_error(self::serde::serde::serde_deserialize::Visitor::visit_unit(
+            self.visitor,
+        ))
     }
 
     fn visit_newtype_struct<D: ::serde::Deserializer<'de>>(
         self,
         deserializer: D,
     ) -> Result<Self::Value, D::Error> {
-        unwrap_de_error_old(GuestsideDeserializerProvider::with_new(
+        unwrap_de_error(GuestsideDeserializerProvider::with_new(
             deserializer,
-            |deserializer| self.old_visitor.visit_newtype_struct(deserializer),
+            |deserializer| {
+                let deserializer =
+                    self::exports::serde::serde::serde_deserializer::OwnDeserializer::new(
+                        deserializer,
+                    );
+
+                self::serde::serde::serde_deserialize::Visitor::visit_newtype_struct(
+                    self.visitor,
+                    self::serde::serde::serde_deserialize::OwnedDeserializerHandle {
+                        owned_handle: deserializer.into_handle(),
+                    },
+                )
+            },
         ))
     }
 
@@ -1305,7 +1403,7 @@ impl<'de> ::serde::de::Visitor<'de> for VisitableVisitor {
 }
 
 struct DeValue {
-    _value: self::serde::serde::serde_deserialize::DeValue,
+    value: self::serde::serde::serde_deserialize::DeValue,
 }
 
 pub struct DeError {
