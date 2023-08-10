@@ -495,13 +495,7 @@ impl Visitor {
         Ok(visitor)
     }
 
-    /*fn visit_map(self, map: MapAccess) -> Result<DeValue, DeError> {
-        self.visitor.erased_visit_map(DeserializerableMapAccess {
-            map_access: Some(map),
-        })
-    }
-
-    fn visit_enum(self, data: EnumAccess) -> Result<DeValue, DeError> {
+    /*fn visit_enum(self, data: EnumAccess) -> Result<DeValue, DeError> {
         self.visitor
             .erased_visit_enum(DeserializerableEnumAccess { enum_access: data })
     }*/
@@ -797,6 +791,25 @@ impl self::exports::serde::serde::serde_deserialize::Visitor for Visitor {
         this.try_extract_visitor("visit_seq")?
             .erased_visit_seq(DeserializerableSeqAccess {
                 seq_access: Some(seq),
+            })
+            .wrap()
+    }
+
+    fn visit_map(
+        this: self::exports::serde::serde::serde_deserialize::OwnVisitor,
+        map: self::exports::serde::serde::serde_deserialize::OwnedMapAccessHandle,
+    ) -> Result<
+        self::exports::serde::serde::serde_deserialize::OwnDeValue,
+        self::exports::serde::serde::serde_deserialize::OwnedDeErrorHandle,
+    > {
+        // TODO: Safety
+        let map = unsafe {
+            self::serde::serde::serde_deserializer::MapAccess::from_handle(map.owned_handle, true)
+        };
+
+        this.try_extract_visitor("visit_map")?
+            .erased_visit_map(DeserializerableMapAccess {
+                map_access: Some(map),
             })
             .wrap()
     }
@@ -1400,32 +1413,8 @@ impl<'de> ::serde::de::SeqAccess<'de> for DeserializerableSeqAccess {
     }
 }
 
-struct MapAccess {
-    _private: (),
-}
-
-impl MapAccess {
-    fn next_key_seed(
-        self,
-        _seed: GuestsideDeserializerClient,
-    ) -> (Self, Result<Option<DeValue>, DeError>) {
-        todo!("wit-bindgen")
-    }
-
-    fn next_value_seed(
-        self,
-        _seed: GuestsideDeserializerClient,
-    ) -> (Self, Result<DeValue, DeError>) {
-        todo!("wit-bindgen")
-    }
-
-    fn size_hint(&self) -> Option<usize> {
-        todo!("wit-bindgen")
-    }
-}
-
 struct DeserializerableMapAccess {
-    map_access: Option<MapAccess>,
+    map_access: Option<self::serde::serde::serde_deserializer::MapAccess>,
 }
 
 impl<'de> ::serde::de::MapAccess<'de> for DeserializerableMapAccess {
@@ -1441,24 +1430,19 @@ impl<'de> ::serde::de::MapAccess<'de> for DeserializerableMapAccess {
 
         let (map_access, result) = unsafe {
             GuestsideDeserializerClient::with_new_seed_unchecked(seed, |seed| {
-                map_access.next_key_seed(seed)
+                let seed =
+                    self::exports::serde::serde::serde_deserialize::OwnDeserializeSeed::new(seed);
+                self::serde::serde::serde_deserializer::MapAccess::next_key_seed(
+                    map_access,
+                    self::serde::serde::serde_deserializer::OwnedDeserializeSeedHandle {
+                        owned_handle: seed.into_handle(),
+                    },
+                )
             })
         };
         self.map_access = Some(map_access);
 
-        match result {
-            Ok(Some(value)) => {
-                if let Some(value) = value.take() {
-                    return Ok(Some(value));
-                }
-            }
-            Ok(None) => return Ok(None),
-            Err(err) => return Err(err),
-        };
-
-        Err(::serde::de::Error::custom(
-            "bug: type mismatch across the wit boundary",
-        ))
+        unwrap_deserializer_optional_result(result, "MapAccess::<T>::Value")
     }
 
     fn next_value_seed<V: ::serde::de::DeserializeSeed<'de>>(
@@ -1471,23 +1455,19 @@ impl<'de> ::serde::de::MapAccess<'de> for DeserializerableMapAccess {
 
         let (map_access, result) = unsafe {
             GuestsideDeserializerClient::with_new_seed_unchecked(seed, |seed| {
-                map_access.next_value_seed(seed)
+                let seed =
+                    self::exports::serde::serde::serde_deserialize::OwnDeserializeSeed::new(seed);
+                self::serde::serde::serde_deserializer::MapAccess::next_value_seed(
+                    map_access,
+                    self::serde::serde::serde_deserializer::OwnedDeserializeSeedHandle {
+                        owned_handle: seed.into_handle(),
+                    },
+                )
             })
         };
         self.map_access = Some(map_access);
 
-        match result {
-            Ok(value) => {
-                if let Some(value) = value.take() {
-                    return Ok(value);
-                }
-            }
-            Err(err) => return Err(err),
-        };
-
-        Err(::serde::de::Error::custom(
-            "bug: type mismatch across the wit boundary",
-        ))
+        unwrap_deserializer_result(result, "MapAccess::<T>::Value")
     }
 
     fn next_entry_seed<
@@ -1504,11 +1484,18 @@ impl<'de> ::serde::de::MapAccess<'de> for DeserializerableMapAccess {
 
         let (map_access, result) = unsafe {
             GuestsideDeserializerClient::with_new_seed_unchecked(kseed, |seed| {
-                map_access.next_key_seed(seed)
+                let seed =
+                    self::exports::serde::serde::serde_deserialize::OwnDeserializeSeed::new(seed);
+                self::serde::serde::serde_deserializer::MapAccess::next_key_seed(
+                    map_access,
+                    self::serde::serde::serde_deserializer::OwnedDeserializeSeedHandle {
+                        owned_handle: seed.into_handle(),
+                    },
+                )
             })
         };
 
-        let key = match result {
+        let key = match unwrap_deserializer_optional_result(result, "MapAccess::<T>::Value") {
             Ok(Some(key)) => key,
             Ok(None) => {
                 self.map_access = Some(map_access);
@@ -1522,29 +1509,28 @@ impl<'de> ::serde::de::MapAccess<'de> for DeserializerableMapAccess {
 
         let (map_access, result) = unsafe {
             GuestsideDeserializerClient::with_new_seed_unchecked(vseed, |seed| {
-                map_access.next_value_seed(seed)
+                let seed =
+                    self::exports::serde::serde::serde_deserialize::OwnDeserializeSeed::new(seed);
+                self::serde::serde::serde_deserializer::MapAccess::next_value_seed(
+                    map_access,
+                    self::serde::serde::serde_deserializer::OwnedDeserializeSeedHandle {
+                        owned_handle: seed.into_handle(),
+                    },
+                )
             })
         };
         self.map_access = Some(map_access);
 
-        match result {
-            Ok(value) => {
-                if let (Some(key), Some(value)) = (key.take(), value.take()) {
-                    return Ok(Some((key, value)));
-                }
-            }
-            Err(err) => return Err(err),
-        };
+        let value = unwrap_deserializer_result(result, "MapAccess::<T>::Value")?;
 
-        Err(::serde::de::Error::custom(
-            "bug: type mismatch across the wit boundary",
-        ))
+        Ok(Some((key, value)))
     }
 
     fn size_hint(&self) -> Option<usize> {
         self.map_access
             .as_ref()
-            .and_then(|map_access| map_access.size_hint())
+            .and_then(self::serde::serde::serde_deserializer::MapAccess::size_hint)
+            .map(|size_hint| size_hint.val as usize)
     }
 }
 

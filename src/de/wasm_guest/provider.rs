@@ -8,6 +8,7 @@ wit_bindgen::generate!({ world: "serde-deserializer-provider", exports: {
     "serde:serde/serde-deserializer/deserializer": GuestsideDeserializerProvider,
     "serde:serde/serde-deserializer/de-error": DeError,
     "serde:serde/serde-deserializer/seq-access": GuestsideSeqAccessProvider,
+    "serde:serde/serde-deserializer/map-access": GuestsideMapAccessProvider,
 } });
 
 use crate::{
@@ -1160,10 +1161,6 @@ struct Visitor {
 }
 
 impl Visitor {
-    fn visit_map(self, _map: GuestsideMapAccessProvider) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
     fn visit_enum(self, _data: GuestsideEnumAccessProvider) -> Result<DeValue, DeError> {
         todo!("wit-bindgen")
     }
@@ -1304,8 +1301,8 @@ impl<'de, T: ::serde::de::MapAccess<'de>> ErasedMapAccess for T {
     }
 }
 
-struct GuestsideMapAccessProvider {
-    map_access: Box<dyn ErasedMapAccess>,
+pub struct GuestsideMapAccessProvider {
+    map_access: RefCell<Box<dyn ErasedMapAccess>>,
     _scope: ScopedBorrowMut<()>,
 }
 
@@ -1325,7 +1322,7 @@ impl GuestsideMapAccessProvider {
                 unsafe { core::mem::transmute(map_access) };
 
             inner(Self {
-                map_access,
+                map_access: RefCell::new(map_access),
                 _scope: scope.borrow_mut(),
             })
         };
@@ -1335,28 +1332,90 @@ impl GuestsideMapAccessProvider {
 
         result
     }
+}
 
-    /*fn next_key_seed(mut self, seed: DeserializeSeed) -> (Self, Result<Option<DeValue>, DeError>) {
-        let result = self
-            .map_access
+impl self::exports::serde::serde::serde_deserializer::MapAccess for GuestsideMapAccessProvider {
+    fn next_key_seed(
+        this: self::exports::serde::serde::serde_deserializer::OwnMapAccess,
+        seed: self::exports::serde::serde::serde_deserializer::OwnedDeserializeSeedHandle,
+    ) -> (
+        self::exports::serde::serde::serde_deserializer::OwnMapAccess,
+        Result<
+            Option<self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle>,
+            self::exports::serde::serde::serde_deserializer::OwnDeError,
+        >,
+    ) {
+        let Ok(mut map_access) = this.map_access.try_borrow_mut() else {
+            let error = DeError {
+                inner: DeErrorVariants::Custom(String::from("bug: could not mutably borrow the owned MapAccess in MapAccess::next_key_seed")),
+            };
+            return (this, Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error)));
+        };
+
+        // TODO: Safety
+        let seed = unsafe {
+            self::serde::serde::serde_deserialize::DeserializeSeed::from_handle(
+                seed.owned_handle,
+                true,
+            )
+        };
+
+        let result = map_access
             .erased_next_key_seed(DeserializableDeserializeSeed {
                 deserialize_seed: seed,
-            });
-        (self, result)
+            })
+            .wrap();
+
+        core::mem::drop(map_access);
+
+        (this, result)
     }
 
-    fn next_value_seed(mut self, seed: DeserializeSeed) -> (Self, Result<DeValue, DeError>) {
-        let result = self
-            .map_access
+    fn next_value_seed(
+        this: self::exports::serde::serde::serde_deserializer::OwnMapAccess,
+        seed: self::exports::serde::serde::serde_deserializer::OwnedDeserializeSeedHandle,
+    ) -> (
+        self::exports::serde::serde::serde_deserializer::OwnMapAccess,
+        Result<
+            self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
+            self::exports::serde::serde::serde_deserializer::OwnDeError,
+        >,
+    ) {
+        let Ok(mut map_access) = this.map_access.try_borrow_mut() else {
+            let error = DeError {
+                inner: DeErrorVariants::Custom(String::from("bug: could not mutably borrow the owned MapAccess in MapAccess::next_value_seed")),
+            };
+            return (this, Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error)));
+        };
+
+        // TODO: Safety
+        let seed = unsafe {
+            self::serde::serde::serde_deserialize::DeserializeSeed::from_handle(
+                seed.owned_handle,
+                true,
+            )
+        };
+
+        let result = map_access
             .erased_next_value_seed(DeserializableDeserializeSeed {
                 deserialize_seed: seed,
-            });
-        (self, result)
+            })
+            .wrap();
+
+        core::mem::drop(map_access);
+
+        (this, result)
     }
 
-    fn size_hint(&self) -> Option<usize> {
-        self.map_access.erased_size_hint()
-    }*/
+    fn size_hint(this: &Self) -> Option<self::serde::serde::serde_types::Usize> {
+        // TODO: can we do better than no error reporting here?
+        let map_access = this.map_access.try_borrow().ok()?;
+        let size_hint = map_access.erased_size_hint()?;
+
+        u32::try_from(size_hint)
+            .ok()
+            .map(|size_hint| self::serde::serde::serde_types::Usize { val: size_hint })
+    }
 }
 
 trait ErasedEnumAccess {
@@ -1869,9 +1928,19 @@ impl<'de> ::serde::de::Visitor<'de> for VisitableVisitor {
     }
 
     fn visit_map<A: ::serde::de::MapAccess<'de>>(self, map: A) -> Result<Self::Value, A::Error> {
-        unwrap_de_error_old(GuestsideMapAccessProvider::with_new(map, |map| {
-            self.old_visitor.visit_map(map)
-        }))
+        unwrap_de_error(GuestsideMapAccessProvider::with_new(
+            map,
+            |map: GuestsideMapAccessProvider| {
+                let map = self::exports::serde::serde::serde_deserializer::OwnMapAccess::new(map);
+
+                self::serde::serde::serde_deserialize::Visitor::visit_map(
+                    self.visitor,
+                    self::serde::serde::serde_deserialize::OwnedMapAccessHandle {
+                        owned_handle: map.into_handle(),
+                    },
+                )
+            },
+        ))
     }
 
     fn visit_enum<A: ::serde::de::EnumAccess<'de>>(self, data: A) -> Result<Self::Value, A::Error> {

@@ -15,6 +15,10 @@ interface serde-deserialize {
         owned-handle: s32
     }
 
+    record owned-map-access-handle {
+        owned-handle: s32
+    }
+
     resource deserialize-seed {
         deserialize: static func(self: deserialize-seed, deserializer: owned-deserializer-handle) -> result<de-value, owned-de-error-handle>
     }
@@ -50,8 +54,8 @@ interface serde-deserialize {
         visit-unit: static func(self: visitor) -> result<de-value, owned-de-error-handle>
         visit-newtype-struct: static func(self: visitor, deserializer: owned-deserializer-handle) -> result<de-value, owned-de-error-handle>
         visit-seq: static func(self: visitor, seq: owned-seq-access-handle) -> result<de-value, owned-de-error-handle>
-        /*visit-map: static func(self: visitor, map: map-access) -> result<de-value, owned-de-error-handle>
-        visit-enum: static func(self: visitor, data: enum-access) -> result<de-value, owned-de-error-handle>*/
+        visit-map: static func(self: visitor, map: owned-map-access-handle) -> result<de-value, owned-de-error-handle>
+        /*visit-enum: static func(self: visitor, data: enum-access) -> result<de-value, owned-de-error-handle>*/
     }
 }
 
@@ -94,12 +98,12 @@ interface serde-deserializer {
         deserialize-unit: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
         deserialize-unit-struct: static func(self: deserializer, name: string, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
         deserialize-newtype-struct: static func(self: deserializer, name: string, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
-        /*deserialize-seq: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
+        deserialize-seq: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
         deserialize-tuple: static func(self: deserializer, len: usize, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
         deserialize-tuple-struct: static func(self: deserializer, name: string, len: usize, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
         deserialize-map: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
         deserialize-struct: static func(self: deserializer, name: string, fields: list<string>, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
-        deserialize-enum: static func(self: deserializer, name: string, variants: list<string>, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>*/
+        deserialize-enum: static func(self: deserializer, name: string, variants: list<string>, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
         deserialize-identifier: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
         deserialize-ignored-any: static func(self: deserializer, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
         is-human-readable: static func(self: borrow<deserializer>) -> bool
@@ -110,19 +114,19 @@ interface serde-deserializer {
         size-hint: static func(self: borrow<seq-access>) -> option<usize>
     }
 
-    /*resource map-access {
-        next-key-seed: static func(self: map-access, seed: deserialize-seed) -> tuple<map-access, result<option<owned-de-value-handle>, de-error>>
-        next-value-seed: static func(self: map-access, seed: deserialize-seed) -> tuple<map-access, result<owned-de-value-handle, de-error>>
+    resource map-access {
+        next-key-seed: static func(self: map-access, seed: owned-deserialize-seed-handle) -> tuple<map-access, result<option<owned-de-value-handle>, de-error>>
+        next-value-seed: static func(self: map-access, seed: owned-deserialize-seed-handle) -> tuple<map-access, result<owned-de-value-handle, de-error>>
         size-hint: static func(self: borrow<map-access>) -> option<usize>
     }
 
-    resource enum-access {
-        variant-seed: static func(self: enum-access, seed: deserialize-seed) -> result<tuple<owned-de-value-handle, variant-access>, de-error>
+    /*resource enum-access {
+        variant-seed: static func(self: enum-access, seed: owned-deserialize-seed-handle) -> result<tuple<owned-de-value-handle, variant-access>, de-error>
     }
 
     resource variant-access {
         unit-variant: static func(self: variant-access) -> result<_, de-error>
-        newtype-variant-seed: static func(self: variant-access, seed: deserialize-seed) -> result<owned-de-value-handle, de-error>
+        newtype-variant-seed: static func(self: variant-access, seed: owned-deserialize-seed-handle) -> result<owned-de-value-handle, de-error>
         tuple-variant: static func(self: variant-access, len: usize, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
         struct-variant: static func(self: variant-access, fields: list<string>, visitor: owned-visitor-handle) -> result<owned-de-value-handle, de-error>
     }*/
