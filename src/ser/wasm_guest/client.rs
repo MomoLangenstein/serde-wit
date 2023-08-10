@@ -1,3 +1,5 @@
+#![allow(clippy::cast_possible_truncation)] // FIXME: make safe wrapper for borrowed handles
+
 use alloc::format;
 use core::fmt;
 

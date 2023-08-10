@@ -190,7 +190,7 @@ impl<S: serde::Serializer, T: wasmtime::AsContextMut> HostsideSerializerProvider
             store: self.store,
             serialize_seq: self
                 .serializer
-                .serialize_seq(len.map(|len| len.val as usize))
+                .serialize_seq(len.map(|len| wit_to_usize(len.val)))
                 .map_err(SerError::wrap)?,
         })
     }
@@ -203,7 +203,7 @@ impl<S: serde::Serializer, T: wasmtime::AsContextMut> HostsideSerializerProvider
             store: self.store,
             serialize_tuple: self
                 .serializer
-                .serialize_tuple(len.val as usize)
+                .serialize_tuple(wit_to_usize(len.val))
                 .map_err(SerError::wrap)?,
         })
     }
@@ -217,7 +217,7 @@ impl<S: serde::Serializer, T: wasmtime::AsContextMut> HostsideSerializerProvider
             store: self.store,
             serialize_tuple_struct: self
                 .serializer
-                .serialize_tuple_struct(intern_string(name), len.val as usize)
+                .serialize_tuple_struct(intern_string(name), wit_to_usize(len.val))
                 .map_err(SerError::wrap)?,
         })
     }
@@ -237,7 +237,7 @@ impl<S: serde::Serializer, T: wasmtime::AsContextMut> HostsideSerializerProvider
                     intern_string(name),
                     variant_index,
                     intern_string(variant),
-                    len.val as usize,
+                    wit_to_usize(len.val),
                 )
                 .map_err(SerError::wrap)?,
         })
@@ -251,7 +251,7 @@ impl<S: serde::Serializer, T: wasmtime::AsContextMut> HostsideSerializerProvider
             store: self.store,
             serialize_map: self
                 .serializer
-                .serialize_map(len.map(|len| len.val as usize))
+                .serialize_map(len.map(|len| wit_to_usize(len.val)))
                 .map_err(SerError::wrap)?,
         })
     }
@@ -265,7 +265,7 @@ impl<S: serde::Serializer, T: wasmtime::AsContextMut> HostsideSerializerProvider
             store: self.store,
             serialize_struct: self
                 .serializer
-                .serialize_struct(intern_string(name), len.val as usize)
+                .serialize_struct(intern_string(name), wit_to_usize(len.val))
                 .map_err(SerError::wrap)?,
         })
     }
@@ -285,7 +285,7 @@ impl<S: serde::Serializer, T: wasmtime::AsContextMut> HostsideSerializerProvider
                     intern_string(name),
                     variant_index,
                     intern_string(variant),
-                    len.val as usize,
+                    wit_to_usize(len.val),
                 )
                 .map_err(SerError::wrap)?,
         })

@@ -23,6 +23,7 @@ wit_bindgen::generate!({ world: "serde-serializer-provider", exports: {
 
 use crate::any::Any;
 use crate::intern::intern_string;
+use crate::wit_to_usize;
 
 pub struct GuestsideSerializerProvider {
     serializer: RefCell<Option<Box<dyn ErasedSerializer>>>,
@@ -401,7 +402,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     > {
         let serialize_seq = this
             .try_extract_serializer("serialize_seq")?
-            .erased_serialize_seq(len.map(|len| len.val as usize))
+            .erased_serialize_seq(len.map(|len| wit_to_usize(len.val)))
             .map_err(self::exports::serde::serde::serde_serializer::OwnSerError::new)?;
 
         Ok(
@@ -423,7 +424,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     > {
         let serialize_tuple = this
             .try_extract_serializer("serialize_tuple")?
-            .erased_serialize_tuple(len.val as usize)
+            .erased_serialize_tuple(wit_to_usize(len.val))
             .map_err(self::exports::serde::serde::serde_serializer::OwnSerError::new)?;
 
         Ok(
@@ -446,7 +447,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     > {
         let serialize_tuple_struct = this
             .try_extract_serializer("serialize_tuple_struct")?
-            .erased_serialize_tuple_struct(intern_string(name), len.val as usize)
+            .erased_serialize_tuple_struct(intern_string(name), wit_to_usize(len.val))
             .map_err(self::exports::serde::serde::serde_serializer::OwnSerError::new)?;
 
         Ok(
@@ -475,7 +476,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
                 intern_string(name),
                 variant_index,
                 intern_string(variant),
-                len.val as usize,
+                wit_to_usize(len.val),
             )
             .map_err(self::exports::serde::serde::serde_serializer::OwnSerError::new)?;
 
@@ -498,7 +499,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     > {
         let serialize_map = this
             .try_extract_serializer("serialize_map")?
-            .erased_serialize_map(len.map(|len| len.val as usize))
+            .erased_serialize_map(len.map(|len| wit_to_usize(len.val)))
             .map_err(self::exports::serde::serde::serde_serializer::OwnSerError::new)?;
 
         Ok(
@@ -521,7 +522,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     > {
         let serialize_struct = this
             .try_extract_serializer("serialize_struct")?
-            .erased_serialize_struct(intern_string(name), len.val as usize)
+            .erased_serialize_struct(intern_string(name), wit_to_usize(len.val))
             .map_err(self::exports::serde::serde::serde_serializer::OwnSerError::new)?;
 
         Ok(
@@ -550,7 +551,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
                 intern_string(name),
                 variant_index,
                 intern_string(variant),
-                len.val as usize,
+                wit_to_usize(len.val),
             )
             .map_err(self::exports::serde::serde::serde_serializer::OwnSerError::new)?;
 

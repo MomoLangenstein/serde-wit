@@ -1,4 +1,4 @@
-//! Based on David Tolnay's https://github.com/dtolnay/erased-serde crate
+//! Based on David Tolnay's <https://github.com/dtolnay/erased-serde> crate
 //! Licensed under either of Apache License, Version 2.0 or MIT license at your option
 
 use alloc::boxed::Box;
@@ -41,17 +41,19 @@ impl Any {
 
         if is_small::<T>() {
             let mut inline = [MaybeUninit::uninit(); 2];
-            unsafe { ptr::write(inline.as_mut_ptr() as *mut T, t) };
+            unsafe { ptr::write(inline.as_mut_ptr().cast::<T>(), t) };
             value = Value { inline };
+            #[allow(clippy::items_after_statements)]
             unsafe fn inline_drop<T>(value: &mut Value) {
-                unsafe { ptr::drop_in_place(value.inline.as_mut_ptr() as *mut T) }
+                unsafe { ptr::drop_in_place(value.inline.as_mut_ptr().cast::<T>()) }
             }
             drop = inline_drop::<T>;
         } else {
-            let ptr = Box::into_raw(Box::new(t)) as *mut ();
+            let ptr = Box::into_raw(Box::new(t)).cast::<()>();
             value = Value { ptr };
+            #[allow(clippy::items_after_statements)]
             unsafe fn ptr_drop<T>(value: &mut Value) {
-                mem::drop(unsafe { Box::from_raw(value.ptr as *mut T) });
+                mem::drop(unsafe { Box::from_raw(value.ptr.cast::<T>()) });
             }
             drop = ptr_drop::<T>;
         };
@@ -70,12 +72,12 @@ impl Any {
         }
 
         if is_small::<T>() {
-            let ptr = unsafe { self.value.inline.as_mut_ptr() as *mut T };
+            let ptr = unsafe { self.value.inline.as_mut_ptr().cast::<T>() };
             let value = unsafe { ptr::read(ptr) };
             mem::forget(self);
             Some(value)
         } else {
-            let ptr = unsafe { self.value.ptr as *mut T };
+            let ptr = unsafe { self.value.ptr.cast::<T>() };
             let box_t = unsafe { Box::from_raw(ptr) };
             mem::forget(self);
             Some(*box_t)

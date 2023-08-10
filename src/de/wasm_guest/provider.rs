@@ -16,6 +16,7 @@ wit_bindgen::generate!({ world: "serde-deserializer-provider", exports: {
 use crate::{
     any::Any,
     intern::{intern_str_list, intern_string},
+    wit_to_usize,
 };
 
 pub struct GuestsideDeserializerProvider {
@@ -561,7 +562,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_tuple")?
-            .erased_deserialize_tuple(len.val as usize, VisitableVisitor { visitor })
+            .erased_deserialize_tuple(wit_to_usize(len.val), VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -582,7 +583,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         this.try_extract_deserializer("deserialize_tuple_struct")?
             .erased_deserialize_tuple_struct(
                 intern_string(name),
-                len.val as usize,
+                wit_to_usize(len.val),
                 VisitableVisitor { visitor },
             )
             .wrap()
@@ -1583,7 +1584,7 @@ impl self::exports::serde::serde::serde_deserializer::VariantAccess
         };
 
         variant_access
-            .erased_tuple_variant(len.val as usize, VisitableVisitor { visitor })
+            .erased_tuple_variant(wit_to_usize(len.val), VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -1687,7 +1688,10 @@ fn unwrap_de_error<E: ::serde::de::Error>(
                     ))
                 }
                 DeErrorVariants::InvalidLength { len, exp } => {
-                    return Err(::serde::de::Error::invalid_length(*len as usize, &&**exp))
+                    return Err(::serde::de::Error::invalid_length(
+                        wit_to_usize(*len),
+                        &&**exp,
+                    ))
                 }
                 DeErrorVariants::UnknownVariant { variant, expected } => {
                     return Err(::serde::de::Error::unknown_variant(variant, expected))

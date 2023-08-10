@@ -10,7 +10,7 @@ wit_bindgen::generate!({ world: "serde-deserializer-client", exports: {
     "serde:serde/serde-deserialize/visitor": Visitor,
 } });
 
-use crate::any::Any;
+use crate::{any::Any, wit_to_usize};
 
 pub struct GuestsideDeserializerClient {
     deserialize_seed: RefCell<Option<Box<dyn ErasedDeserializeSeed>>>,
@@ -399,10 +399,12 @@ impl Visitor {
             let visitor: Box<dyn ErasedVisitor + 'static> =
                 unsafe { core::mem::transmute(visitor) };
 
+            #[allow(clippy::items_after_statements)]
             struct Expecting<'a> {
                 visitor: &'a dyn ErasedVisitor,
             }
 
+            #[allow(clippy::items_after_statements)]
             impl<'a> fmt::Display for Expecting<'a> {
                 fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                     self.visitor.erased_expecting(f)
@@ -1368,7 +1370,7 @@ impl<'de> ::serde::de::SeqAccess<'de> for DeserializerableSeqAccess {
         self.seq_access
             .as_ref()
             .and_then(self::serde::serde::serde_deserializer::SeqAccess::size_hint)
-            .map(|size_hint| size_hint.val as usize)
+            .map(|size_hint| wit_to_usize(size_hint.val))
     }
 }
 
@@ -1434,21 +1436,23 @@ impl<'de> ::serde::de::MapAccess<'de> for DeserializerableMapAccess {
         V: ::serde::de::DeserializeSeed<'de>,
     >(
         &mut self,
-        kseed: K,
-        vseed: V,
+        key_seed: K,
+        value_seed: V,
     ) -> Result<Option<(K::Value, V::Value)>, Self::Error> {
         let Some(map_access) = self.map_access.take() else {
             return Err(::serde::de::Error::custom("bug: MapAccess::next_entry_seed after free"));
         };
 
         let (map_access, result) = unsafe {
-            GuestsideDeserializerClient::with_new_seed_unchecked(kseed, |seed| {
-                let seed =
-                    self::exports::serde::serde::serde_deserialize::OwnDeserializeSeed::new(seed);
+            GuestsideDeserializerClient::with_new_seed_unchecked(key_seed, |key_seed| {
+                let key_seed =
+                    self::exports::serde::serde::serde_deserialize::OwnDeserializeSeed::new(
+                        key_seed,
+                    );
                 self::serde::serde::serde_deserializer::MapAccess::next_key_seed(
                     map_access,
                     self::serde::serde::serde_deserializer::OwnedDeserializeSeedHandle {
-                        owned_handle: seed.into_handle(),
+                        owned_handle: key_seed.into_handle(),
                     },
                 )
             })
@@ -1467,13 +1471,15 @@ impl<'de> ::serde::de::MapAccess<'de> for DeserializerableMapAccess {
         };
 
         let (map_access, result) = unsafe {
-            GuestsideDeserializerClient::with_new_seed_unchecked(vseed, |seed| {
-                let seed =
-                    self::exports::serde::serde::serde_deserialize::OwnDeserializeSeed::new(seed);
+            GuestsideDeserializerClient::with_new_seed_unchecked(value_seed, |value_seed| {
+                let value_seed =
+                    self::exports::serde::serde::serde_deserialize::OwnDeserializeSeed::new(
+                        value_seed,
+                    );
                 self::serde::serde::serde_deserializer::MapAccess::next_value_seed(
                     map_access,
                     self::serde::serde::serde_deserializer::OwnedDeserializeSeedHandle {
-                        owned_handle: seed.into_handle(),
+                        owned_handle: value_seed.into_handle(),
                     },
                 )
             })
@@ -1489,7 +1495,7 @@ impl<'de> ::serde::de::MapAccess<'de> for DeserializerableMapAccess {
         self.map_access
             .as_ref()
             .and_then(self::serde::serde::serde_deserializer::MapAccess::size_hint)
-            .map(|size_hint| size_hint.val as usize)
+            .map(|size_hint| wit_to_usize(size_hint.val))
     }
 }
 
