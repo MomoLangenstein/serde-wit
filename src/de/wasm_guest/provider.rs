@@ -9,6 +9,8 @@ wit_bindgen::generate!({ world: "serde-deserializer-provider", exports: {
     "serde:serde/serde-deserializer/de-error": DeError,
     "serde:serde/serde-deserializer/seq-access": GuestsideSeqAccessProvider,
     "serde:serde/serde-deserializer/map-access": GuestsideMapAccessProvider,
+    "serde:serde/serde-deserializer/enum-access": GuestsideEnumAccessProvider,
+    "serde:serde/serde-deserializer/variant-access": GuestsideVariantAccessProvider,
 } });
 
 use crate::{
@@ -124,6 +126,14 @@ impl WrapDeResult for Result<Option<DeValue>, DeError> {
     }
 }
 
+impl WrapDeResult for Result<(), DeError> {
+    type Ok = ();
+
+    fn wrap(self) -> Result<(), self::exports::serde::serde::serde_deserializer::OwnDeError> {
+        self.map_err(self::exports::serde::serde::serde_deserializer::OwnDeError::new)
+    }
+}
+
 impl self::exports::serde::serde::serde_deserializer::Deserializer
     for GuestsideDeserializerProvider
 {
@@ -140,10 +150,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_any")?
-            .erased_deserialize_any(VisitableVisitor {
-                visitor,
-                old_visitor: Visitor { _private: () },
-            })
+            .erased_deserialize_any(VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -160,10 +167,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_bool")?
-            .erased_deserialize_bool(VisitableVisitor {
-                visitor,
-                old_visitor: Visitor { _private: () },
-            })
+            .erased_deserialize_bool(VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -180,10 +184,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_i8")?
-            .erased_deserialize_i8(VisitableVisitor {
-                visitor,
-                old_visitor: Visitor { _private: () },
-            })
+            .erased_deserialize_i8(VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -200,10 +201,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_i16")?
-            .erased_deserialize_i16(VisitableVisitor {
-                visitor,
-                old_visitor: Visitor { _private: () },
-            })
+            .erased_deserialize_i16(VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -220,10 +218,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_i32")?
-            .erased_deserialize_i32(VisitableVisitor {
-                visitor,
-                old_visitor: Visitor { _private: () },
-            })
+            .erased_deserialize_i32(VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -240,10 +235,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_i64")?
-            .erased_deserialize_i64(VisitableVisitor {
-                visitor,
-                old_visitor: Visitor { _private: () },
-            })
+            .erased_deserialize_i64(VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -260,10 +252,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_i128")?
-            .erased_deserialize_i128(VisitableVisitor {
-                visitor,
-                old_visitor: Visitor { _private: () },
-            })
+            .erased_deserialize_i128(VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -280,10 +269,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_u8")?
-            .erased_deserialize_u8(VisitableVisitor {
-                visitor,
-                old_visitor: Visitor { _private: () },
-            })
+            .erased_deserialize_u8(VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -300,10 +286,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_u16")?
-            .erased_deserialize_u16(VisitableVisitor {
-                visitor,
-                old_visitor: Visitor { _private: () },
-            })
+            .erased_deserialize_u16(VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -320,10 +303,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_u32")?
-            .erased_deserialize_u32(VisitableVisitor {
-                visitor,
-                old_visitor: Visitor { _private: () },
-            })
+            .erased_deserialize_u32(VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -340,10 +320,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_u64")?
-            .erased_deserialize_u64(VisitableVisitor {
-                visitor,
-                old_visitor: Visitor { _private: () },
-            })
+            .erased_deserialize_u64(VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -360,10 +337,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_u128")?
-            .erased_deserialize_u128(VisitableVisitor {
-                visitor,
-                old_visitor: Visitor { _private: () },
-            })
+            .erased_deserialize_u128(VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -380,10 +354,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_f32")?
-            .erased_deserialize_f32(VisitableVisitor {
-                visitor,
-                old_visitor: Visitor { _private: () },
-            })
+            .erased_deserialize_f32(VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -400,10 +371,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_f64")?
-            .erased_deserialize_f64(VisitableVisitor {
-                visitor,
-                old_visitor: Visitor { _private: () },
-            })
+            .erased_deserialize_f64(VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -420,10 +388,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_char")?
-            .erased_deserialize_char(VisitableVisitor {
-                visitor,
-                old_visitor: Visitor { _private: () },
-            })
+            .erased_deserialize_char(VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -440,10 +405,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_str")?
-            .erased_deserialize_str(VisitableVisitor {
-                visitor,
-                old_visitor: Visitor { _private: () },
-            })
+            .erased_deserialize_str(VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -460,10 +422,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_string")?
-            .erased_deserialize_string(VisitableVisitor {
-                visitor,
-                old_visitor: Visitor { _private: () },
-            })
+            .erased_deserialize_string(VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -480,10 +439,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_bytes")?
-            .erased_deserialize_bytes(VisitableVisitor {
-                visitor,
-                old_visitor: Visitor { _private: () },
-            })
+            .erased_deserialize_bytes(VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -500,10 +456,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_byte_buf")?
-            .erased_deserialize_byte_buf(VisitableVisitor {
-                visitor,
-                old_visitor: Visitor { _private: () },
-            })
+            .erased_deserialize_byte_buf(VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -520,10 +473,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_option")?
-            .erased_deserialize_option(VisitableVisitor {
-                visitor,
-                old_visitor: Visitor { _private: () },
-            })
+            .erased_deserialize_option(VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -540,10 +490,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_unit")?
-            .erased_deserialize_unit(VisitableVisitor {
-                visitor,
-                old_visitor: Visitor { _private: () },
-            })
+            .erased_deserialize_unit(VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -561,13 +508,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_unit_struct")?
-            .erased_deserialize_unit_struct(
-                intern_string(name),
-                VisitableVisitor {
-                    visitor,
-                    old_visitor: Visitor { _private: () },
-                },
-            )
+            .erased_deserialize_unit_struct(intern_string(name), VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -585,13 +526,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_newtype_struct")?
-            .erased_deserialize_newtype_struct(
-                intern_string(name),
-                VisitableVisitor {
-                    visitor,
-                    old_visitor: Visitor { _private: () },
-                },
-            )
+            .erased_deserialize_newtype_struct(intern_string(name), VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -608,10 +543,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_seq")?
-            .erased_deserialize_seq(VisitableVisitor {
-                visitor,
-                old_visitor: Visitor { _private: () },
-            })
+            .erased_deserialize_seq(VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -629,13 +561,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_tuple")?
-            .erased_deserialize_tuple(
-                len.val as usize,
-                VisitableVisitor {
-                    visitor,
-                    old_visitor: Visitor { _private: () },
-                },
-            )
+            .erased_deserialize_tuple(len.val as usize, VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -657,10 +583,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
             .erased_deserialize_tuple_struct(
                 intern_string(name),
                 len.val as usize,
-                VisitableVisitor {
-                    visitor,
-                    old_visitor: Visitor { _private: () },
-                },
+                VisitableVisitor { visitor },
             )
             .wrap()
     }
@@ -678,10 +601,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_map")?
-            .erased_deserialize_map(VisitableVisitor {
-                visitor,
-                old_visitor: Visitor { _private: () },
-            })
+            .erased_deserialize_map(VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -705,10 +625,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
             .erased_deserialize_struct(
                 intern_string(name),
                 intern_str_list(fields),
-                VisitableVisitor {
-                    visitor,
-                    old_visitor: Visitor { _private: () },
-                },
+                VisitableVisitor { visitor },
             )
             .wrap()
     }
@@ -733,10 +650,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
             .erased_deserialize_enum(
                 intern_string(name),
                 intern_str_list(variants),
-                VisitableVisitor {
-                    visitor,
-                    old_visitor: Visitor { _private: () },
-                },
+                VisitableVisitor { visitor },
             )
             .wrap()
     }
@@ -754,10 +668,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_identifier")?
-            .erased_deserialize_identifier(VisitableVisitor {
-                visitor,
-                old_visitor: Visitor { _private: () },
-            })
+            .erased_deserialize_identifier(VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -774,10 +685,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         };
 
         this.try_extract_deserializer("deserialize_ignored_any")?
-            .erased_deserialize_ignored_any(VisitableVisitor {
-                visitor,
-                old_visitor: Visitor { _private: () },
-            })
+            .erased_deserialize_ignored_any(VisitableVisitor { visitor })
             .wrap()
     }
 
@@ -1156,16 +1064,6 @@ impl<'de, T: ::serde::de::Deserializer<'de>> ErasedDeserializer for T {
     }
 }
 
-struct Visitor {
-    _private: (),
-}
-
-impl Visitor {
-    fn visit_enum(self, _data: GuestsideEnumAccessProvider) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-}
-
 trait ErasedSeqAccess {
     fn erased_next_element_seed(
         &mut self,
@@ -1232,19 +1130,19 @@ impl self::exports::serde::serde::serde_deserializer::SeqAccess for GuestsideSeq
             self::exports::serde::serde::serde_deserializer::OwnDeError,
         >,
     ) {
-        let Ok(mut seq_access) = this.seq_access.try_borrow_mut() else {
-            let error = DeError {
-                inner: DeErrorVariants::Custom(String::from("bug: could not mutably borrow the owned SeqAccess in SeqAccess::next_element_seed")),
-            };
-            return (this, Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error)));
-        };
-
         // TODO: Safety
         let seed = unsafe {
             self::serde::serde::serde_deserialize::DeserializeSeed::from_handle(
                 seed.owned_handle,
                 true,
             )
+        };
+
+        let Ok(mut seq_access) = this.seq_access.try_borrow_mut() else {
+            let error = DeError {
+                inner: DeErrorVariants::Custom(String::from("bug: could not mutably borrow the owned SeqAccess in SeqAccess::next_element_seed")),
+            };
+            return (this, Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error)));
         };
 
         let result = seq_access
@@ -1345,19 +1243,19 @@ impl self::exports::serde::serde::serde_deserializer::MapAccess for GuestsideMap
             self::exports::serde::serde::serde_deserializer::OwnDeError,
         >,
     ) {
-        let Ok(mut map_access) = this.map_access.try_borrow_mut() else {
-            let error = DeError {
-                inner: DeErrorVariants::Custom(String::from("bug: could not mutably borrow the owned MapAccess in MapAccess::next_key_seed")),
-            };
-            return (this, Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error)));
-        };
-
         // TODO: Safety
         let seed = unsafe {
             self::serde::serde::serde_deserialize::DeserializeSeed::from_handle(
                 seed.owned_handle,
                 true,
             )
+        };
+
+        let Ok(mut map_access) = this.map_access.try_borrow_mut() else {
+            let error = DeError {
+                inner: DeErrorVariants::Custom(String::from("bug: could not mutably borrow the owned MapAccess in MapAccess::next_key_seed")),
+            };
+            return (this, Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error)));
         };
 
         let result = map_access
@@ -1381,19 +1279,19 @@ impl self::exports::serde::serde::serde_deserializer::MapAccess for GuestsideMap
             self::exports::serde::serde::serde_deserializer::OwnDeError,
         >,
     ) {
-        let Ok(mut map_access) = this.map_access.try_borrow_mut() else {
-            let error = DeError {
-                inner: DeErrorVariants::Custom(String::from("bug: could not mutably borrow the owned MapAccess in MapAccess::next_value_seed")),
-            };
-            return (this, Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error)));
-        };
-
         // TODO: Safety
         let seed = unsafe {
             self::serde::serde::serde_deserialize::DeserializeSeed::from_handle(
                 seed.owned_handle,
                 true,
             )
+        };
+
+        let Ok(mut map_access) = this.map_access.try_borrow_mut() else {
+            let error = DeError {
+                inner: DeErrorVariants::Custom(String::from("bug: could not mutably borrow the owned MapAccess in MapAccess::next_value_seed")),
+            };
+            return (this, Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error)));
         };
 
         let result = map_access
@@ -1439,7 +1337,7 @@ impl<'de, T: ::serde::de::EnumAccess<'de>> ErasedEnumAccess for T {
                     unsafe { core::mem::transmute(variant_access) };
 
                 let variant_access = GuestsideVariantAccessProvider {
-                    variant_access,
+                    variant_access: RefCell::new(Some(variant_access)),
                     _scope: scope,
                 };
 
@@ -1450,9 +1348,9 @@ impl<'de, T: ::serde::de::EnumAccess<'de>> ErasedEnumAccess for T {
     }
 }
 
-struct GuestsideEnumAccessProvider {
-    enum_access: Box<dyn ErasedEnumAccess>,
-    _scope: ScopedBorrowMut<()>,
+pub struct GuestsideEnumAccessProvider {
+    enum_access: RefCell<Option<Box<dyn ErasedEnumAccess>>>,
+    scope: RefCell<Option<ScopedBorrowMut<()>>>,
 }
 
 impl GuestsideEnumAccessProvider {
@@ -1471,8 +1369,8 @@ impl GuestsideEnumAccessProvider {
                 unsafe { core::mem::transmute(enum_access) };
 
             inner(Self {
-                enum_access,
-                _scope: scope.borrow_mut(),
+                enum_access: RefCell::new(Some(enum_access)),
+                scope: RefCell::new(Some(scope.borrow_mut())),
             })
         };
 
@@ -1481,18 +1379,72 @@ impl GuestsideEnumAccessProvider {
 
         result
     }
+}
 
-    /*fn variant_seed(
-        self,
-        seed: DeserializeSeed,
-    ) -> Result<(DeValue, GuestsideVariantAccessProvider), DeError> {
-        self.enum_access.erased_variant_seed(
+impl self::exports::serde::serde::serde_deserializer::EnumAccess for GuestsideEnumAccessProvider {
+    fn variant_seed(
+        this: self::exports::serde::serde::serde_deserializer::OwnEnumAccess,
+        seed: self::exports::serde::serde::serde_deserializer::OwnedDeserializeSeedHandle,
+    ) -> Result<
+        (
+            self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
+            self::exports::serde::serde::serde_deserializer::OwnVariantAccess,
+        ),
+        self::exports::serde::serde::serde_deserializer::OwnDeError,
+    > {
+        // TODO: Safety
+        let seed = unsafe {
+            self::serde::serde::serde_deserialize::DeserializeSeed::from_handle(
+                seed.owned_handle,
+                true,
+            )
+        };
+
+        let Ok(mut enum_access) = this.enum_access.try_borrow_mut() else {
+            let error = DeError {
+                inner: DeErrorVariants::Custom(String::from("bug: could not mutably borrow the owned EnumAccess in EnumAccess::variant_seed")),
+            };
+            return Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error));
+        };
+        let Some(enum_access) = enum_access.take() else {
+            let error = DeError {
+                inner: DeErrorVariants::Custom(String::from("bug: EnumAccess::variant_seed after free")),
+            };
+            return Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error));
+        };
+
+        let Ok(mut scope) = this.scope.try_borrow_mut() else {
+            let error = DeError {
+                inner: DeErrorVariants::Custom(String::from("bug: could not mutably borrow the owned EnumAccess's scope in EnumAccess::variant_seed")),
+            };
+            return Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error));
+        };
+        let Some(scope) = scope.take() else {
+            let error = DeError {
+                inner: DeErrorVariants::Custom(String::from("bug: EnumAccess::variant_seed after free")),
+            };
+            return Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error));
+        };
+
+        let result = enum_access.erased_variant_seed(
             DeserializableDeserializeSeed {
                 deserialize_seed: seed,
             },
-            self.scope,
-        )
-    }*/
+            scope,
+        );
+
+        match result {
+            Ok((value, variant)) => Ok((
+                self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle {
+                    owned_handle: value.value.into_handle(),
+                },
+                self::exports::serde::serde::serde_deserializer::OwnVariantAccess::new(variant),
+            )),
+            Err(error) => {
+                Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error))
+            }
+        }
+    }
 }
 
 trait ErasedVariantAccess {
@@ -1542,38 +1494,132 @@ impl<'de, T: ::serde::de::VariantAccess<'de>> ErasedVariantAccess for T {
     }
 }
 
-struct GuestsideVariantAccessProvider {
-    variant_access: Box<dyn ErasedVariantAccess>,
+pub struct GuestsideVariantAccessProvider {
+    variant_access: RefCell<Option<Box<dyn ErasedVariantAccess>>>,
     _scope: ScopedBorrowMut<()>,
 }
 
-/*impl GuestsideVariantAccessProvider {
-    fn unit_variant(self) -> Result<(), DeError> {
-        self.variant_access.erased_unit_variant()
+impl self::exports::serde::serde::serde_deserializer::VariantAccess
+    for GuestsideVariantAccessProvider
+{
+    fn unit_variant(
+        this: self::exports::serde::serde::serde_deserializer::OwnVariantAccess,
+    ) -> Result<(), self::exports::serde::serde::serde_deserializer::OwnDeError> {
+        let Ok(mut variant_access) = this.variant_access.try_borrow_mut() else {
+            let error = DeError {
+                inner: DeErrorVariants::Custom(String::from("bug: could not mutably borrow the owned VariantAccess in VariantAccess::unit_variant")),
+            };
+            return Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error));
+        };
+        let Some(variant_access) = variant_access.take() else {
+            let error = DeError {
+                inner: DeErrorVariants::Custom(String::from("bug: VariantAccess::unit_variant after free")),
+            };
+            return Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error));
+        };
+
+        variant_access.erased_unit_variant().wrap()
     }
 
-    fn newtype_variant_seed(self, seed: DeserializeSeed) -> Result<DeValue, DeError> {
-        self.variant_access
+    fn newtype_variant_seed(
+        this: self::exports::serde::serde::serde_deserializer::OwnVariantAccess,
+        seed: self::exports::serde::serde::serde_deserializer::OwnedDeserializeSeedHandle,
+    ) -> Result<
+        self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
+        self::exports::serde::serde::serde_deserializer::OwnDeError,
+    > {
+        // TODO: Safety
+        let seed = unsafe {
+            self::serde::serde::serde_deserialize::DeserializeSeed::from_handle(
+                seed.owned_handle,
+                true,
+            )
+        };
+
+        let Ok(mut variant_access) = this.variant_access.try_borrow_mut() else {
+            let error = DeError {
+                inner: DeErrorVariants::Custom(String::from("bug: could not mutably borrow the owned VariantAccess in VariantAccess::newtype_variant_seed")),
+            };
+            return Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error));
+        };
+        let Some(variant_access) = variant_access.take() else {
+            let error = DeError {
+                inner: DeErrorVariants::Custom(String::from("bug: VariantAccess::newtype_variant_seed after free")),
+            };
+            return Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error));
+        };
+
+        variant_access
             .erased_newtype_variant_seed(DeserializableDeserializeSeed {
                 deserialize_seed: seed,
             })
+            .wrap()
     }
 
-    fn tuple_variant(self, len: usize, visitor: Visitor) -> Result<DeValue, DeError> {
-        self.variant_access
-            .erased_tuple_variant(len, VisitableVisitor { visitor })
+    fn tuple_variant(
+        this: self::exports::serde::serde::serde_deserializer::OwnVariantAccess,
+        len: self::serde::serde::serde_types::Usize,
+        visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
+    ) -> Result<
+        self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
+        self::exports::serde::serde::serde_deserializer::OwnDeError,
+    > {
+        // TODO: Safety
+        let visitor = unsafe {
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+        };
+
+        let Ok(mut variant_access) = this.variant_access.try_borrow_mut() else {
+            let error = DeError {
+                inner: DeErrorVariants::Custom(String::from("bug: could not mutably borrow the owned VariantAccess in VariantAccess::tuple_variant")),
+            };
+            return Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error));
+        };
+        let Some(variant_access) = variant_access.take() else {
+            let error = DeError {
+                inner: DeErrorVariants::Custom(String::from("bug: VariantAccess::tuple_variant after free")),
+            };
+            return Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error));
+        };
+
+        variant_access
+            .erased_tuple_variant(len.val as usize, VisitableVisitor { visitor })
+            .wrap()
     }
 
-    fn struct_variant(self, fields: &[&str], visitor: Visitor) -> Result<DeValue, DeError> {
-        let fields = fields
-            .iter()
-            .map(|f| intern_string(String::from(*f)))
-            .collect();
+    fn struct_variant(
+        this: self::exports::serde::serde::serde_deserializer::OwnVariantAccess,
+        fields: Vec<String>,
+        visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
+    ) -> Result<
+        self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
+        self::exports::serde::serde::serde_deserializer::OwnDeError,
+    > {
+        // TODO: Safety
+        let visitor = unsafe {
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+        };
 
-        self.variant_access
+        let Ok(mut variant_access) = this.variant_access.try_borrow_mut() else {
+            let error = DeError {
+                inner: DeErrorVariants::Custom(String::from("bug: could not mutably borrow the owned VariantAccess in VariantAccess::struct_variant")),
+            };
+            return Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error));
+        };
+        let Some(variant_access) = variant_access.take() else {
+            let error = DeError {
+                inner: DeErrorVariants::Custom(String::from("bug: VariantAccess::struct_variant after free")),
+            };
+            return Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error));
+        };
+
+        let fields = fields.into_iter().map(intern_string).collect();
+
+        variant_access
             .erased_struct_variant(intern_str_list(fields), VisitableVisitor { visitor })
+            .wrap()
     }
-}*/
+}
 
 struct DeserializableDeserializeSeed {
     deserialize_seed: self::serde::serde::serde_deserialize::DeserializeSeed,
@@ -1606,7 +1652,6 @@ impl<'de> ::serde::de::DeserializeSeed<'de> for DeserializableDeserializeSeed {
 
 struct VisitableVisitor {
     visitor: self::serde::serde::serde_deserialize::Visitor,
-    old_visitor: Visitor,
 }
 
 fn unwrap_de_error<E: ::serde::de::Error>(
@@ -1676,20 +1721,6 @@ fn unwrap_de_error<E: ::serde::de::Error>(
             };
             Err(err)
         }
-    }
-}
-
-fn unwrap_de_error_old<E: ::serde::de::Error>(
-    result: Result<DeValue, DeError>,
-) -> Result<DeValue, E> {
-    match result {
-        Ok(value) => Ok(value),
-        Err(err) => match err.take() {
-            Some(err) => Err(err),
-            None => Err(::serde::de::Error::custom(
-                "bug: type mismatch across the wit boundary",
-            )),
-        },
     }
 }
 
@@ -1944,9 +1975,20 @@ impl<'de> ::serde::de::Visitor<'de> for VisitableVisitor {
     }
 
     fn visit_enum<A: ::serde::de::EnumAccess<'de>>(self, data: A) -> Result<Self::Value, A::Error> {
-        unwrap_de_error_old(GuestsideEnumAccessProvider::with_new(data, |data| {
-            self.old_visitor.visit_enum(data)
-        }))
+        unwrap_de_error(GuestsideEnumAccessProvider::with_new(
+            data,
+            |data: GuestsideEnumAccessProvider| {
+                let data =
+                    self::exports::serde::serde::serde_deserializer::OwnEnumAccess::new(data);
+
+                self::serde::serde::serde_deserialize::Visitor::visit_enum(
+                    self.visitor,
+                    self::serde::serde::serde_deserialize::OwnedEnumAccessHandle {
+                        owned_handle: data.into_handle(),
+                    },
+                )
+            },
+        ))
     }
 }
 
@@ -2066,36 +2108,6 @@ impl DeError {
                 display,
                 debug,
             },
-        }
-    }
-
-    fn take<T: ::serde::de::Error>(self) -> Option<T> {
-        match self.inner {
-            // Safety: TODO
-            DeErrorVariants::Error { err, .. } => unsafe { err.into_inner().unwrap().take() },
-            DeErrorVariants::Custom(msg) => Some(::serde::de::Error::custom(msg)),
-            DeErrorVariants::InvalidType { unexp, exp } => Some(::serde::de::Error::invalid_type(
-                translate_serde_de_unexpected(&unexp),
-                &&*exp,
-            )),
-            DeErrorVariants::InvalidValue { unexp, exp } => Some(
-                ::serde::de::Error::invalid_value(translate_serde_de_unexpected(&unexp), &&*exp),
-            ),
-            DeErrorVariants::InvalidLength { len, exp } => {
-                Some(::serde::de::Error::invalid_length(len as usize, &&*exp))
-            }
-            DeErrorVariants::UnknownVariant { variant, expected } => {
-                Some(::serde::de::Error::unknown_variant(&variant, expected))
-            }
-            DeErrorVariants::UnknownField { field, expected } => {
-                Some(::serde::de::Error::unknown_field(&field, expected))
-            }
-            DeErrorVariants::MissingField { field } => {
-                Some(::serde::de::Error::missing_field(field))
-            }
-            DeErrorVariants::DuplicateField { field } => {
-                Some(::serde::de::Error::duplicate_field(field))
-            }
         }
     }
 }
