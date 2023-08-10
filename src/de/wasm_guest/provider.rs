@@ -70,70 +70,6 @@ impl GuestsideDeserializerProvider {
         };
         Ok(deserializer)
     }
-
-    /*fn deserialize_seq(self, visitor: Visitor) -> Result<DeValue, DeError> {
-        self.deserializer
-            .erased_deserialize_seq(VisitableVisitor { visitor })
-    }
-
-    fn deserialize_tuple(self, len: usize, visitor: Visitor) -> Result<DeValue, DeError> {
-        self.deserializer
-            .erased_deserialize_tuple(len, VisitableVisitor { visitor })
-    }
-
-    fn deserialize_tuple_struct(
-        self,
-        name: &str,
-        len: usize,
-        visitor: Visitor,
-    ) -> Result<DeValue, DeError> {
-        self.deserializer.erased_deserialize_tuple_struct(
-            intern_string(String::from(name)),
-            len,
-            VisitableVisitor { visitor },
-        )
-    }
-
-    fn deserialize_map(self, visitor: Visitor) -> Result<DeValue, DeError> {
-        self.deserializer
-            .erased_deserialize_map(VisitableVisitor { visitor })
-    }
-
-    fn deserialize_struct(
-        self,
-        name: &str,
-        fields: &[&str],
-        visitor: Visitor,
-    ) -> Result<DeValue, DeError> {
-        let fields = fields
-            .iter()
-            .map(|f| intern_string(String::from(*f)))
-            .collect();
-
-        self.deserializer.erased_deserialize_struct(
-            intern_string(String::from(name)),
-            intern_str_list(fields),
-            VisitableVisitor { visitor },
-        )
-    }
-
-    fn deserialize_enum(
-        self,
-        name: &str,
-        variants: &[&str],
-        visitor: Visitor,
-    ) -> Result<DeValue, DeError> {
-        let variants = variants
-            .iter()
-            .map(|v| intern_string(String::from(*v)))
-            .collect();
-
-        self.deserializer.erased_deserialize_enum(
-            intern_string(String::from(name)),
-            intern_str_list(variants),
-            VisitableVisitor { visitor },
-        )
-    }*/
 }
 
 trait WrapDeResult {
@@ -650,6 +586,152 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
         this.try_extract_deserializer("deserialize_newtype_struct")?
             .erased_deserialize_newtype_struct(
                 intern_string(name),
+                VisitableVisitor {
+                    visitor,
+                    old_visitor: Visitor { _private: () },
+                },
+            )
+            .wrap()
+    }
+
+    fn deserialize_seq(
+        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
+    ) -> Result<
+        self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
+        self::exports::serde::serde::serde_deserializer::OwnDeError,
+    > {
+        // TODO: Safety
+        let visitor = unsafe {
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+        };
+
+        this.try_extract_deserializer("deserialize_seq")?
+            .erased_deserialize_seq(VisitableVisitor {
+                visitor,
+                old_visitor: Visitor { _private: () },
+            })
+            .wrap()
+    }
+
+    fn deserialize_tuple(
+        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        len: self::serde::serde::serde_types::Usize,
+        visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
+    ) -> Result<
+        self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
+        self::exports::serde::serde::serde_deserializer::OwnDeError,
+    > {
+        // TODO: Safety
+        let visitor = unsafe {
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+        };
+
+        this.try_extract_deserializer("deserialize_tuple")?
+            .erased_deserialize_tuple(
+                len.val as usize,
+                VisitableVisitor {
+                    visitor,
+                    old_visitor: Visitor { _private: () },
+                },
+            )
+            .wrap()
+    }
+
+    fn deserialize_tuple_struct(
+        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        name: String,
+        len: self::serde::serde::serde_types::Usize,
+        visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
+    ) -> Result<
+        self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
+        self::exports::serde::serde::serde_deserializer::OwnDeError,
+    > {
+        // TODO: Safety
+        let visitor = unsafe {
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+        };
+
+        this.try_extract_deserializer("deserialize_tuple_struct")?
+            .erased_deserialize_tuple_struct(
+                intern_string(name),
+                len.val as usize,
+                VisitableVisitor {
+                    visitor,
+                    old_visitor: Visitor { _private: () },
+                },
+            )
+            .wrap()
+    }
+
+    fn deserialize_map(
+        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
+    ) -> Result<
+        self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
+        self::exports::serde::serde::serde_deserializer::OwnDeError,
+    > {
+        // TODO: Safety
+        let visitor = unsafe {
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+        };
+
+        this.try_extract_deserializer("deserialize_map")?
+            .erased_deserialize_map(VisitableVisitor {
+                visitor,
+                old_visitor: Visitor { _private: () },
+            })
+            .wrap()
+    }
+
+    fn deserialize_struct(
+        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        name: String,
+        fields: Vec<String>,
+        visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
+    ) -> Result<
+        self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
+        self::exports::serde::serde::serde_deserializer::OwnDeError,
+    > {
+        // TODO: Safety
+        let visitor = unsafe {
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+        };
+
+        let fields = fields.into_iter().map(intern_string).collect();
+
+        this.try_extract_deserializer("deserialize_struct")?
+            .erased_deserialize_struct(
+                intern_string(name),
+                intern_str_list(fields),
+                VisitableVisitor {
+                    visitor,
+                    old_visitor: Visitor { _private: () },
+                },
+            )
+            .wrap()
+    }
+
+    fn deserialize_enum(
+        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        name: String,
+        variants: Vec<String>,
+        visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
+    ) -> Result<
+        self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
+        self::exports::serde::serde::serde_deserializer::OwnDeError,
+    > {
+        // TODO: Safety
+        let visitor = unsafe {
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+        };
+
+        let variants = variants.into_iter().map(intern_string).collect();
+
+        this.try_extract_deserializer("deserialize_enum")?
+            .erased_deserialize_enum(
+                intern_string(name),
+                intern_str_list(variants),
                 VisitableVisitor {
                     visitor,
                     old_visitor: Visitor { _private: () },
@@ -1224,7 +1306,7 @@ impl<'de, T: ::serde::de::MapAccess<'de>> ErasedMapAccess for T {
 
 struct GuestsideMapAccessProvider {
     map_access: Box<dyn ErasedMapAccess>,
-    scope: ScopedBorrowMut<()>,
+    _scope: ScopedBorrowMut<()>,
 }
 
 impl GuestsideMapAccessProvider {
@@ -1244,7 +1326,7 @@ impl GuestsideMapAccessProvider {
 
             inner(Self {
                 map_access,
-                scope: scope.borrow_mut(),
+                _scope: scope.borrow_mut(),
             })
         };
 
@@ -1299,7 +1381,7 @@ impl<'de, T: ::serde::de::EnumAccess<'de>> ErasedEnumAccess for T {
 
                 let variant_access = GuestsideVariantAccessProvider {
                     variant_access,
-                    scope,
+                    _scope: scope,
                 };
 
                 Ok((value, variant_access))
@@ -1311,7 +1393,7 @@ impl<'de, T: ::serde::de::EnumAccess<'de>> ErasedEnumAccess for T {
 
 struct GuestsideEnumAccessProvider {
     enum_access: Box<dyn ErasedEnumAccess>,
-    scope: ScopedBorrowMut<()>,
+    _scope: ScopedBorrowMut<()>,
 }
 
 impl GuestsideEnumAccessProvider {
@@ -1331,7 +1413,7 @@ impl GuestsideEnumAccessProvider {
 
             inner(Self {
                 enum_access,
-                scope: scope.borrow_mut(),
+                _scope: scope.borrow_mut(),
             })
         };
 
@@ -1403,7 +1485,7 @@ impl<'de, T: ::serde::de::VariantAccess<'de>> ErasedVariantAccess for T {
 
 struct GuestsideVariantAccessProvider {
     variant_access: Box<dyn ErasedVariantAccess>,
-    scope: ScopedBorrowMut<()>,
+    _scope: ScopedBorrowMut<()>,
 }
 
 /*impl GuestsideVariantAccessProvider {
