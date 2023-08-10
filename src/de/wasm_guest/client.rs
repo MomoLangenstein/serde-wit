@@ -326,6 +326,60 @@ struct DeserializerableDeserializer {
     old_deserializer: Deserializer,
 }
 
+fn unwrap_deserializer_result<V>(
+    result: Result<
+        self::serde::serde::serde_deserializer::OwnedDeValueHandle,
+        self::serde::serde::serde_deserializer::DeError,
+    >,
+    value_ty: &'static str,
+) -> Result<V, DeError> {
+    match result {
+        Ok(value) => {
+            // TODO: Safety
+            let value = unsafe {
+                self::exports::serde::serde::serde_deserialize::OwnDeValue::from_handle(
+                    value.owned_handle,
+                )
+            };
+
+            let Ok(mut value) = value.value.try_borrow_mut() else {
+                return Err(::serde::de::Error::custom(
+                    format!("bug: could not mutably borrow the owned {value_ty} result"),
+                ));
+            };
+            let Some(value) = value.take() else {
+                return Err(::serde::de::Error::custom(
+                    format!("bug: use of {value_ty} after free"),
+                ));
+            };
+            // TODO: Safety
+            let Some(value): Option<V> = (unsafe { value.take() }) else {
+                return Err(::serde::de::Error::custom(
+                    format!("bug: {value_ty} type mismatch across the wit boundary"),
+                ))
+            };
+            Ok(value)
+        }
+        Err(error) => Err(DeError { error }),
+    }
+}
+
+fn unwrap_deserializer_optional_result<V>(
+    result: Result<
+        Option<self::serde::serde::serde_deserializer::OwnedDeValueHandle>,
+        self::serde::serde::serde_deserializer::DeError,
+    >,
+    value_ty: &'static str,
+) -> Result<Option<V>, DeError> {
+    let non_optional_result = match result {
+        Ok(None) => return Ok(None),
+        Ok(Some(ok)) => Ok(ok),
+        Err(err) => Err(err),
+    };
+
+    unwrap_deserializer_result(non_optional_result, value_ty).map(Some)
+}
+
 impl Visitor {
     fn with_new_old<
         'de,
@@ -424,35 +478,7 @@ impl Visitor {
         // Abort if there are any outstanding, soon dangling, scoped borrows
         core::mem::drop(scope);
 
-        match result {
-            Ok(value) => {
-                // TODO: Safety
-                let value = unsafe {
-                    self::exports::serde::serde::serde_deserialize::OwnDeValue::from_handle(
-                        value.owned_handle,
-                    )
-                };
-
-                let Ok(mut value) = value.value.try_borrow_mut() else {
-                    return Err(::serde::de::Error::custom(
-                        "bug: could not mutably borrow the owned Visitor::Value result",
-                    ));
-                };
-                let Some(value) = value.take() else {
-                    return Err(::serde::de::Error::custom(
-                        "bug: use of Visitor::Value after free",
-                    ));
-                };
-                // TODO: Safety
-                let Some(value): Option<V::Value> = (unsafe { value.take() }) else {
-                    return Err(::serde::de::Error::custom(
-                        "bug: Visitor::Value type mismatch across the wit boundary",
-                    ))
-                };
-                Ok(value)
-            }
-            Err(error) => Err(DeError { error }),
-        }
+        unwrap_deserializer_result(result, "Visitor::Value")
     }
 
     fn try_extract_visitor(
@@ -473,13 +499,7 @@ impl Visitor {
         Ok(visitor)
     }
 
-    /*fn visit_seq(self, seq: SeqAccess) -> Result<DeValue, DeError> {
-        self.visitor.erased_visit_seq(DeserializerableSeqAccess {
-            seq_access: Some(seq),
-        })
-    }
-
-    fn visit_map(self, map: MapAccess) -> Result<DeValue, DeError> {
+    /*fn visit_map(self, map: MapAccess) -> Result<DeValue, DeError> {
         self.visitor.erased_visit_map(DeserializerableMapAccess {
             map_access: Some(map),
         })
@@ -768,6 +788,25 @@ impl self::exports::serde::serde::serde_deserialize::Visitor for Visitor {
             .erased_visit_newtype_struct(DeserializerableDeserializer {
                 deserializer,
                 old_deserializer: Deserializer { _private: () },
+            })
+            .wrap()
+    }
+
+    fn visit_seq(
+        this: self::exports::serde::serde::serde_deserialize::OwnVisitor,
+        seq: self::exports::serde::serde::serde_deserialize::OwnedSeqAccessHandle,
+    ) -> Result<
+        self::exports::serde::serde::serde_deserialize::OwnDeValue,
+        self::exports::serde::serde::serde_deserialize::OwnedDeErrorHandle,
+    > {
+        // TODO: Safety
+        let seq = unsafe {
+            self::serde::serde::serde_deserializer::SeqAccess::from_handle(seq.owned_handle, true)
+        };
+
+        this.try_extract_visitor("visit_seq")?
+            .erased_visit_seq(DeserializerableSeqAccess {
+                seq_access: Some(seq),
             })
             .wrap()
     }
@@ -1300,25 +1339,8 @@ pub struct Visitor {
     _scope: ScopedBorrowMut<()>,
 }
 
-struct SeqAccess {
-    _private: (),
-}
-
-impl SeqAccess {
-    fn next_element_seed(
-        self,
-        _seed: GuestsideDeserializerClient,
-    ) -> (Self, Result<Option<DeValue>, DeError>) {
-        todo!("wit-bindgen")
-    }
-
-    fn size_hint(&self) -> Option<usize> {
-        todo!("wit-bindgen")
-    }
-}
-
 struct DeserializerableSeqAccess {
-    seq_access: Option<SeqAccess>,
+    seq_access: Option<self::serde::serde::serde_deserializer::SeqAccess>,
 }
 
 impl<'de> ::serde::de::SeqAccess<'de> for DeserializerableSeqAccess {
@@ -1334,30 +1356,26 @@ impl<'de> ::serde::de::SeqAccess<'de> for DeserializerableSeqAccess {
 
         let (seq_access, result) = unsafe {
             GuestsideDeserializerClient::with_new_seed_unchecked(seed, |seed| {
-                seq_access.next_element_seed(seed)
+                let seed =
+                    self::exports::serde::serde::serde_deserialize::OwnDeserializeSeed::new(seed);
+                self::serde::serde::serde_deserializer::SeqAccess::next_element_seed(
+                    seq_access,
+                    self::serde::serde::serde_deserializer::OwnedDeserializeSeedHandle {
+                        owned_handle: seed.into_handle(),
+                    },
+                )
             })
         };
         self.seq_access = Some(seq_access);
 
-        match result {
-            Ok(Some(value)) => {
-                if let Some(value) = value.take() {
-                    return Ok(Some(value));
-                }
-            }
-            Ok(None) => return Ok(None),
-            Err(err) => return Err(err),
-        };
-
-        Err(::serde::de::Error::custom(
-            "bug: type mismatch across the wit boundary",
-        ))
+        unwrap_deserializer_optional_result(result, "SeqAccess::<T>::Value")
     }
 
     fn size_hint(&self) -> Option<usize> {
         self.seq_access
             .as_ref()
-            .and_then(|seq_access| seq_access.size_hint())
+            .and_then(self::serde::serde::serde_deserializer::SeqAccess::size_hint)
+            .map(|size_hint| size_hint.val as usize)
     }
 }
 

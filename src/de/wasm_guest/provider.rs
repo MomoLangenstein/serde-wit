@@ -7,6 +7,7 @@ use scoped_reference::{ScopedBorrowMut, ScopedReference};
 wit_bindgen::generate!({ world: "serde-deserializer-provider", exports: {
     "serde:serde/serde-deserializer/deserializer": GuestsideDeserializerProvider,
     "serde:serde/serde-deserializer/de-error": DeError,
+    "serde:serde/serde-deserializer/seq-access": GuestsideSeqAccessProvider,
 } });
 
 use crate::{
@@ -156,6 +157,29 @@ impl WrapDeResult for Result<DeValue, DeError> {
                     owned_handle: ok.value.into_handle(),
                 },
             ),
+            Err(error) => {
+                Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error))
+            }
+        }
+    }
+}
+
+impl WrapDeResult for Result<Option<DeValue>, DeError> {
+    type Ok = Option<self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle>;
+
+    fn wrap(
+        self,
+    ) -> Result<
+        Option<self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle>,
+        self::exports::serde::serde::serde_deserializer::OwnDeError,
+    > {
+        match self {
+            Ok(None) => Ok(None),
+            Ok(Some(ok)) => Ok(Some(
+                self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle {
+                    owned_handle: ok.value.into_handle(),
+                },
+            )),
             Err(error) => {
                 Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error))
             }
@@ -1054,10 +1078,6 @@ struct Visitor {
 }
 
 impl Visitor {
-    fn visit_seq(self, _seq: GuestsideSeqAccessProvider) -> Result<DeValue, DeError> {
-        todo!("wit-bindgen")
-    }
-
     fn visit_map(self, _map: GuestsideMapAccessProvider) -> Result<DeValue, DeError> {
         todo!("wit-bindgen")
     }
@@ -1089,9 +1109,9 @@ impl<'de, T: ::serde::de::SeqAccess<'de>> ErasedSeqAccess for T {
     }
 }
 
-struct GuestsideSeqAccessProvider {
-    seq_access: Box<dyn ErasedSeqAccess>,
-    scope: ScopedBorrowMut<()>,
+pub struct GuestsideSeqAccessProvider {
+    seq_access: RefCell<Box<dyn ErasedSeqAccess>>,
+    _scope: ScopedBorrowMut<()>,
 }
 
 impl GuestsideSeqAccessProvider {
@@ -1110,8 +1130,8 @@ impl GuestsideSeqAccessProvider {
                 unsafe { core::mem::transmute(seq_access) };
 
             inner(Self {
-                seq_access,
-                scope: scope.borrow_mut(),
+                seq_access: RefCell::new(seq_access),
+                _scope: scope.borrow_mut(),
             })
         };
 
@@ -1120,22 +1140,54 @@ impl GuestsideSeqAccessProvider {
 
         result
     }
+}
 
-    /*fn next_element_seed(
-        mut self,
-        seed: DeserializeSeed,
-    ) -> (Self, Result<Option<DeValue>, DeError>) {
-        let result = self
-            .seq_access
+impl self::exports::serde::serde::serde_deserializer::SeqAccess for GuestsideSeqAccessProvider {
+    fn next_element_seed(
+        this: self::exports::serde::serde::serde_deserializer::OwnSeqAccess,
+        seed: self::exports::serde::serde::serde_deserializer::OwnedDeserializeSeedHandle,
+    ) -> (
+        self::exports::serde::serde::serde_deserializer::OwnSeqAccess,
+        Result<
+            Option<self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle>,
+            self::exports::serde::serde::serde_deserializer::OwnDeError,
+        >,
+    ) {
+        let Ok(mut seq_access) = this.seq_access.try_borrow_mut() else {
+            let error = DeError {
+                inner: DeErrorVariants::Custom(String::from("bug: could not mutably borrow the owned SeqAccess in SeqAccess::next_element_seed")),
+            };
+            return (this, Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error)));
+        };
+
+        // TODO: Safety
+        let seed = unsafe {
+            self::serde::serde::serde_deserialize::DeserializeSeed::from_handle(
+                seed.owned_handle,
+                true,
+            )
+        };
+
+        let result = seq_access
             .erased_next_element_seed(DeserializableDeserializeSeed {
                 deserialize_seed: seed,
-            });
-        (self, result)
+            })
+            .wrap();
+
+        core::mem::drop(seq_access);
+
+        (this, result)
     }
 
-    fn size_hint(&self) -> Option<usize> {
-        self.seq_access.erased_size_hint()
-    }*/
+    fn size_hint(this: &Self) -> Option<self::serde::serde::serde_types::Usize> {
+        // TODO: can we do better than no error reporting here?
+        let seq_access = this.seq_access.try_borrow().ok()?;
+        let size_hint = seq_access.erased_size_hint()?;
+
+        u32::try_from(size_hint)
+            .ok()
+            .map(|size_hint| self::serde::serde::serde_types::Usize { val: size_hint })
+    }
 }
 
 trait ErasedMapAccess {
@@ -1722,8 +1774,15 @@ impl<'de> ::serde::de::Visitor<'de> for VisitableVisitor {
     }
 
     fn visit_seq<A: ::serde::de::SeqAccess<'de>>(self, seq: A) -> Result<Self::Value, A::Error> {
-        unwrap_de_error_old(GuestsideSeqAccessProvider::with_new(seq, |seq| {
-            self.old_visitor.visit_seq(seq)
+        unwrap_de_error(GuestsideSeqAccessProvider::with_new(seq, |seq| {
+            let seq = self::exports::serde::serde::serde_deserializer::OwnSeqAccess::new(seq);
+
+            self::serde::serde::serde_deserialize::Visitor::visit_seq(
+                self.visitor,
+                self::serde::serde::serde_deserialize::OwnedSeqAccessHandle {
+                    owned_handle: seq.into_handle(),
+                },
+            )
         }))
     }
 
