@@ -5,6 +5,7 @@ interface test {
 }
 
 world demo {
+    import test
     export test
 
     export run: func() -> result<_, string>

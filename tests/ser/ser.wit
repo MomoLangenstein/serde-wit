@@ -1,0 +1,9 @@
+package test:ser
+
+world ser {
+    include serde:serde/serde-serializer-client
+
+    export serialize-value: func(serializer: serde:serde/serde-serializer/owned-serializer-handle) -> result<owned-ser-ok-handle, owned-ser-error-handle>
+
+    export run: func() -> result<_, string>
+}

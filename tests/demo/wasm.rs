@@ -1,4 +1,4 @@
-wit_bindgen::generate!({ path: "../../ser/demo", world: "demo", exports: {
+wit_bindgen::generate!({ path: "../../demo", world: "demo", exports: {
     world: DemoTest,
     "test:demo/test": DemoTest,
 } });
@@ -7,6 +7,9 @@ struct DemoTest;
 
 impl Demo for DemoTest {
     fn run() -> Result<(), String> {
+        println!("hello stdout");
+        eprintln!("hello stderr");
+
         Err(String::from("Hello world!"))
     }
 }

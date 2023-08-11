@@ -7,6 +7,7 @@ use wit_component::ComponentEncoder;
 use wit_parser::Resolve;
 
 mod demo;
+mod ser;
 
 wasmtime::component::bindgen!(in "tests/crates/wasi_snapshot_preview1/wit");
 
@@ -76,7 +77,7 @@ where
 fn tests(name: &str, dir_name: &str) -> Result<Vec<PathBuf>> {
     let mut result = Vec::new();
 
-    let mut dir = PathBuf::from("./tests/ser");
+    let mut dir = PathBuf::from("./tests");
     dir.push(dir_name);
 
     let mut resolve = Resolve::new();
@@ -86,7 +87,7 @@ fn tests(name: &str, dir_name: &str) -> Result<Vec<PathBuf>> {
     let mut rust = Vec::new();
     for file in dir.read_dir()? {
         let path = file?.path();
-        if matches!(path.extension(), Some(ext) if ext == "rs") {
+        if matches!(path.file_name(), Some(name) if name == "wasm.rs") {
             rust.push(path);
         }
     }

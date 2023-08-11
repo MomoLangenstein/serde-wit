@@ -7,6 +7,8 @@ publish = false
 
 [dependencies]
 wit-bindgen = { workspace = true, features = ["macros", "realloc"] }
+serde = { version = "1.0", default-features = false, features = ["alloc"] }
+serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 
 [lib]
 test = false
@@ -14,5 +16,10 @@ doctest = false
 
 [[bin]]
 name = "demo"
-path = "../../ser/demo/wasm.rs"
+path = "../../demo/wasm.rs"
+test = false
+
+[[bin]]
+name = "ser"
+path = "../../ser/wasm.rs"
 test = false
