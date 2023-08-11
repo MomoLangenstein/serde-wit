@@ -1,0 +1,11 @@
+package test:demo
+
+interface test {
+    string-roundtrip: func(a: string) -> string
+}
+
+world demo {
+    export test
+
+    export run: func() -> result<_, string>
+}

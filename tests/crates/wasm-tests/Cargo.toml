@@ -1,0 +1,18 @@
+[package]
+name = "wasm-tests"
+version = "0.0.0"
+license = { workspace = true }
+edition = { workspace = true }
+publish = false
+
+[dependencies]
+wit-bindgen = { workspace = true, features = ["macros", "realloc"] }
+
+[lib]
+test = false
+doctest = false
+
+[[bin]]
+name = "demo"
+path = "../../ser/demo/wasm.rs"
+test = false

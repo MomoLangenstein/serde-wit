@@ -1,0 +1,15 @@
+[package]
+name = "wasi_snapshot_preview1"
+version = "0.0.0"
+authors = ["Alex Crichton <alex@alexcrichton.com>"]
+license = { workspace = true }
+edition = { workspace = true }
+publish = false
+
+[dependencies]
+wasi = "0.11.0"
+wit-bindgen = { workspace = true, default-features = false, features = ["macros"] }
+
+[lib]
+crate-type = ["cdylib"]
+test = false
