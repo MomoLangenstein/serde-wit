@@ -21,16 +21,11 @@ path = "../../demo/wasm.rs"
 test = false
 
 [[bin]]
-name = "ser-dummy"
-path = "../../ser/wasm-dummy.rs"
+name = "ser-serialize-test"
+path = "../../ser/wasm-serialize-test.rs"
 test = false
 
 [[bin]]
-name = "ser-serialize"
-path = "../../ser/wasm-serialize.rs"
-test = false
-
-[[bin]]
-name = "ser-serializer-test"
-path = "../../ser/wasm-serializer-test.rs"
+name = "ser-serializer"
+path = "../../ser/wasm-serializer.rs"
 test = false

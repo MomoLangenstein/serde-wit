@@ -52,3 +52,5 @@ wasmtime = { workspace = true, default-features = false, features = ["component-
 wasmtime-component-macro = { workspace = true }
 test-artifacts = { path = "tests/crates/wasm-tests/artifacts" }
 wit-component = { version = "0.13" }
+wasm-compose = { version = "0.4" }
+temp-file = { version = "0.1" }

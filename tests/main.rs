@@ -1,6 +1,9 @@
 use anyhow::Result;
 use std::io::Write;
 use std::path::Path;
+use temp_file::TempFile;
+use wasm_compose::composer::ComponentComposer;
+use wasm_compose::config::Config as ComposerConfig;
 use wasmtime::component::{Component, Instance, Linker};
 use wasmtime::{Config, Engine, Store};
 use wit_component::ComponentEncoder;
@@ -28,7 +31,6 @@ impl<T> testwasi::Host for Wasi<T> {
 #[allow(clippy::type_complexity)]
 fn run_test<T, U>(
     path: &Path,
-    dummy: Option<&Path>,
     dependencies: &[&Path],
     add_to_linker: fn(&mut Linker<Wasi<T>>) -> Result<()>,
     instantiate: fn(&mut Store<Wasi<T>>, &Component, &Linker<Wasi<T>>) -> Result<(U, Instance)>,
@@ -38,7 +40,7 @@ where
     T: Default,
 {
     // Create an engine with caching enabled to assist with iteration in this
-    // project.
+    //  project.
     let mut config = Config::new();
     config.cache_config_load_default()?;
     config.wasm_backtrace_details(wasmtime::WasmBacktraceDetails::Enable);
@@ -51,25 +53,8 @@ where
     crate::testwasi::add_to_linker(&mut linker, |x| x)?;
     let mut store = Store::new(&engine, Wasi::default());
 
-    if let Some(path) = dummy {
-        println!("loading dummy {path:?}");
-        let component = load_wasi_component(path, &engine)?;
-        println!("instantiating dummy {path:?}");
-        linker.instantiate(&mut store, &component)?;
-        ser::Dummy::instantiate(&mut store, &component, &linker)?;
-        // linker.instantiate(&mut store, &component)?;
-        linker.allow_shadowing(true);
-    }
-
-    for path in dependencies {
-        println!("loading dependency {path:?}");
-        let component = load_wasi_component(path, &engine)?;
-        println!("instantiating dependency {path:?}");
-        linker.instantiate(&mut store, &component)?;
-    }
-
     println!("loading root {path:?}");
-    let root_component = load_wasi_component(path, &engine)?;
+    let root_component = compose_wasi_components(path, dependencies, &engine)?;
     println!("instantiating root {path:?}");
     let (exports, _) = instantiate(&mut store, &root_component, &linker)?;
 
@@ -79,15 +64,57 @@ where
     Ok(())
 }
 
-fn load_wasi_component(path: &Path, engine: &Engine) -> Result<Component> {
+fn compile_wasi_component(path: &Path) -> Result<Vec<u8>> {
     let wasi_adapter = std::fs::read(test_artifacts::ADAPTER)?;
     let module = std::fs::read(path)?;
 
-    let wasm = ComponentEncoder::default()
+    ComponentEncoder::default()
         .module(&module)?
         .validate(true)
         .adapter("wasi_snapshot_preview1", &wasi_adapter)?
-        .encode()?;
+        .encode()
+}
+
+fn compile_wasi_component_to_file(path: &Path) -> Result<TempFile> {
+    let wasm = compile_wasi_component(path)?;
+
+    TempFile::new()?
+        .panic_on_cleanup_error()
+        .with_contents(&wasm)
+        .map_err(anyhow::Error::from)
+}
+
+fn compose_wasi_components(
+    path: &Path,
+    dependencies: &[&Path],
+    engine: &Engine,
+) -> Result<Component> {
+    let wasm = if dependencies.is_empty() {
+        compile_wasi_component(path)?
+    } else {
+        let root = compile_wasi_component_to_file(path)?;
+
+        let dependencies = dependencies
+            .iter()
+            .copied()
+            .map(compile_wasi_component_to_file)
+            .collect::<Result<Vec<_>, _>>()?;
+
+        let config = ComposerConfig {
+            dir: root
+                .path()
+                .parent()
+                .map(Path::to_path_buf)
+                .unwrap_or_default(),
+            definitions: dependencies
+                .iter()
+                .map(|dependency| dependency.path().to_path_buf())
+                .collect(),
+            ..Default::default()
+        };
+
+        ComponentComposer::new(root.path(), &config).compose()?
+    };
 
     Component::from_binary(engine, &wasm)
 }

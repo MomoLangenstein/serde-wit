@@ -1,25 +1,14 @@
 package test:ser
 
-interface serialize {
-    serialize: func() -> string
-}
-
 interface serializer {
     serialize-i32: func(v: s32) -> string
 }
 
-world test-dummy {
-    export serialize
-    export serializer
-}
-
 world test-serialize {
     import serializer
-    export serialize
 }
 
 world test-serializer {
-    import serialize
     export serializer
 }
 

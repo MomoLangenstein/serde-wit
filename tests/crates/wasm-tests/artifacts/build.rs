@@ -22,6 +22,7 @@ fn main() {
     let mut cmd = Command::new("cargo");
     cmd.arg("build")
         .current_dir("../../wasm-tests")
+        .arg("--release")
         .arg("--target=wasm32-wasi")
         .env("CARGO_TARGET_DIR", &out_dir)
         .env("CARGO_PROFILE_DEV_DEBUG", "1");
@@ -29,7 +30,7 @@ fn main() {
     assert!(status.success());
 
     let mut wasms = Vec::new();
-    for file in out_dir.join("wasm32-wasi/debug").read_dir().unwrap() {
+    for file in out_dir.join("wasm32-wasi/release").read_dir().unwrap() {
         let file = file.unwrap().path();
         if file.extension().and_then(|s| s.to_str()) != Some("wasm") {
             continue;
