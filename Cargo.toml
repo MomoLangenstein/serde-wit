@@ -51,5 +51,4 @@ anyhow = { workspace = true }
 wasmtime = { workspace = true, default-features = false, features = ["component-model", "cache", "cranelift"] }
 wasmtime-component-macro = { workspace = true }
 test-artifacts = { path = "tests/crates/wasm-tests/artifacts" }
-wit-parser = { version = "0.9" }
 wit-component = { version = "0.13" }

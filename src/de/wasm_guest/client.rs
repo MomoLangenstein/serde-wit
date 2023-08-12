@@ -8,7 +8,7 @@ wit_bindgen::generate!({ world: "serde-deserializer-client", exports: {
     "serde:serde/serde-deserialize/deserialize-seed": GuestsideDeserializerClient,
     "serde:serde/serde-deserialize/de-value": DeValue,
     "serde:serde/serde-deserialize/visitor": Visitor,
-} });
+}, std_feature });
 
 use crate::{any::Any, wit_to_usize};
 

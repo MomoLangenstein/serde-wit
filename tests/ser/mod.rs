@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use anyhow::Result;
 use wasmtime::Store;
 
@@ -11,15 +13,15 @@ pub struct MyImports;
 #[test]
 fn run() -> Result<()> {
     crate::run_test(
-        "ser",
+        Path::new(test_artifacts::WASM_SER),
         |_linker| Ok(()), // Ser::add_to_linker(linker, |x| &mut x.0),
-        |store, component, linker| Ser::instantiate(store, component, linker),
+        |store, component, linker| Test::instantiate(store, component, linker),
         run_test,
     )
 }
 
-fn run_test(ser: Ser, store: &mut Store<crate::Wasi<MyImports>>) -> Result<()> {
-    let result = ser.call_run(&mut *store)?;
+fn run_test(test: Test, store: &mut Store<crate::Wasi<MyImports>>) -> Result<()> {
+    let result = test.call_run(&mut *store)?;
     assert_eq!(result, Err(String::from("Hello world!")));
     Ok(())
 }

@@ -11,7 +11,7 @@ wit_bindgen::generate!({ world: "serde-deserializer-provider", exports: {
     "serde:serde/serde-deserializer/map-access": GuestsideMapAccessProvider,
     "serde:serde/serde-deserializer/enum-access": GuestsideEnumAccessProvider,
     "serde:serde/serde-deserializer/variant-access": GuestsideVariantAccessProvider,
-} });
+}, std_feature });
 
 use crate::{
     any::Any,

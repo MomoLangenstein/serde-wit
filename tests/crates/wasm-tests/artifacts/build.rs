@@ -1,3 +1,4 @@
+use std::fmt::Write;
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
@@ -44,11 +45,19 @@ fn main() {
     }
     println!("cargo:rerun-if-changed=../../wasm-tests/Cargo.toml");
 
-    let src = format!(
-        "
-            pub const ADAPTER: &str = {wasi_adapter:?};
-            pub const WASMS: &[&str] = &{wasms:?};
-        ",
-    );
+    let mut src = format!("pub const ADAPTER: &str = {wasi_adapter:?};\n");
+
+    for wasm in wasms {
+        let name = wasm
+            .file_stem()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_uppercase()
+            .replace('-', "_");
+        src.write_fmt(format_args!("pub const WASM_{name}: &str = {wasm:?};\n"))
+            .unwrap();
+    }
+
     std::fs::write(out_dir.join("wasms.rs"), src).unwrap();
 }

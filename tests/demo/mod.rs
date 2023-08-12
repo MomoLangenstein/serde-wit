@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use anyhow::Result;
 use wasmtime::Store;
 
@@ -17,7 +19,7 @@ impl test::demo::test::Host for MyImports {
 #[test]
 fn run() -> Result<()> {
     crate::run_test(
-        "demo",
+        Path::new(test_artifacts::WASM_DEMO),
         |linker| Demo::add_to_linker(linker, |x| &mut x.0),
         |store, component, linker| Demo::instantiate(store, component, linker),
         run_test,
