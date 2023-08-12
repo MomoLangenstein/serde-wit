@@ -20,6 +20,8 @@ impl test::demo::test::Host for MyImports {
 fn run() -> Result<()> {
     crate::run_test(
         Path::new(test_artifacts::WASM_DEMO),
+        None,
+        &[],
         |linker| Demo::add_to_linker(linker, |x| &mut x.0),
         |store, component, linker| Demo::instantiate(store, component, linker),
         run_test,

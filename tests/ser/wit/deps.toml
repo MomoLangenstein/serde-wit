@@ -1,0 +1,3 @@
+# Run wit-deps inside the outer ser/ folder
+
+serde = { path = "../../../wit" }

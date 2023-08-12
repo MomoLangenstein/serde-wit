@@ -28,6 +28,8 @@ impl<T> testwasi::Host for Wasi<T> {
 #[allow(clippy::type_complexity)]
 fn run_test<T, U>(
     path: &Path,
+    dummy: Option<&Path>,
+    dependencies: &[&Path],
     add_to_linker: fn(&mut Linker<Wasi<T>>) -> Result<()>,
     instantiate: fn(&mut Store<Wasi<T>>, &Component, &Linker<Wasi<T>>) -> Result<(U, Instance)>,
     test: fn(U, &mut Store<Wasi<T>>) -> Result<()>,
@@ -43,14 +45,33 @@ where
     config.wasm_component_model(true);
     let engine = Engine::new(&config)?;
 
-    let component = load_wasi_component(path, &engine)?;
-
     let mut linker = Linker::new(&engine);
 
     add_to_linker(&mut linker)?;
     crate::testwasi::add_to_linker(&mut linker, |x| x)?;
     let mut store = Store::new(&engine, Wasi::default());
-    let (exports, _) = instantiate(&mut store, &component, &linker)?;
+
+    if let Some(path) = dummy {
+        println!("loading dummy {path:?}");
+        let component = load_wasi_component(path, &engine)?;
+        println!("instantiating dummy {path:?}");
+        linker.instantiate(&mut store, &component)?;
+        ser::Dummy::instantiate(&mut store, &component, &linker)?;
+        // linker.instantiate(&mut store, &component)?;
+        linker.allow_shadowing(true);
+    }
+
+    for path in dependencies {
+        println!("loading dependency {path:?}");
+        let component = load_wasi_component(path, &engine)?;
+        println!("instantiating dependency {path:?}");
+        linker.instantiate(&mut store, &component)?;
+    }
+
+    println!("loading root {path:?}");
+    let root_component = load_wasi_component(path, &engine)?;
+    println!("instantiating root {path:?}");
+    let (exports, _) = instantiate(&mut store, &root_component, &linker)?;
 
     println!("testing {path:?}");
     test(exports, &mut store)?;

@@ -1,5 +1,0 @@
-package test:ser
-
-world test {
-    export run: func() -> result<_, string>
-}
