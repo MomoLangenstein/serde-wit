@@ -1,0 +1,11 @@
+[package]
+name = "resource"
+version = "0.0.0"
+authors = ["Alex Crichton <alex@alexcrichton.com>"]
+license = { workspace = true }
+edition = { workspace = true }
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+test = false

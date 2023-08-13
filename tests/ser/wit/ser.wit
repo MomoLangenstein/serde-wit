@@ -1,6 +1,11 @@
 package test:ser
 
 interface serializer {
+    resource serializer-resource {
+        constructor()
+        serialize-i32: static func(self: serializer-resource, v: s32) -> string
+    }
+
     serialize-i32: func(v: s32) -> string
 }
 

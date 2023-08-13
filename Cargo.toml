@@ -16,6 +16,7 @@ repository = "https://github.com/juntyr/serde-wit"
 members = [
     "tests/crates/wasm-tests",
     "tests/crates/wasi_snapshot_preview1",
+    "tests/crates/resource",
 ]
 resolver = "2"
 
@@ -25,9 +26,12 @@ license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
 anyhow = { version = "1.0" }
-wit-bindgen = { version = "0.9", git = "https://github.com/bytecodealliance/wit-bindgen", rev = "03154cb", default-features = false }
+wit-bindgen = { version = "0.9", git = "https://github.com/Nor2-io/wit-bindgen", rev = "6ac43fa", default-features = false }
 wasmtime = { version = "13.0", git = "https://github.com/bytecodealliance/wasmtime", rev = "137c6f6", default-features = false }
 wasmtime-component-macro = { version = "13.0", git = "https://github.com/bytecodealliance/wasmtime", rev = "137c6f6", default-features = false }
+
+[patch.crates-io]
+wasmparser = { path = "wasm-tools/crates/wasmparser" }
 
 [lib]
 

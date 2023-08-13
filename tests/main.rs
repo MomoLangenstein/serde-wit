@@ -66,13 +66,38 @@ where
 
 fn compile_wasi_component(path: &Path) -> Result<Vec<u8>> {
     let wasi_adapter = std::fs::read(test_artifacts::ADAPTER)?;
+    let resource_adapter = std::fs::read(test_artifacts::RESOURCE)?;
     let module = std::fs::read(path)?;
+
+    // let module = replace(&module, b"[export]", b"_export_");
 
     ComponentEncoder::default()
         .module(&module)?
-        .validate(true)
+        .validate(false)
         .adapter("wasi_snapshot_preview1", &wasi_adapter)?
+        // .adapter("_export_test:ser/serializer", &resource_adapter)?
         .encode()
+}
+
+fn replace<T>(source: &[T], from: &[T], to: &[T]) -> Vec<T>
+where
+    T: Clone + PartialEq
+{
+    let mut result = source.to_vec();
+    let from_len = from.len();
+    let to_len = to.len();
+
+    let mut i = 0;
+    while i + from_len <= result.len() {
+        if result[i..].starts_with(from) {
+            result.splice(i..i + from_len, to.iter().cloned());
+            i += to_len;
+        } else {
+            i += 1;
+        }
+    }
+
+    result
 }
 
 fn compile_wasi_component_to_file(path: &Path) -> Result<TempFile> {

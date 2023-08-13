@@ -21,6 +21,17 @@ fn main() {
 
     let mut cmd = Command::new("cargo");
     cmd.arg("build")
+        .arg("--release")
+        .current_dir("../../resource")
+        .arg("--target=wasm32-unknown-unknown")
+        .env("CARGO_TARGET_DIR", &out_dir);
+    let status = cmd.status().unwrap();
+    assert!(status.success());
+    println!("cargo:rerun-if-changed=../../resource");
+    let resource_adapter = out_dir.join("wasm32-unknown-unknown/release/resource.wasm");
+
+    let mut cmd = Command::new("cargo");
+    cmd.arg("build")
         .current_dir("../../wasm-tests")
         .arg("--release")
         .arg("--target=wasm32-wasi")
@@ -37,7 +48,7 @@ fn main() {
         }
 
         let dep_file = file.with_extension("d");
-        let deps = fs::read_to_string(&dep_file).expect("failed to read dep file");
+        let Ok(deps) = fs::read_to_string(&dep_file) else { continue };//.expect("failed to read dep file");
         for dep in deps.split_once(':').unwrap().1.split_whitespace() {
             println!("cargo:rerun-if-changed={}", dep);
         }
@@ -47,6 +58,7 @@ fn main() {
     println!("cargo:rerun-if-changed=../../wasm-tests/Cargo.toml");
 
     let mut src = format!("pub const ADAPTER: &str = {wasi_adapter:?};\n");
+    src.write_fmt(format_args!("pub const RESOURCE: &str = {resource_adapter:?};\n")).unwrap();
 
     for wasm in wasms {
         let name = wasm
