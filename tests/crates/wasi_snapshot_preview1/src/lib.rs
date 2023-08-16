@@ -126,6 +126,31 @@ pub extern "C" fn fd_fdstat_get(fd: Fd, fdstat: *mut Fdstat) -> Errno {
     ERRNO_SUCCESS
 }
 
+#[no_mangle]
+pub extern "C" fn path_open(
+    fd: Fd,
+    dirflags: Lookupflags,
+    path_ptr: *const u8,
+    path_len: usize,
+    oflags: Oflags,
+    fs_rights_base: Rights,
+    fs_rights_inheriting: Rights,
+    fdflags: Fdflags,
+    opened_fd: *mut Fd,
+) -> Errno {
+    unreachable()
+}
+
+#[no_mangle]
+pub extern "C" fn fd_prestat_get(fd: Fd, buf: *mut Prestat) -> Errno {
+    unreachable()
+}
+
+#[no_mangle]
+pub extern "C" fn fd_prestat_dir_name(fd: Fd, path: *mut u8, path_max_len: Size) -> Errno {
+    unreachable()
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 fn unreachable() -> ! {
     std::process::abort()

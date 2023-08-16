@@ -2,7 +2,25 @@ mod serializer {
     wit_bindgen::generate!({ path: "../../ser/wit", world: "test-serializer", exports: {
         "test:ser/serializer": super::SerTest,
         "test:ser/serializer/serializer-resource": super::SerTest,
+        "test:ser/serializer/serialize": super::Serialize,
     } });
+}
+
+#[derive(Debug)]
+pub struct Serialize {
+    handle: i32,
+    serialize: fn(i32, i32) -> String,
+}
+
+impl serializer::exports::test::ser::serializer::Serialize for Serialize {
+    fn new(handle: i32, vtable: serializer::exports::test::ser::serializer::SerializeVtable) -> Self {
+        Self { handle, serialize: unsafe { std::mem::transmute(vtable.serialize as isize) } }
+    }
+
+    fn serialize(&self, serializer: serializer::exports::test::ser::serializer::OwnSerializerResource) -> String {
+        println!("{self:?}");
+        (self.serialize)(self.handle, serializer.into_handle())
+    }
 }
 
 pub struct SerTest;
@@ -17,6 +35,10 @@ impl serializer::exports::test::ser::serializer::SerializerResource for SerTest 
         println!("SerializerResource::serialize_i32(v={v}) called from serialize");
 
         format!("{v}")
+    }
+
+    fn serialize_some(this: serializer::exports::test::ser::serializer::OwnSerializerResource, serialize: &Serialize) -> String {
+        serializer::exports::test::ser::serializer::Serialize::serialize(serialize, this)
     }
 }
 

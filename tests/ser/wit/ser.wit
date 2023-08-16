@@ -1,9 +1,19 @@
 package test:ser
 
 interface serializer {
+    record serialize-vtable {
+        serialize: s32
+    }
+
+    resource serialize {
+        constructor(handle: s32, vtable: serialize-vtable)
+        serialize: func(serializer: serializer-resource) -> string
+    }
+
     resource serializer-resource {
         constructor()
         serialize-i32: static func(self: serializer-resource, v: s32) -> string
+        serialize-some: static func(self: serializer-resource, v: borrow<serialize>) -> string
     }
 
     serialize-i32: func(v: s32) -> string

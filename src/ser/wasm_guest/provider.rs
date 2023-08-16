@@ -1,3 +1,5 @@
+#![allow(clippy::ignored_unit_patterns)]
+
 use core::cell::RefCell;
 
 use alloc::{boxed::Box, format, string::String, vec::Vec};
