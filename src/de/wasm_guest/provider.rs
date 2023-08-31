@@ -1,5 +1,5 @@
 use alloc::{boxed::Box, format, string::String, vec::Vec};
-use core::{cell::RefCell, fmt};
+use core::fmt;
 
 use ::serde::serde_if_integer128;
 use scoped_reference::{ScopedBorrowMut, ScopedReference};
@@ -11,7 +11,7 @@ wit_bindgen::generate!({ world: "serde-deserializer-provider", exports: {
     "serde:serde/serde-deserializer/map-access": GuestsideMapAccessProvider,
     "serde:serde/serde-deserializer/enum-access": GuestsideEnumAccessProvider,
     "serde:serde/serde-deserializer/variant-access": GuestsideVariantAccessProvider,
-} });
+}, std_feature });
 
 use crate::{
     any::Any,
@@ -20,7 +20,7 @@ use crate::{
 };
 
 pub struct GuestsideDeserializerProvider {
-    deserializer: RefCell<Option<Box<dyn ErasedDeserializer>>>,
+    deserializer: Option<Box<dyn ErasedDeserializer>>,
     is_human_readable: bool,
     _scope: ScopedBorrowMut<()>,
 }
@@ -42,7 +42,7 @@ impl GuestsideDeserializerProvider {
 
             inner(Self {
                 is_human_readable: deserializer.erased_is_human_readable(),
-                deserializer: RefCell::new(Some(deserializer)),
+                deserializer: Some(deserializer),
                 _scope: scope.borrow_mut(),
             })
         };
@@ -54,19 +54,13 @@ impl GuestsideDeserializerProvider {
     }
 
     fn try_extract_deserializer(
-        &self,
+        &mut self,
         method: &'static str,
     ) -> Result<
         Box<dyn ErasedDeserializer>,
         self::exports::serde::serde::serde_deserializer::OwnDeError,
     > {
-        let Ok(mut deserializer) = self.deserializer.try_borrow_mut() else {
-            let error = DeError {
-                inner: DeErrorVariants::Custom(format!("bug: could not mutably borrow the owned Visitor in Visitor::{method}")),
-            };
-            return Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error));
-        };
-        let Some(deserializer) = deserializer.take() else {
+        let Some(deserializer) = self.deserializer.take() else {
             let error = DeError {
                 inner: DeErrorVariants::Custom(format!("bug: Visitor::{method} after free")),
             };
@@ -135,11 +129,11 @@ impl WrapDeResult for Result<(), DeError> {
     }
 }
 
-impl self::exports::serde::serde::serde_deserializer::Deserializer
+impl self::exports::serde::serde::serde_deserializer::GuestDeserializer
     for GuestsideDeserializerProvider
 {
     fn deserialize_any(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
         self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
@@ -147,7 +141,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_any")?
@@ -156,7 +150,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_bool(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
         self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
@@ -164,7 +158,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_bool")?
@@ -173,7 +167,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_i8(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
         self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
@@ -181,7 +175,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_i8")?
@@ -190,7 +184,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_i16(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
         self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
@@ -198,7 +192,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_i16")?
@@ -207,7 +201,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_i32(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
         self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
@@ -215,7 +209,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_i32")?
@@ -224,7 +218,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_i64(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
         self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
@@ -232,7 +226,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_i64")?
@@ -241,7 +235,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_i128(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
         self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
@@ -249,7 +243,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_i128")?
@@ -258,7 +252,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_u8(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
         self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
@@ -266,7 +260,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_u8")?
@@ -275,7 +269,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_u16(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
         self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
@@ -283,7 +277,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_u16")?
@@ -292,7 +286,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_u32(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
         self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
@@ -300,7 +294,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_u32")?
@@ -309,7 +303,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_u64(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
         self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
@@ -317,7 +311,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_u64")?
@@ -326,7 +320,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_u128(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
         self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
@@ -334,7 +328,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_u128")?
@@ -343,7 +337,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_f32(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
         self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
@@ -351,7 +345,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_f32")?
@@ -360,7 +354,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_f64(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
         self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
@@ -368,7 +362,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_f64")?
@@ -377,7 +371,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_char(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
         self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
@@ -385,7 +379,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_char")?
@@ -394,7 +388,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_str(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
         self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
@@ -402,7 +396,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_str")?
@@ -411,7 +405,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_string(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
         self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
@@ -419,7 +413,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_string")?
@@ -428,7 +422,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_bytes(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
         self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
@@ -436,7 +430,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_bytes")?
@@ -445,7 +439,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_byte_buf(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
         self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
@@ -453,7 +447,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_byte_buf")?
@@ -462,7 +456,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_option(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
         self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
@@ -470,7 +464,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_option")?
@@ -479,7 +473,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_unit(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
         self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
@@ -487,7 +481,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_unit")?
@@ -496,7 +490,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_unit_struct(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         name: String,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
@@ -505,7 +499,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_unit_struct")?
@@ -514,7 +508,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_newtype_struct(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         name: String,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
@@ -523,7 +517,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_newtype_struct")?
@@ -532,7 +526,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_seq(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
         self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
@@ -540,7 +534,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_seq")?
@@ -549,7 +543,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_tuple(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         len: self::serde::serde::serde_types::Usize,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
@@ -558,7 +552,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_tuple")?
@@ -567,7 +561,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_tuple_struct(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         name: String,
         len: self::serde::serde::serde_types::Usize,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
@@ -577,7 +571,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_tuple_struct")?
@@ -590,7 +584,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_map(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
         self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
@@ -598,7 +592,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_map")?
@@ -607,7 +601,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_struct(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         name: String,
         fields: Vec<String>,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
@@ -617,7 +611,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         let fields = fields.into_iter().map(intern_string).collect();
@@ -632,7 +626,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_enum(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         name: String,
         variants: Vec<String>,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
@@ -642,7 +636,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         let variants = variants.into_iter().map(intern_string).collect();
@@ -657,7 +651,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_identifier(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
         self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
@@ -665,7 +659,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_identifier")?
@@ -674,7 +668,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     }
 
     fn deserialize_ignored_any(
-        this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnDeserializer,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
         self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
@@ -682,7 +676,7 @@ impl self::exports::serde::serde::serde_deserializer::Deserializer
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
         this.try_extract_deserializer("deserialize_ignored_any")?
@@ -1088,7 +1082,7 @@ impl<'de, T: ::serde::de::SeqAccess<'de>> ErasedSeqAccess for T {
 }
 
 pub struct GuestsideSeqAccessProvider {
-    seq_access: RefCell<Box<dyn ErasedSeqAccess>>,
+    seq_access: Box<dyn ErasedSeqAccess>,
     _scope: ScopedBorrowMut<()>,
 }
 
@@ -1108,7 +1102,7 @@ impl GuestsideSeqAccessProvider {
                 unsafe { core::mem::transmute(seq_access) };
 
             inner(Self {
-                seq_access: RefCell::new(seq_access),
+                seq_access,
                 _scope: scope.borrow_mut(),
             })
         };
@@ -1120,9 +1114,11 @@ impl GuestsideSeqAccessProvider {
     }
 }
 
-impl self::exports::serde::serde::serde_deserializer::SeqAccess for GuestsideSeqAccessProvider {
+impl self::exports::serde::serde::serde_deserializer::GuestSeqAccess
+    for GuestsideSeqAccessProvider
+{
     fn next_element_seed(
-        this: self::exports::serde::serde::serde_deserializer::OwnSeqAccess,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnSeqAccess,
         seed: self::exports::serde::serde::serde_deserializer::OwnedDeserializeSeedHandle,
     ) -> (
         self::exports::serde::serde::serde_deserializer::OwnSeqAccess,
@@ -1133,34 +1129,21 @@ impl self::exports::serde::serde::serde_deserializer::SeqAccess for GuestsideSeq
     ) {
         // TODO: Safety
         let seed = unsafe {
-            self::serde::serde::serde_deserialize::DeserializeSeed::from_handle(
-                seed.owned_handle,
-                true,
-            )
+            self::serde::serde::serde_deserialize::DeserializeSeed::from_handle(seed.owned_handle)
         };
 
-        let Ok(mut seq_access) = this.seq_access.try_borrow_mut() else {
-            let error = DeError {
-                inner: DeErrorVariants::Custom(String::from("bug: could not mutably borrow the owned SeqAccess in SeqAccess::next_element_seed")),
-            };
-            return (this, Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error)));
-        };
-
-        let result = seq_access
+        let result = this
+            .seq_access
             .erased_next_element_seed(DeserializableDeserializeSeed {
                 deserialize_seed: seed,
             })
             .wrap();
 
-        core::mem::drop(seq_access);
-
         (this, result)
     }
 
     fn size_hint(this: &Self) -> Option<self::serde::serde::serde_types::Usize> {
-        // TODO: can we do better than no error reporting here?
-        let seq_access = this.seq_access.try_borrow().ok()?;
-        let size_hint = seq_access.erased_size_hint()?;
+        let size_hint = this.seq_access.erased_size_hint()?;
 
         u32::try_from(size_hint)
             .ok()
@@ -1201,7 +1184,7 @@ impl<'de, T: ::serde::de::MapAccess<'de>> ErasedMapAccess for T {
 }
 
 pub struct GuestsideMapAccessProvider {
-    map_access: RefCell<Box<dyn ErasedMapAccess>>,
+    map_access: Box<dyn ErasedMapAccess>,
     _scope: ScopedBorrowMut<()>,
 }
 
@@ -1221,7 +1204,7 @@ impl GuestsideMapAccessProvider {
                 unsafe { core::mem::transmute(map_access) };
 
             inner(Self {
-                map_access: RefCell::new(map_access),
+                map_access,
                 _scope: scope.borrow_mut(),
             })
         };
@@ -1233,9 +1216,11 @@ impl GuestsideMapAccessProvider {
     }
 }
 
-impl self::exports::serde::serde::serde_deserializer::MapAccess for GuestsideMapAccessProvider {
+impl self::exports::serde::serde::serde_deserializer::GuestMapAccess
+    for GuestsideMapAccessProvider
+{
     fn next_key_seed(
-        this: self::exports::serde::serde::serde_deserializer::OwnMapAccess,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnMapAccess,
         seed: self::exports::serde::serde::serde_deserializer::OwnedDeserializeSeedHandle,
     ) -> (
         self::exports::serde::serde::serde_deserializer::OwnMapAccess,
@@ -1246,32 +1231,21 @@ impl self::exports::serde::serde::serde_deserializer::MapAccess for GuestsideMap
     ) {
         // TODO: Safety
         let seed = unsafe {
-            self::serde::serde::serde_deserialize::DeserializeSeed::from_handle(
-                seed.owned_handle,
-                true,
-            )
+            self::serde::serde::serde_deserialize::DeserializeSeed::from_handle(seed.owned_handle)
         };
 
-        let Ok(mut map_access) = this.map_access.try_borrow_mut() else {
-            let error = DeError {
-                inner: DeErrorVariants::Custom(String::from("bug: could not mutably borrow the owned MapAccess in MapAccess::next_key_seed")),
-            };
-            return (this, Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error)));
-        };
-
-        let result = map_access
+        let result = this
+            .map_access
             .erased_next_key_seed(DeserializableDeserializeSeed {
                 deserialize_seed: seed,
             })
             .wrap();
 
-        core::mem::drop(map_access);
-
         (this, result)
     }
 
     fn next_value_seed(
-        this: self::exports::serde::serde::serde_deserializer::OwnMapAccess,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnMapAccess,
         seed: self::exports::serde::serde::serde_deserializer::OwnedDeserializeSeedHandle,
     ) -> (
         self::exports::serde::serde::serde_deserializer::OwnMapAccess,
@@ -1282,34 +1256,21 @@ impl self::exports::serde::serde::serde_deserializer::MapAccess for GuestsideMap
     ) {
         // TODO: Safety
         let seed = unsafe {
-            self::serde::serde::serde_deserialize::DeserializeSeed::from_handle(
-                seed.owned_handle,
-                true,
-            )
+            self::serde::serde::serde_deserialize::DeserializeSeed::from_handle(seed.owned_handle)
         };
 
-        let Ok(mut map_access) = this.map_access.try_borrow_mut() else {
-            let error = DeError {
-                inner: DeErrorVariants::Custom(String::from("bug: could not mutably borrow the owned MapAccess in MapAccess::next_value_seed")),
-            };
-            return (this, Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error)));
-        };
-
-        let result = map_access
+        let result = this
+            .map_access
             .erased_next_value_seed(DeserializableDeserializeSeed {
                 deserialize_seed: seed,
             })
             .wrap();
 
-        core::mem::drop(map_access);
-
         (this, result)
     }
 
     fn size_hint(this: &Self) -> Option<self::serde::serde::serde_types::Usize> {
-        // TODO: can we do better than no error reporting here?
-        let map_access = this.map_access.try_borrow().ok()?;
-        let size_hint = map_access.erased_size_hint()?;
+        let size_hint = this.map_access.erased_size_hint()?;
 
         u32::try_from(size_hint)
             .ok()
@@ -1338,7 +1299,7 @@ impl<'de, T: ::serde::de::EnumAccess<'de>> ErasedEnumAccess for T {
                     unsafe { core::mem::transmute(variant_access) };
 
                 let variant_access = GuestsideVariantAccessProvider {
-                    variant_access: RefCell::new(Some(variant_access)),
+                    variant_access: Some(variant_access),
                     _scope: scope,
                 };
 
@@ -1350,8 +1311,8 @@ impl<'de, T: ::serde::de::EnumAccess<'de>> ErasedEnumAccess for T {
 }
 
 pub struct GuestsideEnumAccessProvider {
-    enum_access: RefCell<Option<Box<dyn ErasedEnumAccess>>>,
-    scope: RefCell<Option<ScopedBorrowMut<()>>>,
+    enum_access: Option<Box<dyn ErasedEnumAccess>>,
+    scope: Option<ScopedBorrowMut<()>>,
 }
 
 impl GuestsideEnumAccessProvider {
@@ -1370,8 +1331,8 @@ impl GuestsideEnumAccessProvider {
                 unsafe { core::mem::transmute(enum_access) };
 
             inner(Self {
-                enum_access: RefCell::new(Some(enum_access)),
-                scope: RefCell::new(Some(scope.borrow_mut())),
+                enum_access: Some(enum_access),
+                scope: Some(scope.borrow_mut()),
             })
         };
 
@@ -1382,9 +1343,11 @@ impl GuestsideEnumAccessProvider {
     }
 }
 
-impl self::exports::serde::serde::serde_deserializer::EnumAccess for GuestsideEnumAccessProvider {
+impl self::exports::serde::serde::serde_deserializer::GuestEnumAccess
+    for GuestsideEnumAccessProvider
+{
     fn variant_seed(
-        this: self::exports::serde::serde::serde_deserializer::OwnEnumAccess,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnEnumAccess,
         seed: self::exports::serde::serde::serde_deserializer::OwnedDeserializeSeedHandle,
     ) -> Result<
         (
@@ -1395,32 +1358,17 @@ impl self::exports::serde::serde::serde_deserializer::EnumAccess for GuestsideEn
     > {
         // TODO: Safety
         let seed = unsafe {
-            self::serde::serde::serde_deserialize::DeserializeSeed::from_handle(
-                seed.owned_handle,
-                true,
-            )
+            self::serde::serde::serde_deserialize::DeserializeSeed::from_handle(seed.owned_handle)
         };
 
-        let Ok(mut enum_access) = this.enum_access.try_borrow_mut() else {
-            let error = DeError {
-                inner: DeErrorVariants::Custom(String::from("bug: could not mutably borrow the owned EnumAccess in EnumAccess::variant_seed")),
-            };
-            return Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error));
-        };
-        let Some(enum_access) = enum_access.take() else {
+        let Some(enum_access) = this.enum_access.take() else {
             let error = DeError {
                 inner: DeErrorVariants::Custom(String::from("bug: EnumAccess::variant_seed after free")),
             };
             return Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error));
         };
 
-        let Ok(mut scope) = this.scope.try_borrow_mut() else {
-            let error = DeError {
-                inner: DeErrorVariants::Custom(String::from("bug: could not mutably borrow the owned EnumAccess's scope in EnumAccess::variant_seed")),
-            };
-            return Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error));
-        };
-        let Some(scope) = scope.take() else {
+        let Some(scope) = this.scope.take() else {
             let error = DeError {
                 inner: DeErrorVariants::Custom(String::from("bug: EnumAccess::variant_seed after free")),
             };
@@ -1496,23 +1444,17 @@ impl<'de, T: ::serde::de::VariantAccess<'de>> ErasedVariantAccess for T {
 }
 
 pub struct GuestsideVariantAccessProvider {
-    variant_access: RefCell<Option<Box<dyn ErasedVariantAccess>>>,
+    variant_access: Option<Box<dyn ErasedVariantAccess>>,
     _scope: ScopedBorrowMut<()>,
 }
 
-impl self::exports::serde::serde::serde_deserializer::VariantAccess
+impl self::exports::serde::serde::serde_deserializer::GuestVariantAccess
     for GuestsideVariantAccessProvider
 {
     fn unit_variant(
-        this: self::exports::serde::serde::serde_deserializer::OwnVariantAccess,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnVariantAccess,
     ) -> Result<(), self::exports::serde::serde::serde_deserializer::OwnDeError> {
-        let Ok(mut variant_access) = this.variant_access.try_borrow_mut() else {
-            let error = DeError {
-                inner: DeErrorVariants::Custom(String::from("bug: could not mutably borrow the owned VariantAccess in VariantAccess::unit_variant")),
-            };
-            return Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error));
-        };
-        let Some(variant_access) = variant_access.take() else {
+        let Some(variant_access) = this.variant_access.take() else {
             let error = DeError {
                 inner: DeErrorVariants::Custom(String::from("bug: VariantAccess::unit_variant after free")),
             };
@@ -1523,7 +1465,7 @@ impl self::exports::serde::serde::serde_deserializer::VariantAccess
     }
 
     fn newtype_variant_seed(
-        this: self::exports::serde::serde::serde_deserializer::OwnVariantAccess,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnVariantAccess,
         seed: self::exports::serde::serde::serde_deserializer::OwnedDeserializeSeedHandle,
     ) -> Result<
         self::exports::serde::serde::serde_deserializer::OwnedDeValueHandle,
@@ -1531,19 +1473,10 @@ impl self::exports::serde::serde::serde_deserializer::VariantAccess
     > {
         // TODO: Safety
         let seed = unsafe {
-            self::serde::serde::serde_deserialize::DeserializeSeed::from_handle(
-                seed.owned_handle,
-                true,
-            )
+            self::serde::serde::serde_deserialize::DeserializeSeed::from_handle(seed.owned_handle)
         };
 
-        let Ok(mut variant_access) = this.variant_access.try_borrow_mut() else {
-            let error = DeError {
-                inner: DeErrorVariants::Custom(String::from("bug: could not mutably borrow the owned VariantAccess in VariantAccess::newtype_variant_seed")),
-            };
-            return Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error));
-        };
-        let Some(variant_access) = variant_access.take() else {
+        let Some(variant_access) = this.variant_access.take() else {
             let error = DeError {
                 inner: DeErrorVariants::Custom(String::from("bug: VariantAccess::newtype_variant_seed after free")),
             };
@@ -1558,7 +1491,7 @@ impl self::exports::serde::serde::serde_deserializer::VariantAccess
     }
 
     fn tuple_variant(
-        this: self::exports::serde::serde::serde_deserializer::OwnVariantAccess,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnVariantAccess,
         len: self::serde::serde::serde_types::Usize,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
@@ -1567,16 +1500,10 @@ impl self::exports::serde::serde::serde_deserializer::VariantAccess
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
-        let Ok(mut variant_access) = this.variant_access.try_borrow_mut() else {
-            let error = DeError {
-                inner: DeErrorVariants::Custom(String::from("bug: could not mutably borrow the owned VariantAccess in VariantAccess::tuple_variant")),
-            };
-            return Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error));
-        };
-        let Some(variant_access) = variant_access.take() else {
+        let Some(variant_access) = this.variant_access.take() else {
             let error = DeError {
                 inner: DeErrorVariants::Custom(String::from("bug: VariantAccess::tuple_variant after free")),
             };
@@ -1589,7 +1516,7 @@ impl self::exports::serde::serde::serde_deserializer::VariantAccess
     }
 
     fn struct_variant(
-        this: self::exports::serde::serde::serde_deserializer::OwnVariantAccess,
+        mut this: self::exports::serde::serde::serde_deserializer::OwnVariantAccess,
         fields: Vec<String>,
         visitor: self::exports::serde::serde::serde_deserializer::OwnedVisitorHandle,
     ) -> Result<
@@ -1598,16 +1525,10 @@ impl self::exports::serde::serde::serde_deserializer::VariantAccess
     > {
         // TODO: Safety
         let visitor = unsafe {
-            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle, true)
+            self::serde::serde::serde_deserialize::Visitor::from_handle(visitor.owned_handle)
         };
 
-        let Ok(mut variant_access) = this.variant_access.try_borrow_mut() else {
-            let error = DeError {
-                inner: DeErrorVariants::Custom(String::from("bug: could not mutably borrow the owned VariantAccess in VariantAccess::struct_variant")),
-            };
-            return Err(self::exports::serde::serde::serde_deserializer::OwnDeError::new(error));
-        };
-        let Some(variant_access) = variant_access.take() else {
+        let Some(variant_access) = this.variant_access.take() else {
             let error = DeError {
                 inner: DeErrorVariants::Custom(String::from("bug: VariantAccess::struct_variant after free")),
             };
@@ -1636,15 +1557,16 @@ impl<'de> ::serde::de::DeserializeSeed<'de> for DeserializableDeserializeSeed {
         unwrap_de_error(GuestsideDeserializerProvider::with_new(
             deserializer,
             |deserializer| {
-                let owned_handle =
+                let deserializer =
                     self::exports::serde::serde::serde_deserializer::OwnDeserializer::new(
                         deserializer,
-                    )
-                    .into_handle();
+                    );
 
                 self::serde::serde::serde_deserialize::DeserializeSeed::deserialize(
                     self.deserialize_seed,
-                    self::serde::serde::serde_deserialize::OwnedDeserializerHandle { owned_handle },
+                    self::serde::serde::serde_deserialize::OwnedDeserializerHandle {
+                        owned_handle: wit_bindgen::Resource::into_handle(deserializer),
+                    },
                 )
             },
         ))
@@ -1665,13 +1587,13 @@ fn unwrap_de_error<E: ::serde::de::Error>(
         Ok(value) => Ok(DeValue { value }),
         Err(err) => {
             // TODO: Safety
-            let err = unsafe {
+            let mut err = unsafe {
                 self::exports::serde::serde::serde_deserializer::OwnDeError::from_handle(
                     err.owned_handle,
                 )
             };
 
-            let err = match &err.inner {
+            let err = match &mut err.inner {
                 // Safety: TODO
                 DeErrorVariants::Error { err, .. } => err,
                 DeErrorVariants::Custom(msg) => return Err(::serde::de::Error::custom(msg)),
@@ -1707,11 +1629,6 @@ fn unwrap_de_error<E: ::serde::de::Error>(
                 }
             };
 
-            let Ok(mut err) = err.try_borrow_mut() else {
-                return Err(::serde::de::Error::custom(
-                    "bug: could not mutably borrow the owned Deserializer::Error result",
-                ));
-            };
             let Some(err) = err.take() else {
                 return Err(::serde::de::Error::custom(
                     "bug: use of Deserializer::Error after free",
@@ -1914,7 +1831,7 @@ impl<'de> ::serde::de::Visitor<'de> for VisitableVisitor {
                 self::serde::serde::serde_deserialize::Visitor::visit_some(
                     self.visitor,
                     self::serde::serde::serde_deserialize::OwnedDeserializerHandle {
-                        owned_handle: deserializer.into_handle(),
+                        owned_handle: wit_bindgen::Resource::into_handle(deserializer),
                     },
                 )
             },
@@ -1942,7 +1859,7 @@ impl<'de> ::serde::de::Visitor<'de> for VisitableVisitor {
                 self::serde::serde::serde_deserialize::Visitor::visit_newtype_struct(
                     self.visitor,
                     self::serde::serde::serde_deserialize::OwnedDeserializerHandle {
-                        owned_handle: deserializer.into_handle(),
+                        owned_handle: wit_bindgen::Resource::into_handle(deserializer),
                     },
                 )
             },
@@ -1956,7 +1873,7 @@ impl<'de> ::serde::de::Visitor<'de> for VisitableVisitor {
             self::serde::serde::serde_deserialize::Visitor::visit_seq(
                 self.visitor,
                 self::serde::serde::serde_deserialize::OwnedSeqAccessHandle {
-                    owned_handle: seq.into_handle(),
+                    owned_handle: wit_bindgen::Resource::into_handle(seq),
                 },
             )
         }))
@@ -1971,7 +1888,7 @@ impl<'de> ::serde::de::Visitor<'de> for VisitableVisitor {
                 self::serde::serde::serde_deserialize::Visitor::visit_map(
                     self.visitor,
                     self::serde::serde::serde_deserialize::OwnedMapAccessHandle {
-                        owned_handle: map.into_handle(),
+                        owned_handle: wit_bindgen::Resource::into_handle(map),
                     },
                 )
             },
@@ -1988,7 +1905,7 @@ impl<'de> ::serde::de::Visitor<'de> for VisitableVisitor {
                 self::serde::serde::serde_deserialize::Visitor::visit_enum(
                     self.visitor,
                     self::serde::serde::serde_deserialize::OwnedEnumAccessHandle {
-                        owned_handle: data.into_handle(),
+                        owned_handle: wit_bindgen::Resource::into_handle(data),
                     },
                 )
             },
@@ -2006,7 +1923,7 @@ pub struct DeError {
 
 enum DeErrorVariants {
     Error {
-        err: RefCell<Option<Any>>,
+        err: Option<Any>,
         display: String,
         debug: String,
     },
@@ -2108,7 +2025,7 @@ impl DeError {
         // Safety: TODO
         Self {
             inner: DeErrorVariants::Error {
-                err: unsafe { RefCell::new(Some(Any::new(err))) },
+                err: unsafe { Some(Any::new(err)) },
                 display,
                 debug,
             },
@@ -2116,7 +2033,7 @@ impl DeError {
     }
 }
 
-impl self::exports::serde::serde::serde_deserializer::DeError for DeError {
+impl self::exports::serde::serde::serde_deserializer::GuestDeError for DeError {
     fn display(this: &DeError) -> String {
         match &this.inner {
             DeErrorVariants::Error { display, .. } => String::from(display),

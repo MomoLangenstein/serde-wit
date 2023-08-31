@@ -14,7 +14,7 @@ pub struct GuestsideSerializerClient {
     serialize: ScopedBorrow<dyn ErasedSerialize>,
 }
 
-impl self::exports::serde::serde::serde_serialize::Serialize for GuestsideSerializerClient {
+impl self::exports::serde::serde::serde_serialize::GuestSerialize for GuestsideSerializerClient {
     fn serialize(
         &self,
         serializer: self::exports::serde::serde::serde_serialize::OwnedSerializerHandle,
@@ -84,10 +84,7 @@ impl SerializerableSerializer {
     ) -> Self {
         // Safety: both serializers should be the same on the other side, from owned to owned
         let serializer = unsafe {
-            self::serde::serde::serde_serializer::Serializer::from_handle(
-                serializer.owned_handle,
-                true,
-            )
+            self::serde::serde::serde_serializer::Serializer::from_handle(serializer.owned_handle)
         };
 
         Self { serializer }
@@ -238,7 +235,7 @@ impl ::serde::Serializer for SerializerableSerializer {
     ) -> Result<Self::Ok, Self::Error> {
         GuestsideSerializerClient::with_new(value, |value| {
             let borrowed_handle =
-                unsafe { core::mem::transmute::<&GuestsideSerializerClient, isize>(value) } as i32;
+                unsafe { core::mem::transmute::<&GuestsideSerializerClient, usize>(value) } as u32;
             let value = serde::serde::serde_serializer::BorrowedSerializeHandle { borrowed_handle };
             self::serde::serde::serde_serializer::Serializer::serialize_some(self.serializer, value)
         })
@@ -279,7 +276,7 @@ impl ::serde::Serializer for SerializerableSerializer {
     ) -> Result<Self::Ok, Self::Error> {
         GuestsideSerializerClient::with_new(value, |value| {
             let borrowed_handle =
-                unsafe { core::mem::transmute::<&GuestsideSerializerClient, isize>(value) } as i32;
+                unsafe { core::mem::transmute::<&GuestsideSerializerClient, usize>(value) } as u32;
             let value = serde::serde::serde_serializer::BorrowedSerializeHandle { borrowed_handle };
             self::serde::serde::serde_serializer::Serializer::serialize_newtype_struct(
                 self.serializer,
@@ -299,7 +296,7 @@ impl ::serde::Serializer for SerializerableSerializer {
     ) -> Result<Self::Ok, Self::Error> {
         GuestsideSerializerClient::with_new(value, |value| {
             let borrowed_handle =
-                unsafe { core::mem::transmute::<&GuestsideSerializerClient, isize>(value) } as i32;
+                unsafe { core::mem::transmute::<&GuestsideSerializerClient, usize>(value) } as u32;
             let value = serde::serde::serde_serializer::BorrowedSerializeHandle { borrowed_handle };
             self::serde::serde::serde_serializer::Serializer::serialize_newtype_variant(
                 self.serializer,
@@ -507,7 +504,7 @@ impl ::serde::ser::SerializeSeq for SerializerableSerializeSeq {
 
         let (serialize_seq, result) = GuestsideSerializerClient::with_new(value, |value| {
             let borrowed_handle =
-                unsafe { core::mem::transmute::<&GuestsideSerializerClient, isize>(value) } as i32;
+                unsafe { core::mem::transmute::<&GuestsideSerializerClient, usize>(value) } as u32;
             let value = serde::serde::serde_serializer::BorrowedSerializeHandle { borrowed_handle };
             self::serde::serde::serde_serializer::SerializeSeq::serialize_element(
                 serialize_seq,
@@ -546,7 +543,7 @@ impl ::serde::ser::SerializeTuple for SerializerableSerializeTuple {
 
         let (serialize_tuple, result) = GuestsideSerializerClient::with_new(value, |value| {
             let borrowed_handle =
-                unsafe { core::mem::transmute::<&GuestsideSerializerClient, isize>(value) } as i32;
+                unsafe { core::mem::transmute::<&GuestsideSerializerClient, usize>(value) } as u32;
             let value = serde::serde::serde_serializer::BorrowedSerializeHandle { borrowed_handle };
             self::serde::serde::serde_serializer::SerializeTuple::serialize_element(
                 serialize_tuple,
@@ -586,8 +583,8 @@ impl ::serde::ser::SerializeTupleStruct for SerializerableSerializeTupleStruct {
         let (serialize_tuple_struct, result) =
             GuestsideSerializerClient::with_new(value, |value| {
                 let borrowed_handle =
-                    unsafe { core::mem::transmute::<&GuestsideSerializerClient, isize>(value) }
-                        as i32;
+                    unsafe { core::mem::transmute::<&GuestsideSerializerClient, usize>(value) }
+                        as u32;
                 let value =
                     serde::serde::serde_serializer::BorrowedSerializeHandle { borrowed_handle };
                 self::serde::serde::serde_serializer::SerializeTupleStruct::serialize_field(
@@ -629,8 +626,8 @@ impl ::serde::ser::SerializeTupleVariant for SerializerableSerializeTupleVariant
         let (serialize_tuple_variant, result) =
             GuestsideSerializerClient::with_new(value, |value| {
                 let borrowed_handle =
-                    unsafe { core::mem::transmute::<&GuestsideSerializerClient, isize>(value) }
-                        as i32;
+                    unsafe { core::mem::transmute::<&GuestsideSerializerClient, usize>(value) }
+                        as u32;
                 let value =
                     serde::serde::serde_serializer::BorrowedSerializeHandle { borrowed_handle };
                 self::serde::serde::serde_serializer::SerializeTupleVariant::serialize_field(
@@ -671,7 +668,7 @@ impl ::serde::ser::SerializeMap for SerializerableSerializeMap {
 
         let (serialize_map, result) = GuestsideSerializerClient::with_new(key, |key| {
             let borrowed_handle =
-                unsafe { core::mem::transmute::<&GuestsideSerializerClient, isize>(key) } as i32;
+                unsafe { core::mem::transmute::<&GuestsideSerializerClient, usize>(key) } as u32;
             let key = serde::serde::serde_serializer::BorrowedSerializeHandle { borrowed_handle };
             self::serde::serde::serde_serializer::SerializeMap::serialize_key(serialize_map, key)
         });
@@ -690,7 +687,7 @@ impl ::serde::ser::SerializeMap for SerializerableSerializeMap {
 
         let (serialize_map, result) = GuestsideSerializerClient::with_new(value, |value| {
             let borrowed_handle =
-                unsafe { core::mem::transmute::<&GuestsideSerializerClient, isize>(value) } as i32;
+                unsafe { core::mem::transmute::<&GuestsideSerializerClient, usize>(value) } as u32;
             let value = serde::serde::serde_serializer::BorrowedSerializeHandle { borrowed_handle };
             self::serde::serde::serde_serializer::SerializeMap::serialize_value(
                 serialize_map,
@@ -721,7 +718,7 @@ impl ::serde::ser::SerializeMap for SerializerableSerializeMap {
 
         let (serialize_map, result) = GuestsideSerializerClient::with_new(key, |key| {
             let borrowed_handle =
-                unsafe { core::mem::transmute::<&GuestsideSerializerClient, isize>(key) } as i32;
+                unsafe { core::mem::transmute::<&GuestsideSerializerClient, usize>(key) } as u32;
             let key = serde::serde::serde_serializer::BorrowedSerializeHandle { borrowed_handle };
             self::serde::serde::serde_serializer::SerializeMap::serialize_key(serialize_map, key)
         });
@@ -733,7 +730,7 @@ impl ::serde::ser::SerializeMap for SerializerableSerializeMap {
 
         let (serialize_map, result) = GuestsideSerializerClient::with_new(value, |value| {
             let borrowed_handle =
-                unsafe { core::mem::transmute::<&GuestsideSerializerClient, isize>(value) } as i32;
+                unsafe { core::mem::transmute::<&GuestsideSerializerClient, usize>(value) } as u32;
             let value = serde::serde::serde_serializer::BorrowedSerializeHandle { borrowed_handle };
             self::serde::serde::serde_serializer::SerializeMap::serialize_value(
                 serialize_map,
@@ -765,7 +762,7 @@ impl ::serde::ser::SerializeStruct for SerializerableSerializeStruct {
 
         let (serialize_struct, result) = GuestsideSerializerClient::with_new(value, |value| {
             let borrowed_handle =
-                unsafe { core::mem::transmute::<&GuestsideSerializerClient, isize>(value) } as i32;
+                unsafe { core::mem::transmute::<&GuestsideSerializerClient, usize>(value) } as u32;
             let value = serde::serde::serde_serializer::BorrowedSerializeHandle { borrowed_handle };
             self::serde::serde::serde_serializer::SerializeStruct::serialize_field(
                 serialize_struct,
@@ -822,8 +819,8 @@ impl ::serde::ser::SerializeStructVariant for SerializerableSerializeStructVaria
         let (serialize_struct_variant, result) =
             GuestsideSerializerClient::with_new(value, |value| {
                 let borrowed_handle =
-                    unsafe { core::mem::transmute::<&GuestsideSerializerClient, isize>(value) }
-                        as i32;
+                    unsafe { core::mem::transmute::<&GuestsideSerializerClient, usize>(value) }
+                        as u32;
                 let value =
                     serde::serde::serde_serializer::BorrowedSerializeHandle { borrowed_handle };
                 self::serde::serde::serde_serializer::SerializeStructVariant::serialize_field(

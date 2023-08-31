@@ -1,5 +1,3 @@
-use core::cell::RefCell;
-
 use alloc::{boxed::Box, format, string::String, vec::Vec};
 
 use ::serde::ser::{
@@ -26,9 +24,9 @@ use crate::intern::intern_string;
 use crate::wit_to_usize;
 
 pub struct GuestsideSerializerProvider {
-    serializer: RefCell<Option<Box<dyn ErasedSerializer>>>,
+    serializer: Option<Box<dyn ErasedSerializer>>,
     is_human_readable: bool,
-    scope: RefCell<Option<ScopedBorrowMut<()>>>,
+    scope: Option<ScopedBorrowMut<()>>,
 }
 
 trait WrapSerResult {
@@ -63,9 +61,11 @@ impl WrapSerResult for Result<(), SerError> {
     }
 }
 
-impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSerializerProvider {
+impl self::exports::serde::serde::serde_serializer::GuestSerializer
+    for GuestsideSerializerProvider
+{
     fn serialize_bool(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
         v: bool,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerOk,
@@ -77,7 +77,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_i8(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
         v: i8,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerOk,
@@ -89,7 +89,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_i16(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
         v: i16,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerOk,
@@ -101,7 +101,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_i32(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
         v: i32,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerOk,
@@ -113,7 +113,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_i64(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
         v: i64,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerOk,
@@ -125,7 +125,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_i128(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
         v: self::serde::serde::serde_types::S128,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerOk,
@@ -145,7 +145,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_u8(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
         v: u8,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerOk,
@@ -157,7 +157,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_u16(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
         v: u16,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerOk,
@@ -169,7 +169,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_u32(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
         v: u32,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerOk,
@@ -181,7 +181,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_u64(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
         v: u64,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerOk,
@@ -193,7 +193,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_u128(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
         v: self::serde::serde::serde_types::U128,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerOk,
@@ -213,7 +213,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_f32(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
         v: f32,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerOk,
@@ -225,7 +225,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_f64(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
         v: f64,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerOk,
@@ -237,7 +237,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_char(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
         v: char,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerOk,
@@ -249,7 +249,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_str(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
         v: String,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerOk,
@@ -261,7 +261,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_bytes(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
         v: Vec<u8>,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerOk,
@@ -273,7 +273,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_none(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerOk,
         self::exports::serde::serde::serde_serializer::OwnSerError,
@@ -284,7 +284,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_some(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
         value: self::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerOk,
@@ -292,10 +292,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     > {
         // TODO: Safety
         let value = unsafe {
-            self::serde::serde::serde_serialize::Serialize::from_handle(
-                value.borrowed_handle,
-                false,
-            )
+            self::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
         };
         this.try_extract_serializer("serialize_some")?
             .erased_serialize_some(&SerializableSerialize::new(&value))
@@ -303,7 +300,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_unit(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerOk,
         self::exports::serde::serde::serde_serializer::OwnSerError,
@@ -314,7 +311,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_unit_struct(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
         name: String,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerOk,
@@ -326,7 +323,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_unit_variant(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
         name: String,
         variant_index: u32,
         variant: String,
@@ -344,7 +341,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_newtype_struct(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
         name: String,
         value: self::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
     ) -> Result<
@@ -353,10 +350,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     > {
         // TODO: Safety
         let value = unsafe {
-            self::serde::serde::serde_serialize::Serialize::from_handle(
-                value.borrowed_handle,
-                false,
-            )
+            self::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
         };
         this.try_extract_serializer("serialize_newtype_struct")?
             .erased_serialize_newtype_struct(
@@ -367,7 +361,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_newtype_variant(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
         name: String,
         variant_index: u32,
         variant: String,
@@ -378,10 +372,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     > {
         // TODO: Safety
         let value = unsafe {
-            self::serde::serde::serde_serialize::Serialize::from_handle(
-                value.borrowed_handle,
-                false,
-            )
+            self::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
         };
         this.try_extract_serializer("serialize_newtype_variant")?
             .erased_serialize_newtype_variant(
@@ -394,7 +385,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_seq(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
         len: Option<self::serde::serde::serde_types::Usize>,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerializeSeq,
@@ -408,7 +399,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
         Ok(
             self::exports::serde::serde::serde_serializer::OwnSerializeSeq::new(
                 GuestsideSerializeSeqProvider {
-                    serialize_seq: RefCell::new(Some(serialize_seq)),
+                    serialize_seq: Some(serialize_seq),
                     _scope: this.try_extract_scope("serialize_seq")?,
                 },
             ),
@@ -416,7 +407,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_tuple(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
         len: self::serde::serde::serde_types::Usize,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerializeTuple,
@@ -430,7 +421,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
         Ok(
             self::exports::serde::serde::serde_serializer::OwnSerializeTuple::new(
                 GuestsideSerializeTupleProvider {
-                    serialize_tuple: RefCell::new(Some(serialize_tuple)),
+                    serialize_tuple: Some(serialize_tuple),
                     _scope: this.try_extract_scope("serialize_tuple")?,
                 },
             ),
@@ -438,7 +429,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_tuple_struct(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
         name: String,
         len: self::serde::serde::serde_types::Usize,
     ) -> Result<
@@ -453,7 +444,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
         Ok(
             self::exports::serde::serde::serde_serializer::OwnSerializeTupleStruct::new(
                 GuestsideSerializeTupleStructProvider {
-                    serialize_tuple_struct: RefCell::new(Some(serialize_tuple_struct)),
+                    serialize_tuple_struct: Some(serialize_tuple_struct),
                     _scope: this.try_extract_scope("serialize_tuple_struct")?,
                 },
             ),
@@ -461,7 +452,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_tuple_variant(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
         name: String,
         variant_index: u32,
         variant: String,
@@ -483,7 +474,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
         Ok(
             self::exports::serde::serde::serde_serializer::OwnSerializeTupleVariant::new(
                 GuestsideSerializeTupleVariantProvider {
-                    serialize_tuple_variant: RefCell::new(Some(serialize_tuple_variant)),
+                    serialize_tuple_variant: Some(serialize_tuple_variant),
                     _scope: this.try_extract_scope("serialize_tuple_variant")?,
                 },
             ),
@@ -491,7 +482,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_map(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
         len: Option<self::serde::serde::serde_types::Usize>,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerializeMap,
@@ -505,7 +496,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
         Ok(
             self::exports::serde::serde::serde_serializer::OwnSerializeMap::new(
                 GuestsideSerializeMapProvider {
-                    serialize_map: RefCell::new(Some(serialize_map)),
+                    serialize_map: Some(serialize_map),
                     _scope: this.try_extract_scope("serialize_map")?,
                 },
             ),
@@ -513,7 +504,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_struct(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
         name: String,
         len: self::serde::serde::serde_types::Usize,
     ) -> Result<
@@ -528,7 +519,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
         Ok(
             self::exports::serde::serde::serde_serializer::OwnSerializeStruct::new(
                 GuestsideSerializeStructProvider {
-                    serialize_struct: RefCell::new(Some(serialize_struct)),
+                    serialize_struct: Some(serialize_struct),
                     _scope: this.try_extract_scope("serialize_struct")?,
                 },
             ),
@@ -536,7 +527,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
     }
 
     fn serialize_struct_variant(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
         name: String,
         variant_index: u32,
         variant: String,
@@ -558,7 +549,7 @@ impl self::exports::serde::serde::serde_serializer::Serializer for GuestsideSeri
         Ok(
             self::exports::serde::serde::serde_serializer::OwnSerializeStructVariant::new(
                 GuestsideSerializeStructVariantProvider {
-                    serialize_struct_variant: RefCell::new(Some(serialize_struct_variant)),
+                    serialize_struct_variant: Some(serialize_struct_variant),
                     _scope: this.try_extract_scope("serialize_struct_variant")?,
                 },
             ),
@@ -587,8 +578,8 @@ impl GuestsideSerializerProvider {
 
             inner(Self {
                 is_human_readable: serializer.erased_is_human_readable(),
-                serializer: RefCell::new(Some(serializer)),
-                scope: RefCell::new(Some(scope.borrow_mut())),
+                serializer: Some(serializer),
+                scope: Some(scope.borrow_mut()),
             })
         };
 
@@ -599,16 +590,11 @@ impl GuestsideSerializerProvider {
     }
 
     fn try_extract_serializer(
-        &self,
+        &mut self,
         method: &'static str,
     ) -> Result<Box<dyn ErasedSerializer>, self::exports::serde::serde::serde_serializer::OwnSerError>
     {
-        let Ok(mut serializer) = self.serializer.try_borrow_mut() else {
-            return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(format!("bug: could not mutably borrow the owned Serializer in Serializer::{method}"))
-            }));
-        };
-        let Some(serializer) = serializer.take() else {
+        let Some(serializer) = self.serializer.take() else {
             return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
                 inner: SerErrorOrCustom::Custom(format!("bug: Serializer::{method} after free"))
             }));
@@ -617,16 +603,11 @@ impl GuestsideSerializerProvider {
     }
 
     fn try_extract_scope(
-        &self,
+        &mut self,
         method: &'static str,
     ) -> Result<ScopedBorrowMut<()>, self::exports::serde::serde::serde_serializer::OwnSerError>
     {
-        let Ok(mut scope) = self.scope.try_borrow_mut() else {
-            return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(format!("bug: could not mutably borrow the owned Serializer's scope in Serializer::{method}"))
-            }));
-        };
-        let Some(scope) = scope.take() else {
+        let Some(scope) = self.scope.take() else {
             return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
                 inner: SerErrorOrCustom::Custom(format!("bug: Serializer::{method} after free"))
             }));
@@ -1148,14 +1129,14 @@ impl<T: SerializeStructVariant> ErasedSerializeStructVariant for T {
 }
 
 pub struct SerOk {
-    value: RefCell<Option<Any>>,
+    value: Option<Any>,
 }
 
 impl SerOk {
     fn wrap<T>(value: T) -> Self {
         // Safety: TODO
         Self {
-            value: unsafe { RefCell::new(Some(Any::new(value))) },
+            value: unsafe { Some(Any::new(value)) },
         }
     }
 }
@@ -1166,14 +1147,14 @@ pub struct SerError {
 
 enum SerErrorOrCustom {
     Error {
-        err: RefCell<Option<Any>>,
+        err: Option<Any>,
         display: String,
         debug: String,
     },
     Custom(String),
 }
 
-impl self::exports::serde::serde::serde_serializer::SerError for SerError {
+impl self::exports::serde::serde::serde_serializer::GuestSerError for SerError {
     fn display(&self) -> String {
         match &self.inner {
             SerErrorOrCustom::Error { display, .. } => String::from(display),
@@ -1209,7 +1190,7 @@ impl SerError {
         // Safety: TODO
         Self {
             inner: SerErrorOrCustom::Error {
-                err: RefCell::new(Some(unsafe { Any::new(err) })),
+                err: Some(unsafe { Any::new(err) }),
                 display,
                 debug,
             },
@@ -1218,56 +1199,51 @@ impl SerError {
 }
 
 pub struct GuestsideSerializeSeqProvider {
-    serialize_seq: RefCell<Option<Box<dyn ErasedSerializeSeq>>>,
+    serialize_seq: Option<Box<dyn ErasedSerializeSeq>>,
     _scope: ScopedBorrowMut<()>,
 }
 
 pub struct GuestsideSerializeTupleProvider {
-    serialize_tuple: RefCell<Option<Box<dyn ErasedSerializeTuple>>>,
+    serialize_tuple: Option<Box<dyn ErasedSerializeTuple>>,
     _scope: ScopedBorrowMut<()>,
 }
 
 pub struct GuestsideSerializeTupleStructProvider {
-    serialize_tuple_struct: RefCell<Option<Box<dyn ErasedSerializeTupleStruct>>>,
+    serialize_tuple_struct: Option<Box<dyn ErasedSerializeTupleStruct>>,
     _scope: ScopedBorrowMut<()>,
 }
 
 pub struct GuestsideSerializeTupleVariantProvider {
-    serialize_tuple_variant: RefCell<Option<Box<dyn ErasedSerializeTupleVariant>>>,
+    serialize_tuple_variant: Option<Box<dyn ErasedSerializeTupleVariant>>,
     _scope: ScopedBorrowMut<()>,
 }
 
 pub struct GuestsideSerializeMapProvider {
-    serialize_map: RefCell<Option<Box<dyn ErasedSerializeMap>>>,
+    serialize_map: Option<Box<dyn ErasedSerializeMap>>,
     _scope: ScopedBorrowMut<()>,
 }
 
 pub struct GuestsideSerializeStructProvider {
-    serialize_struct: RefCell<Option<Box<dyn ErasedSerializeStruct>>>,
+    serialize_struct: Option<Box<dyn ErasedSerializeStruct>>,
     _scope: ScopedBorrowMut<()>,
 }
 
 pub struct GuestsideSerializeStructVariantProvider {
-    serialize_struct_variant: RefCell<Option<Box<dyn ErasedSerializeStructVariant>>>,
+    serialize_struct_variant: Option<Box<dyn ErasedSerializeStructVariant>>,
     _scope: ScopedBorrowMut<()>,
 }
 
-impl self::exports::serde::serde::serde_serializer::SerializeSeq for GuestsideSerializeSeqProvider {
+impl self::exports::serde::serde::serde_serializer::GuestSerializeSeq
+    for GuestsideSerializeSeqProvider
+{
     fn serialize_element(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializeSeq,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeSeq,
         value: self::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
     ) -> (
         self::exports::serde::serde::serde_serializer::OwnSerializeSeq,
         Result<(), self::exports::serde::serde::serde_serializer::OwnSerError>,
     ) {
-        let Ok(mut serialize_seq_mut) = this.serialize_seq.try_borrow_mut() else {
-            return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: could not mutably borrow the mutably borrowed SerializeSeq in SerializeSeq::serialize_element"))
-            })));
-        };
-        let Some(serialize_seq) = serialize_seq_mut.as_mut() else {
-            core::mem::drop(serialize_seq_mut);
-
+        let Some(serialize_seq) = this.serialize_seq.as_mut() else {
             return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
                 inner: SerErrorOrCustom::Custom(String::from("bug: SerializeSeq::serialize_element after free"))
             })));
@@ -1275,33 +1251,23 @@ impl self::exports::serde::serde::serde_serializer::SerializeSeq for GuestsideSe
 
         // TODO: Safety
         let value = unsafe {
-            self::serde::serde::serde_serialize::Serialize::from_handle(
-                value.borrowed_handle,
-                false,
-            )
+            self::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
         };
 
         let result = serialize_seq
             .erased_serialize_element(&SerializableSerialize::new(&value))
             .wrap();
 
-        core::mem::drop(serialize_seq_mut);
-
         (this, result)
     }
 
     fn end(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializeSeq,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeSeq,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerOk,
         self::exports::serde::serde::serde_serializer::OwnSerError,
     > {
-        let Ok(mut serialize_seq) = this.serialize_seq.try_borrow_mut() else {
-            return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: could not mutably borrow the owned SerializeSeq in SerializeSeq::end"))
-            }));
-        };
-        let Some(serialize_seq) = serialize_seq.take() else {
+        let Some(serialize_seq) = this.serialize_seq.take() else {
             return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
                 inner: SerErrorOrCustom::Custom(String::from("bug: SerializeSeq::end after free"))
             }));
@@ -1310,24 +1276,17 @@ impl self::exports::serde::serde::serde_serializer::SerializeSeq for GuestsideSe
     }
 }
 
-impl self::exports::serde::serde::serde_serializer::SerializeTuple
+impl self::exports::serde::serde::serde_serializer::GuestSerializeTuple
     for GuestsideSerializeTupleProvider
 {
     fn serialize_element(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializeTuple,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeTuple,
         value: self::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
     ) -> (
         self::exports::serde::serde::serde_serializer::OwnSerializeTuple,
         Result<(), self::exports::serde::serde::serde_serializer::OwnSerError>,
     ) {
-        let Ok(mut serialize_tuple_mut) = this.serialize_tuple.try_borrow_mut() else {
-            return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: could not mutably borrow the mutably borrowed SerializeTuple in SerializeTuple::serialize_element"))
-            })));
-        };
-        let Some(serialize_tuple) = serialize_tuple_mut.as_mut() else {
-            core::mem::drop(serialize_tuple_mut);
-
+        let Some(serialize_tuple) = this.serialize_tuple.as_mut() else {
             return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
                 inner: SerErrorOrCustom::Custom(String::from("bug: SerializeTuple::serialize_element after free"))
             })));
@@ -1335,33 +1294,23 @@ impl self::exports::serde::serde::serde_serializer::SerializeTuple
 
         // TODO: Safety
         let value = unsafe {
-            self::serde::serde::serde_serialize::Serialize::from_handle(
-                value.borrowed_handle,
-                false,
-            )
+            self::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
         };
 
         let result = serialize_tuple
             .erased_serialize_element(&SerializableSerialize::new(&value))
             .wrap();
 
-        core::mem::drop(serialize_tuple_mut);
-
         (this, result)
     }
 
     fn end(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializeTuple,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeTuple,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerOk,
         self::exports::serde::serde::serde_serializer::OwnSerError,
     > {
-        let Ok(mut serialize_tuple) = this.serialize_tuple.try_borrow_mut() else {
-            return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: could not mutably borrow the owned SerializeTuple in SerializeTuple::end"))
-            }));
-        };
-        let Some(serialize_tuple) = serialize_tuple.take() else {
+        let Some(serialize_tuple) = this.serialize_tuple.take() else {
             return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
                 inner: SerErrorOrCustom::Custom(String::from("bug: SerializeTuple::end after free"))
             }));
@@ -1370,24 +1319,17 @@ impl self::exports::serde::serde::serde_serializer::SerializeTuple
     }
 }
 
-impl self::exports::serde::serde::serde_serializer::SerializeTupleStruct
+impl self::exports::serde::serde::serde_serializer::GuestSerializeTupleStruct
     for GuestsideSerializeTupleStructProvider
 {
     fn serialize_field(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializeTupleStruct,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeTupleStruct,
         value: self::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
     ) -> (
         self::exports::serde::serde::serde_serializer::OwnSerializeTupleStruct,
         Result<(), self::exports::serde::serde::serde_serializer::OwnSerError>,
     ) {
-        let Ok(mut serialize_tuple_struct_mut) = this.serialize_tuple_struct.try_borrow_mut() else {
-            return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: could not mutably borrow the mutably borrowed SerializeTupleStruct in SerializeTupleStruct::serialize_field"))
-            })));
-        };
-        let Some(serialize_tuple_struct) = serialize_tuple_struct_mut.as_mut() else {
-            core::mem::drop(serialize_tuple_struct_mut);
-
+        let Some(serialize_tuple_struct) = this.serialize_tuple_struct.as_mut() else {
             return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
                 inner: SerErrorOrCustom::Custom(String::from("bug: SerializeTupleStruct::serialize_field after free"))
             })));
@@ -1395,33 +1337,23 @@ impl self::exports::serde::serde::serde_serializer::SerializeTupleStruct
 
         // TODO: Safety
         let value = unsafe {
-            self::serde::serde::serde_serialize::Serialize::from_handle(
-                value.borrowed_handle,
-                false,
-            )
+            self::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
         };
 
         let result = serialize_tuple_struct
             .erased_serialize_field(&SerializableSerialize::new(&value))
             .wrap();
 
-        core::mem::drop(serialize_tuple_struct_mut);
-
         (this, result)
     }
 
     fn end(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializeTupleStruct,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeTupleStruct,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerOk,
         self::exports::serde::serde::serde_serializer::OwnSerError,
     > {
-        let Ok(mut serialize_tuple_struct) = this.serialize_tuple_struct.try_borrow_mut() else {
-            return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: could not mutably borrow the owned SerializeTupleStruct in SerializeTupleStruct::end"))
-            }));
-        };
-        let Some(serialize_tuple_struct) = serialize_tuple_struct.take() else {
+        let Some(serialize_tuple_struct) = this.serialize_tuple_struct.take() else {
             return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
                 inner: SerErrorOrCustom::Custom(String::from("bug: SerializeTupleStruct::end after free"))
             }));
@@ -1430,24 +1362,17 @@ impl self::exports::serde::serde::serde_serializer::SerializeTupleStruct
     }
 }
 
-impl self::exports::serde::serde::serde_serializer::SerializeTupleVariant
+impl self::exports::serde::serde::serde_serializer::GuestSerializeTupleVariant
     for GuestsideSerializeTupleVariantProvider
 {
     fn serialize_field(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializeTupleVariant,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeTupleVariant,
         value: self::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
     ) -> (
         self::exports::serde::serde::serde_serializer::OwnSerializeTupleVariant,
         Result<(), self::exports::serde::serde::serde_serializer::OwnSerError>,
     ) {
-        let Ok(mut serialize_tuple_variant_mut) = this.serialize_tuple_variant.try_borrow_mut() else {
-            return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: could not mutably borrow the mutably borrowed SerializeTupleVariant in SerializeTupleVariant::serialize_field"))
-            })));
-        };
-        let Some(serialize_tuple_variant) = serialize_tuple_variant_mut.as_mut() else {
-            core::mem::drop(serialize_tuple_variant_mut);
-
+        let Some(serialize_tuple_variant) = this.serialize_tuple_variant.as_mut() else {
             return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
                 inner: SerErrorOrCustom::Custom(String::from("bug: SerializeTupleVariant::serialize_field after free"))
             })));
@@ -1455,33 +1380,23 @@ impl self::exports::serde::serde::serde_serializer::SerializeTupleVariant
 
         // TODO: Safety
         let value = unsafe {
-            self::serde::serde::serde_serialize::Serialize::from_handle(
-                value.borrowed_handle,
-                false,
-            )
+            self::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
         };
 
         let result = serialize_tuple_variant
             .erased_serialize_field(&SerializableSerialize::new(&value))
             .wrap();
 
-        core::mem::drop(serialize_tuple_variant_mut);
-
         (this, result)
     }
 
     fn end(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializeTupleVariant,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeTupleVariant,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerOk,
         self::exports::serde::serde::serde_serializer::OwnSerError,
     > {
-        let Ok(mut serialize_tuple_variant) = this.serialize_tuple_variant.try_borrow_mut() else {
-            return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: could not mutably borrow the owned SerializeTupleVariant in SerializeTupleVariant::end"))
-            }));
-        };
-        let Some(serialize_tuple_variant) = serialize_tuple_variant.take() else {
+        let Some(serialize_tuple_variant) = this.serialize_tuple_variant.take() else {
             return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
                 inner: SerErrorOrCustom::Custom(String::from("bug: SerializeTupleVariant::end after free"))
             }));
@@ -1490,22 +1405,17 @@ impl self::exports::serde::serde::serde_serializer::SerializeTupleVariant
     }
 }
 
-impl self::exports::serde::serde::serde_serializer::SerializeMap for GuestsideSerializeMapProvider {
+impl self::exports::serde::serde::serde_serializer::GuestSerializeMap
+    for GuestsideSerializeMapProvider
+{
     fn serialize_key(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializeMap,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeMap,
         key: self::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
     ) -> (
         self::exports::serde::serde::serde_serializer::OwnSerializeMap,
         Result<(), self::exports::serde::serde::serde_serializer::OwnSerError>,
     ) {
-        let Ok(mut serialize_map_mut) = this.serialize_map.try_borrow_mut() else {
-            return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: could not mutably borrow the mutably borrowed SerializeMap in SerializeMap::serialize_key"))
-            })));
-        };
-        let Some(serialize_map) = serialize_map_mut.as_mut() else {
-            core::mem::drop(serialize_map_mut);
-
+        let Some(serialize_map) = this.serialize_map.as_mut() else {
             return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
                 inner: SerErrorOrCustom::Custom(String::from("bug: SerializeMap::serialize_key after free"))
             })));
@@ -1513,33 +1423,24 @@ impl self::exports::serde::serde::serde_serializer::SerializeMap for GuestsideSe
 
         // TODO: Safety
         let key = unsafe {
-            self::serde::serde::serde_serialize::Serialize::from_handle(key.borrowed_handle, false)
+            self::serde::serde::serde_serialize::Serialize::from_handle(key.borrowed_handle)
         };
 
         let result = serialize_map
             .erased_serialize_key(&SerializableSerialize::new(&key))
             .wrap();
 
-        core::mem::drop(serialize_map_mut);
-
         (this, result)
     }
 
     fn serialize_value(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializeMap,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeMap,
         value: self::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
     ) -> (
         self::exports::serde::serde::serde_serializer::OwnSerializeMap,
         Result<(), self::exports::serde::serde::serde_serializer::OwnSerError>,
     ) {
-        let Ok(mut serialize_map_mut) = this.serialize_map.try_borrow_mut() else {
-            return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: could not mutably borrow the mutably borrowed SerializeMap in SerializeMap::serialize_value"))
-            })));
-        };
-        let Some(serialize_map) = serialize_map_mut.as_mut() else {
-            core::mem::drop(serialize_map_mut);
-
+        let Some(serialize_map) = this.serialize_map.as_mut() else {
             return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
                 inner: SerErrorOrCustom::Custom(String::from("bug: SerializeMap::serialize_value after free"))
             })));
@@ -1547,33 +1448,23 @@ impl self::exports::serde::serde::serde_serializer::SerializeMap for GuestsideSe
 
         // TODO: Safety
         let value = unsafe {
-            self::serde::serde::serde_serialize::Serialize::from_handle(
-                value.borrowed_handle,
-                false,
-            )
+            self::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
         };
 
         let result = serialize_map
             .erased_serialize_key(&SerializableSerialize::new(&value))
             .wrap();
 
-        core::mem::drop(serialize_map_mut);
-
         (this, result)
     }
 
     fn end(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializeMap,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeMap,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerOk,
         self::exports::serde::serde::serde_serializer::OwnSerError,
     > {
-        let Ok(mut serialize_map) = this.serialize_map.try_borrow_mut() else {
-            return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: could not mutably borrow the owned SerializeMap in SerializeMap::end"))
-            }));
-        };
-        let Some(serialize_map) = serialize_map.take() else {
+        let Some(serialize_map) = this.serialize_map.take() else {
             return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
                 inner: SerErrorOrCustom::Custom(String::from("bug: SerializeMap::end after free"))
             }));
@@ -1582,25 +1473,18 @@ impl self::exports::serde::serde::serde_serializer::SerializeMap for GuestsideSe
     }
 }
 
-impl self::exports::serde::serde::serde_serializer::SerializeStruct
+impl self::exports::serde::serde::serde_serializer::GuestSerializeStruct
     for GuestsideSerializeStructProvider
 {
     fn serialize_field(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializeStruct,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeStruct,
         key: String,
         value: self::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
     ) -> (
         self::exports::serde::serde::serde_serializer::OwnSerializeStruct,
         Result<(), self::exports::serde::serde::serde_serializer::OwnSerError>,
     ) {
-        let Ok(mut serialize_struct_mut) = this.serialize_struct.try_borrow_mut() else {
-            return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: could not mutably borrow the mutably borrowed SerializeStruct in SerializeStruct::serialize_field"))
-            })));
-        };
-        let Some(serialize_struct) = serialize_struct_mut.as_mut() else {
-            core::mem::drop(serialize_struct_mut);
-
+        let Some(serialize_struct) = this.serialize_struct.as_mut() else {
             return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
                 inner: SerErrorOrCustom::Custom(String::from("bug: SerializeStruct::serialize_field after free"))
             })));
@@ -1608,33 +1492,23 @@ impl self::exports::serde::serde::serde_serializer::SerializeStruct
 
         // TODO: Safety
         let value = unsafe {
-            self::serde::serde::serde_serialize::Serialize::from_handle(
-                value.borrowed_handle,
-                false,
-            )
+            self::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
         };
 
         let result = serialize_struct
             .erased_serialize_field(intern_string(key), &SerializableSerialize::new(&value))
             .wrap();
 
-        core::mem::drop(serialize_struct_mut);
-
         (this, result)
     }
 
     fn end(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializeStruct,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeStruct,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerOk,
         self::exports::serde::serde::serde_serializer::OwnSerError,
     > {
-        let Ok(mut serialize_struct) = this.serialize_struct.try_borrow_mut() else {
-        return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-            inner: SerErrorOrCustom::Custom(String::from("bug: could not mutably borrow the owned SerializeStruct in SerializeStruct::end"))
-        }));
-    };
-        let Some(serialize_struct) = serialize_struct.take() else {
+        let Some(serialize_struct) = this.serialize_struct.take() else {
         return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
             inner: SerErrorOrCustom::Custom(String::from("bug: SerializeStruct::end after free"))
         }));
@@ -1643,20 +1517,13 @@ impl self::exports::serde::serde::serde_serializer::SerializeStruct
     }
 
     fn skip_field(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializeStruct,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeStruct,
         key: String,
     ) -> (
         self::exports::serde::serde::serde_serializer::OwnSerializeStruct,
         Result<(), self::exports::serde::serde::serde_serializer::OwnSerError>,
     ) {
-        let Ok(mut serialize_struct_mut) = this.serialize_struct.try_borrow_mut() else {
-            return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: could not mutably borrow the mutably borrowed SerializeStruct in SerializeStruct::skip_field"))
-            })));
-        };
-        let Some(serialize_struct) = serialize_struct_mut.as_mut() else {
-            core::mem::drop(serialize_struct_mut);
-
+        let Some(serialize_struct) = this.serialize_struct.as_mut() else {
             return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
                 inner: SerErrorOrCustom::Custom(String::from("bug: SerializeStruct::skip_field after free"))
             })));
@@ -1666,31 +1533,22 @@ impl self::exports::serde::serde::serde_serializer::SerializeStruct
             .erased_skip_field(intern_string(key))
             .wrap();
 
-        core::mem::drop(serialize_struct_mut);
-
         (this, result)
     }
 }
 
-impl self::exports::serde::serde::serde_serializer::SerializeStructVariant
+impl self::exports::serde::serde::serde_serializer::GuestSerializeStructVariant
     for GuestsideSerializeStructVariantProvider
 {
     fn serialize_field(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializeStructVariant,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeStructVariant,
         key: String,
         value: self::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
     ) -> (
         self::exports::serde::serde::serde_serializer::OwnSerializeStructVariant,
         Result<(), self::exports::serde::serde::serde_serializer::OwnSerError>,
     ) {
-        let Ok(mut serialize_struct_variant_mut) = this.serialize_struct_variant.try_borrow_mut() else {
-            return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: could not mutably borrow the mutably borrowed SerializeStructVariant in SerializeStructVariant::serialize_field"))
-            })));
-        };
-        let Some(serialize_struct_variant) = serialize_struct_variant_mut.as_mut() else {
-            core::mem::drop(serialize_struct_variant_mut);
-
+        let Some(serialize_struct_variant) = this.serialize_struct_variant.as_mut() else {
             return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
                 inner: SerErrorOrCustom::Custom(String::from("bug: SerializeStructVariant::serialize_field after free"))
             })));
@@ -1698,33 +1556,23 @@ impl self::exports::serde::serde::serde_serializer::SerializeStructVariant
 
         // TODO: Safety
         let value = unsafe {
-            self::serde::serde::serde_serialize::Serialize::from_handle(
-                value.borrowed_handle,
-                false,
-            )
+            self::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
         };
 
         let result = serialize_struct_variant
             .erased_serialize_field(intern_string(key), &SerializableSerialize::new(&value))
             .wrap();
 
-        core::mem::drop(serialize_struct_variant_mut);
-
         (this, result)
     }
 
     fn end(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializeStructVariant,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeStructVariant,
     ) -> Result<
         self::exports::serde::serde::serde_serializer::OwnSerOk,
         self::exports::serde::serde::serde_serializer::OwnSerError,
     > {
-        let Ok(mut serialize_struct_variant) = this.serialize_struct_variant.try_borrow_mut() else {
-            return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: could not mutably borrow the owned SerializeStructVariant in SerializeStructVariant::end"))
-            }));
-        };
-        let Some(serialize_struct_variant) = serialize_struct_variant.take() else {
+        let Some(serialize_struct_variant) = this.serialize_struct_variant.take() else {
             return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
                 inner: SerErrorOrCustom::Custom(String::from("bug: SerializeStructVariant::end after free"))
             }));
@@ -1733,20 +1581,13 @@ impl self::exports::serde::serde::serde_serializer::SerializeStructVariant
     }
 
     fn skip_field(
-        this: self::exports::serde::serde::serde_serializer::OwnSerializeStructVariant,
+        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeStructVariant,
         key: String,
     ) -> (
         self::exports::serde::serde::serde_serializer::OwnSerializeStructVariant,
         Result<(), self::exports::serde::serde::serde_serializer::OwnSerError>,
     ) {
-        let Ok(mut serialize_struct_variant_mut) = this.serialize_struct_variant.try_borrow_mut() else {
-            return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: could not mutably borrow the mutably borrowed SerializeStructVariant in SerializeStructVariant::skip_field"))
-            })));
-        };
-        let Some(serialize_struct_variant) = serialize_struct_variant_mut.as_mut() else {
-            core::mem::drop(serialize_struct_variant_mut);
-
+        let Some(serialize_struct_variant) = this.serialize_struct_variant.as_mut() else {
             return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
                 inner: SerErrorOrCustom::Custom(String::from("bug: SerializeStructVariant::skip_field after free"))
             })));
@@ -1755,8 +1596,6 @@ impl self::exports::serde::serde::serde_serializer::SerializeStructVariant
         let result = serialize_struct_variant
             .erased_skip_field(intern_string(key))
             .wrap();
-
-        core::mem::drop(serialize_struct_variant_mut);
 
         (this, result)
     }
@@ -1775,9 +1614,9 @@ impl<'a> SerializableSerialize<'a> {
 impl<'a> ::serde::Serialize for SerializableSerialize<'a> {
     fn serialize<S: ::serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let result = GuestsideSerializerProvider::with_new(serializer, |serializer| {
-            let owned_handle =
-                self::exports::serde::serde::serde_serializer::OwnSerializer::new(serializer)
-                    .into_handle();
+            let owned_handle = wit_bindgen::Resource::into_handle(
+                self::exports::serde::serde::serde_serializer::OwnSerializer::new(serializer),
+            );
             let serializer =
                 self::serde::serde::serde_serialize::OwnedSerializerHandle { owned_handle };
             self.serialize.serialize(serializer)
@@ -1786,17 +1625,12 @@ impl<'a> ::serde::Serialize for SerializableSerialize<'a> {
         match result {
             Ok(value) => {
                 // TODO: Safety
-                let value = unsafe {
+                let mut value = unsafe {
                     self::exports::serde::serde::serde_serializer::OwnSerOk::from_handle(
                         value.owned_handle,
                     )
                 };
-                let Ok(mut value) = value.value.try_borrow_mut() else {
-                    return Err(::serde::ser::Error::custom(
-                        "bug: could not mutably borrow the owned Serializer::Ok result",
-                    ));
-                };
-                let Some(value) = value.take() else {
+                let Some(value) = value.value.take() else {
                     return Err(::serde::ser::Error::custom(
                         "bug: use of Serializer::Ok after free",
                     ));
@@ -1811,19 +1645,14 @@ impl<'a> ::serde::Serialize for SerializableSerialize<'a> {
             }
             Err(err) => {
                 // TODO: Safety
-                let err = unsafe {
+                let mut err = unsafe {
                     self::exports::serde::serde::serde_serializer::OwnSerError::from_handle(
                         err.owned_handle,
                     )
                 };
-                let err = match &err.inner {
+                let err = match &mut err.inner {
                     SerErrorOrCustom::Error { err, .. } => err,
                     SerErrorOrCustom::Custom(msg) => return Err(::serde::ser::Error::custom(msg)),
-                };
-                let Ok(mut err) = err.try_borrow_mut() else {
-                    return Err(::serde::ser::Error::custom(
-                        "bug: could not mutably borrow the owned Serializer::Error result",
-                    ));
                 };
                 let Some(err) = err.take() else {
                     return Err(::serde::ser::Error::custom(
