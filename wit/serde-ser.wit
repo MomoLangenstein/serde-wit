@@ -1,7 +1,7 @@
-package serde:serde
+package serde:serde;
 
 interface serde-serialize {
-    use serde-types.{s128, usize, u128}
+    use serde-types.{s128, usize, u128};
 
     record owned-serializer-handle {
         owned-handle: u32
@@ -16,49 +16,49 @@ interface serde-serialize {
     }
 
     resource serialize {
-        serialize: func(serializer: owned-serializer-handle) -> result<owned-ser-ok-handle, owned-ser-error-handle>
+        serialize: func(serializer: owned-serializer-handle) -> result<owned-ser-ok-handle, owned-ser-error-handle>;
     }
 }
 
 interface serde-serializer {
-    use serde-types.{s128, usize, u128}
+    use serde-types.{s128, usize, u128};
 
     record borrowed-serialize-handle {
         borrowed-handle: u32
     }
 
     resource serializer {
-        serialize-bool: static func(%self: serializer, v: bool) -> result<ser-ok, ser-error>
-        serialize-i8: static func(%self: serializer, v: s8) -> result<ser-ok, ser-error>
-        serialize-i16: static func(%self: serializer, v: s16) -> result<ser-ok, ser-error>
-        serialize-i32: static func(%self: serializer, v: s32) -> result<ser-ok, ser-error>
-        serialize-i64: static func(%self: serializer, v: s64) -> result<ser-ok, ser-error>
-        serialize-i128: static func(%self: serializer, v: s128) -> result<ser-ok, ser-error>
-        serialize-u8: static func(%self: serializer, v: u8) -> result<ser-ok, ser-error>
-        serialize-u16: static func(%self: serializer, v: u16) -> result<ser-ok, ser-error>
-        serialize-u32: static func(%self: serializer, v: u32) -> result<ser-ok, ser-error>
-        serialize-u64: static func(%self: serializer, v: u64) -> result<ser-ok, ser-error>
-        serialize-u128: static func(%self: serializer, v: u128) -> result<ser-ok, ser-error>
-        serialize-f32: static func(%self: serializer, v: float32) -> result<ser-ok, ser-error>
-        serialize-f64: static func(%self: serializer, v: float64) -> result<ser-ok, ser-error>
-        serialize-char: static func(%self: serializer, v: char) -> result<ser-ok, ser-error>
-        serialize-str: static func(%self: serializer, v: string) -> result<ser-ok, ser-error>
-        serialize-bytes: static func(%self: serializer, v: list<u8>) -> result<ser-ok, ser-error>
-        serialize-none: static func(%self: serializer) -> result<ser-ok, ser-error>
-        serialize-some: static func(%self: serializer, value: borrowed-serialize-handle) -> result<ser-ok, ser-error>
-        serialize-unit: static func(%self: serializer) -> result<ser-ok, ser-error>
-        serialize-unit-struct: static func(%self: serializer, name: string) -> result<ser-ok, ser-error>
-        serialize-unit-variant: static func(%self: serializer, name: string, variant-index: u32, %variant: string) -> result<ser-ok, ser-error>
-        serialize-newtype-struct: static func(%self: serializer, name: string, value: borrowed-serialize-handle) -> result<ser-ok, ser-error>
-        serialize-newtype-variant: static func(%self: serializer, name: string, variant-index: u32, %variant: string, value: borrowed-serialize-handle) -> result<ser-ok, ser-error>
-        serialize-seq: static func(%self: serializer, len: option<usize>) -> result<serialize-seq, ser-error>
-        serialize-tuple: static func(%self: serializer, len: usize) -> result<serialize-tuple, ser-error>
-        serialize-tuple-struct: static func(%self: serializer, name: string, len: usize) -> result<serialize-tuple-struct, ser-error>
-        serialize-tuple-variant: static func(%self: serializer, name: string, variant-index: u32, %variant: string, len: usize) -> result<serialize-tuple-variant, ser-error>
-        serialize-map: static func(%self: serializer, len: option<usize>) -> result<serialize-map, ser-error>
-        serialize-struct: static func(%self: serializer, name: string, len: usize) -> result<serialize-struct, ser-error>
-        serialize-struct-variant: static func(%self: serializer, name: string, variant-index: u32, %variant: string, len: usize) -> result<serialize-struct-variant, ser-error>
-        is-human-readable: static func(%self: borrow<serializer>) -> bool
+        serialize-bool: static func(%self: serializer, v: bool) -> result<ser-ok, ser-error>;
+        serialize-i8: static func(%self: serializer, v: s8) -> result<ser-ok, ser-error>;
+        serialize-i16: static func(%self: serializer, v: s16) -> result<ser-ok, ser-error>;
+        serialize-i32: static func(%self: serializer, v: s32) -> result<ser-ok, ser-error>;
+        serialize-i64: static func(%self: serializer, v: s64) -> result<ser-ok, ser-error>;
+        serialize-i128: static func(%self: serializer, v: s128) -> result<ser-ok, ser-error>;
+        serialize-u8: static func(%self: serializer, v: u8) -> result<ser-ok, ser-error>;
+        serialize-u16: static func(%self: serializer, v: u16) -> result<ser-ok, ser-error>;
+        serialize-u32: static func(%self: serializer, v: u32) -> result<ser-ok, ser-error>;
+        serialize-u64: static func(%self: serializer, v: u64) -> result<ser-ok, ser-error>;
+        serialize-u128: static func(%self: serializer, v: u128) -> result<ser-ok, ser-error>;
+        serialize-f32: static func(%self: serializer, v: float32) -> result<ser-ok, ser-error>;
+        serialize-f64: static func(%self: serializer, v: float64) -> result<ser-ok, ser-error>;
+        serialize-char: static func(%self: serializer, v: char) -> result<ser-ok, ser-error>;
+        serialize-str: static func(%self: serializer, v: string) -> result<ser-ok, ser-error>;
+        serialize-bytes: static func(%self: serializer, v: list<u8>) -> result<ser-ok, ser-error>;
+        serialize-none: static func(%self: serializer) -> result<ser-ok, ser-error>;
+        serialize-some: static func(%self: serializer, value: borrowed-serialize-handle) -> result<ser-ok, ser-error>;
+        serialize-unit: static func(%self: serializer) -> result<ser-ok, ser-error>;
+        serialize-unit-struct: static func(%self: serializer, name: string) -> result<ser-ok, ser-error>;
+        serialize-unit-variant: static func(%self: serializer, name: string, variant-index: u32, %variant: string) -> result<ser-ok, ser-error>;
+        serialize-newtype-struct: static func(%self: serializer, name: string, value: borrowed-serialize-handle) -> result<ser-ok, ser-error>;
+        serialize-newtype-variant: static func(%self: serializer, name: string, variant-index: u32, %variant: string, value: borrowed-serialize-handle) -> result<ser-ok, ser-error>;
+        serialize-seq: static func(%self: serializer, len: option<usize>) -> result<serialize-seq, ser-error>;
+        serialize-tuple: static func(%self: serializer, len: usize) -> result<serialize-tuple, ser-error>;
+        serialize-tuple-struct: static func(%self: serializer, name: string, len: usize) -> result<serialize-tuple-struct, ser-error>;
+        serialize-tuple-variant: static func(%self: serializer, name: string, variant-index: u32, %variant: string, len: usize) -> result<serialize-tuple-variant, ser-error>;
+        serialize-map: static func(%self: serializer, len: option<usize>) -> result<serialize-map, ser-error>;
+        serialize-struct: static func(%self: serializer, name: string, len: usize) -> result<serialize-struct, ser-error>;
+        serialize-struct-variant: static func(%self: serializer, name: string, variant-index: u32, %variant: string, len: usize) -> result<serialize-struct-variant, ser-error>;
+        is-human-readable: static func(%self: borrow<serializer>) -> bool;
     }
 
     resource ser-ok {
@@ -66,47 +66,47 @@ interface serde-serializer {
     }
 
     resource ser-error {
-        display: func() -> string
-        debug: func() -> string
+        display: func() -> string;
+        debug: func() -> string;
 
-        custom: static func(msg: string) -> ser-error
+        custom: static func(msg: string) -> ser-error;
     }
 
     resource serialize-seq {
-        serialize-element: static func(%self: serialize-seq, value: borrowed-serialize-handle) -> tuple<serialize-seq, result<_, ser-error>>
-        end: static func(%self: serialize-seq) -> result<ser-ok, ser-error>
+        serialize-element: static func(%self: serialize-seq, value: borrowed-serialize-handle) -> tuple<serialize-seq, result<_, ser-error>>;
+        end: static func(%self: serialize-seq) -> result<ser-ok, ser-error>;
     }
 
     resource serialize-tuple {
-        serialize-element: static func(%self: serialize-tuple, value: borrowed-serialize-handle) -> tuple<serialize-tuple, result<_, ser-error>>
-        end: static func(%self: serialize-tuple) -> result<ser-ok, ser-error>
+        serialize-element: static func(%self: serialize-tuple, value: borrowed-serialize-handle) -> tuple<serialize-tuple, result<_, ser-error>>;
+        end: static func(%self: serialize-tuple) -> result<ser-ok, ser-error>;
     }
 
     resource serialize-tuple-struct {
-        serialize-field: static func(%self: serialize-tuple-struct, value: borrowed-serialize-handle) -> tuple<serialize-tuple-struct, result<_, ser-error>>
-        end: static func(%self: serialize-tuple-struct) -> result<ser-ok, ser-error>
+        serialize-field: static func(%self: serialize-tuple-struct, value: borrowed-serialize-handle) -> tuple<serialize-tuple-struct, result<_, ser-error>>;
+        end: static func(%self: serialize-tuple-struct) -> result<ser-ok, ser-error>;
     }
 
     resource serialize-tuple-variant {
-        serialize-field: static func(%self: serialize-tuple-variant, value: borrowed-serialize-handle) -> tuple<serialize-tuple-variant, result<_, ser-error>>
-        end: static func(%self: serialize-tuple-variant) -> result<ser-ok, ser-error>
+        serialize-field: static func(%self: serialize-tuple-variant, value: borrowed-serialize-handle) -> tuple<serialize-tuple-variant, result<_, ser-error>>;
+        end: static func(%self: serialize-tuple-variant) -> result<ser-ok, ser-error>;
     }
 
     resource serialize-map {
-        serialize-key: static func(%self: serialize-map, key: borrowed-serialize-handle) -> tuple<serialize-map, result<_, ser-error>>
-        serialize-value: static func(%self: serialize-map, value: borrowed-serialize-handle) -> tuple<serialize-map, result<_, ser-error>>
-        end: static func(%self: serialize-map) -> result<ser-ok, ser-error>
+        serialize-key: static func(%self: serialize-map, key: borrowed-serialize-handle) -> tuple<serialize-map, result<_, ser-error>>;
+        serialize-value: static func(%self: serialize-map, value: borrowed-serialize-handle) -> tuple<serialize-map, result<_, ser-error>>;
+        end: static func(%self: serialize-map) -> result<ser-ok, ser-error>;
     }
 
     resource serialize-struct {
-        serialize-field: static func(%self: serialize-struct, key: string, value: borrowed-serialize-handle) -> tuple<serialize-struct, result<_, ser-error>>
-        end: static func(%self: serialize-struct) -> result<ser-ok, ser-error>
-        skip-field: static func(%self: serialize-struct, key: string) -> tuple<serialize-struct, result<_, ser-error>>
+        serialize-field: static func(%self: serialize-struct, key: string, value: borrowed-serialize-handle) -> tuple<serialize-struct, result<_, ser-error>>;
+        end: static func(%self: serialize-struct) -> result<ser-ok, ser-error>;
+        skip-field: static func(%self: serialize-struct, key: string) -> tuple<serialize-struct, result<_, ser-error>>;
     }
 
     resource serialize-struct-variant {
-        serialize-field: static func(%self: serialize-struct-variant, key: string, value: borrowed-serialize-handle) -> tuple<serialize-struct-variant, result<_, ser-error>>
-        end: static func(%self: serialize-struct-variant) -> result<ser-ok, ser-error>
-        skip-field: static func(%self: serialize-struct-variant, key: string) -> tuple<serialize-struct-variant, result<_, ser-error>>
+        serialize-field: static func(%self: serialize-struct-variant, key: string, value: borrowed-serialize-handle) -> tuple<serialize-struct-variant, result<_, ser-error>>;
+        end: static func(%self: serialize-struct-variant) -> result<ser-ok, ser-error>;
+        skip-field: static func(%self: serialize-struct-variant, key: string) -> tuple<serialize-struct-variant, result<_, ser-error>>;
     }
 }

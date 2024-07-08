@@ -1,6 +1,6 @@
-package serde:serde
+package serde:serde;
 
 world serde-serializer-client {
-    import serde-serializer
-    export serde-serialize
+    import serde-serializer;
+    export serde-serialize;
 }

@@ -6,48 +6,60 @@ use ::serde::ser::{
 };
 use scoped_reference::{ScopedBorrowMut, ScopedReference};
 
-wit_bindgen::generate!({ world: "serde-serializer-provider", exports: {
-    "serde:serde/serde-serializer/serializer": GuestsideSerializerProvider,
-    "serde:serde/serde-serializer/ser-ok": SerOk,
-    "serde:serde/serde-serializer/ser-error": SerError,
-    "serde:serde/serde-serializer/serialize-seq": GuestsideSerializeSeqProvider,
-    "serde:serde/serde-serializer/serialize-tuple": GuestsideSerializeTupleProvider,
-    "serde:serde/serde-serializer/serialize-tuple-struct": GuestsideSerializeTupleStructProvider,
-    "serde:serde/serde-serializer/serialize-tuple-variant": GuestsideSerializeTupleVariantProvider,
-    "serde:serde/serde-serializer/serialize-map": GuestsideSerializeMapProvider,
-    "serde:serde/serde-serializer/serialize-struct": GuestsideSerializeStructProvider,
-    "serde:serde/serde-serializer/serialize-struct-variant": GuestsideSerializeStructVariantProvider,
-}, std_feature });
+mod bindings {
+    wit_bindgen::generate!({ world: "serde-serializer-provider", std_feature });
+}
+
+mod export {
+    enum GuestsideSerializerProvider {}
+
+    impl super::bindings::exports::serde::serde::serde_serializer::Guest
+        for GuestsideSerializerProvider
+    {
+        type Serializer = super::GuestsideSerializerProvider;
+        type SerOk = super::SerOk;
+        type SerError = super::SerError;
+        type SerializeSeq = super::GuestsideSerializeSeqProvider;
+        type SerializeTuple = super::GuestsideSerializeTupleProvider;
+        type SerializeTupleStruct = super::GuestsideSerializeTupleStructProvider;
+        type SerializeTupleVariant = super::GuestsideSerializeTupleVariantProvider;
+        type SerializeMap = super::GuestsideSerializeMapProvider;
+        type SerializeStruct = super::GuestsideSerializeStructProvider;
+        type SerializeStructVariant = super::GuestsideSerializeStructVariantProvider;
+    }
+
+    super::bindings::export!(GuestsideSerializerProvider with_types_in super::bindings);
+}
 
 use crate::any::Any;
 use crate::intern::intern_string;
 use crate::wit_to_usize;
 
 pub struct GuestsideSerializerProvider {
-    serializer: Option<Box<dyn ErasedSerializer>>,
+    serializer: Box<dyn ErasedSerializer>,
     is_human_readable: bool,
-    scope: Option<ScopedBorrowMut<()>>,
+    scope: ScopedBorrowMut<()>,
 }
 
 trait WrapSerResult {
     type Ok;
 
-    fn wrap(self) -> Result<Self::Ok, self::exports::serde::serde::serde_serializer::OwnSerError>;
+    fn wrap(self) -> Result<Self::Ok, bindings::exports::serde::serde::serde_serializer::SerError>;
 }
 
 impl WrapSerResult for Result<SerOk, SerError> {
-    type Ok = self::exports::serde::serde::serde_serializer::OwnSerOk;
+    type Ok = bindings::exports::serde::serde::serde_serializer::SerOk;
 
     fn wrap(
         self,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
         match self {
-            Ok(ok) => Ok(self::exports::serde::serde::serde_serializer::OwnSerOk::new(ok)),
+            Ok(ok) => Ok(bindings::exports::serde::serde::serde_serializer::SerOk::new(ok)),
             Err(error) => {
-                Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(error))
+                Err(bindings::exports::serde::serde::serde_serializer::SerError::new(error))
             }
         }
     }
@@ -56,80 +68,75 @@ impl WrapSerResult for Result<SerOk, SerError> {
 impl WrapSerResult for Result<(), SerError> {
     type Ok = ();
 
-    fn wrap(self) -> Result<(), self::exports::serde::serde::serde_serializer::OwnSerError> {
-        self.map_err(self::exports::serde::serde::serde_serializer::OwnSerError::new)
+    fn wrap(self) -> Result<(), bindings::exports::serde::serde::serde_serializer::SerError> {
+        self.map_err(bindings::exports::serde::serde::serde_serializer::SerError::new)
     }
 }
 
-impl self::exports::serde::serde::serde_serializer::GuestSerializer
+impl bindings::exports::serde::serde::serde_serializer::GuestSerializer
     for GuestsideSerializerProvider
 {
     fn serialize_bool(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
         v: bool,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        this.try_extract_serializer("serialize_bool")?
-            .erased_serialize_bool(v)
-            .wrap()
+        let Self { serializer, .. } = this.into_inner();
+        serializer.erased_serialize_bool(v).wrap()
     }
 
     fn serialize_i8(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
         v: i8,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        this.try_extract_serializer("serialize_i8")?
-            .erased_serialize_i8(v)
-            .wrap()
+        let Self { serializer, .. } = this.into_inner();
+        serializer.erased_serialize_i8(v).wrap()
     }
 
     fn serialize_i16(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
         v: i16,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        this.try_extract_serializer("serialize_i16")?
-            .erased_serialize_i16(v)
-            .wrap()
+        let Self { serializer, .. } = this.into_inner();
+        serializer.erased_serialize_i16(v).wrap()
     }
 
     fn serialize_i32(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
         v: i32,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        this.try_extract_serializer("serialize_i32")?
-            .erased_serialize_i32(v)
-            .wrap()
+        let Self { serializer, .. } = this.into_inner();
+        serializer.erased_serialize_i32(v).wrap()
     }
 
     fn serialize_i64(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
         v: i64,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        this.try_extract_serializer("serialize_i64")?
-            .erased_serialize_i64(v)
-            .wrap()
+        let Self { serializer, .. } = this.into_inner();
+        serializer.erased_serialize_i64(v).wrap()
     }
 
     fn serialize_i128(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
-        v: self::serde::serde::serde_types::S128,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
+        v: bindings::serde::serde::serde_types::S128,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
         let le_hi = v.le_hi.to_le_bytes();
         let le_lo = v.le_lo.to_le_bytes();
@@ -139,65 +146,62 @@ impl self::exports::serde::serde::serde_serializer::GuestSerializer
             le_lo[0], le_lo[1], le_lo[2], le_lo[3], le_lo[4], le_lo[5], le_lo[6], le_lo[7],
         ];
 
-        this.try_extract_serializer("serialize_i128")?
+        let Self { serializer, .. } = this.into_inner();
+        serializer
             .erased_serialize_i128(i128::from_le_bytes(bytes))
             .wrap()
     }
 
     fn serialize_u8(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
         v: u8,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        this.try_extract_serializer("serialize_u8")?
-            .erased_serialize_u8(v)
-            .wrap()
+        let Self { serializer, .. } = this.into_inner();
+        serializer.erased_serialize_u8(v).wrap()
     }
 
     fn serialize_u16(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
         v: u16,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        this.try_extract_serializer("serialize_u16")?
-            .erased_serialize_u16(v)
-            .wrap()
+        let Self { serializer, .. } = this.into_inner();
+        serializer.erased_serialize_u16(v).wrap()
     }
 
     fn serialize_u32(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
         v: u32,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        this.try_extract_serializer("serialize_u32")?
-            .erased_serialize_u32(v)
-            .wrap()
+        let Self { serializer, .. } = this.into_inner();
+        serializer.erased_serialize_u32(v).wrap()
     }
 
     fn serialize_u64(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
         v: u64,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        this.try_extract_serializer("serialize_u64")?
-            .erased_serialize_u64(v)
-            .wrap()
+        let Self { serializer, .. } = this.into_inner();
+        serializer.erased_serialize_u64(v).wrap()
     }
 
     fn serialize_u128(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
-        v: self::serde::serde::serde_types::U128,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
+        v: bindings::serde::serde::serde_types::U128,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
         let le_hi = v.le_hi.to_le_bytes();
         let le_lo = v.le_lo.to_le_bytes();
@@ -207,131 +211,128 @@ impl self::exports::serde::serde::serde_serializer::GuestSerializer
             le_lo[0], le_lo[1], le_lo[2], le_lo[3], le_lo[4], le_lo[5], le_lo[6], le_lo[7],
         ];
 
-        this.try_extract_serializer("serialize_u128")?
+        let Self { serializer, .. } = this.into_inner();
+        serializer
             .erased_serialize_u128(u128::from_le_bytes(bytes))
             .wrap()
     }
 
     fn serialize_f32(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
         v: f32,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        this.try_extract_serializer("serialize_f32")?
-            .erased_serialize_f32(v)
-            .wrap()
+        let Self { serializer, .. } = this.into_inner();
+        serializer.erased_serialize_f32(v).wrap()
     }
 
     fn serialize_f64(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
         v: f64,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        this.try_extract_serializer("serialize_f64")?
-            .erased_serialize_f64(v)
-            .wrap()
+        let Self { serializer, .. } = this.into_inner();
+        serializer.erased_serialize_f64(v).wrap()
     }
 
     fn serialize_char(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
         v: char,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        this.try_extract_serializer("serialize_char")?
-            .erased_serialize_char(v)
-            .wrap()
+        let Self { serializer, .. } = this.into_inner();
+        serializer.erased_serialize_char(v).wrap()
     }
 
     fn serialize_str(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
         v: String,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        this.try_extract_serializer("serialize_str")?
-            .erased_serialize_str(&v)
-            .wrap()
+        let Self { serializer, .. } = this.into_inner();
+        serializer.erased_serialize_str(&v).wrap()
     }
 
     fn serialize_bytes(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
         v: Vec<u8>,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        this.try_extract_serializer("serialize_bytes")?
-            .erased_serialize_bytes(&v)
-            .wrap()
+        let Self { serializer, .. } = this.into_inner();
+        serializer.erased_serialize_bytes(&v).wrap()
     }
 
     fn serialize_none(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        this.try_extract_serializer("serialize_none")?
-            .erased_serialize_none()
-            .wrap()
+        let Self { serializer, .. } = this.into_inner();
+        serializer.erased_serialize_none().wrap()
     }
 
     fn serialize_some(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
-        value: self::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
+        value: bindings::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
         // TODO: Safety
         let value = unsafe {
-            self::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
+            bindings::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
         };
-        this.try_extract_serializer("serialize_some")?
+        let Self { serializer, .. } = this.into_inner();
+        serializer
             .erased_serialize_some(&SerializableSerialize::new(&value))
             .wrap()
     }
 
     fn serialize_unit(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        this.try_extract_serializer("serialize_unit")?
-            .erased_serialize_unit()
-            .wrap()
+        let Self { serializer, .. } = this.into_inner();
+        serializer.erased_serialize_unit().wrap()
     }
 
     fn serialize_unit_struct(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
         name: String,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        this.try_extract_serializer("serialize_unit_struct")?
+        let Self { serializer, .. } = this.into_inner();
+        serializer
             .erased_serialize_unit_struct(intern_string(name))
             .wrap()
     }
 
     fn serialize_unit_variant(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
         name: String,
         variant_index: u32,
         variant: String,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        this.try_extract_serializer("serialize_unit_variant")?
+        let Self { serializer, .. } = this.into_inner();
+        serializer
             .erased_serialize_unit_variant(
                 intern_string(name),
                 variant_index,
@@ -341,18 +342,19 @@ impl self::exports::serde::serde::serde_serializer::GuestSerializer
     }
 
     fn serialize_newtype_struct(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
         name: String,
-        value: self::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
+        value: bindings::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
         // TODO: Safety
         let value = unsafe {
-            self::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
+            bindings::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
         };
-        this.try_extract_serializer("serialize_newtype_struct")?
+        let Self { serializer, .. } = this.into_inner();
+        serializer
             .erased_serialize_newtype_struct(
                 intern_string(name),
                 &SerializableSerialize::new(&value),
@@ -361,20 +363,21 @@ impl self::exports::serde::serde::serde_serializer::GuestSerializer
     }
 
     fn serialize_newtype_variant(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
         name: String,
         variant_index: u32,
         variant: String,
-        value: self::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
+        value: bindings::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
         // TODO: Safety
         let value = unsafe {
-            self::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
+            bindings::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
         };
-        this.try_extract_serializer("serialize_newtype_variant")?
+        let Self { serializer, .. } = this.into_inner();
+        serializer
             .erased_serialize_newtype_variant(
                 intern_string(name),
                 variant_index,
@@ -385,179 +388,202 @@ impl self::exports::serde::serde::serde_serializer::GuestSerializer
     }
 
     fn serialize_seq(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
-        len: Option<self::serde::serde::serde_types::Usize>,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
+        len: Option<bindings::serde::serde::serde_types::Usize>,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerializeSeq,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerializeSeq,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        let serialize_seq = this
-            .try_extract_serializer("serialize_seq")?
+        let Self {
+            serializer, scope, ..
+        } = this.into_inner();
+
+        let serialize_seq = serializer
             .erased_serialize_seq(len.map(|len| wit_to_usize(len.val)))
-            .map_err(self::exports::serde::serde::serde_serializer::OwnSerError::new)?;
+            .map_err(bindings::exports::serde::serde::serde_serializer::SerError::new)?;
 
         Ok(
-            self::exports::serde::serde::serde_serializer::OwnSerializeSeq::new(
+            bindings::exports::serde::serde::serde_serializer::SerializeSeq::new(
                 GuestsideSerializeSeqProvider {
-                    serialize_seq: Some(serialize_seq),
-                    _scope: this.try_extract_scope("serialize_seq")?,
+                    serialize_seq,
+                    _scope: scope,
                 },
             ),
         )
     }
 
     fn serialize_tuple(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
-        len: self::serde::serde::serde_types::Usize,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
+        len: bindings::serde::serde::serde_types::Usize,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerializeTuple,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerializeTuple,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        let serialize_tuple = this
-            .try_extract_serializer("serialize_tuple")?
+        let Self {
+            serializer, scope, ..
+        } = this.into_inner();
+
+        let serialize_tuple = serializer
             .erased_serialize_tuple(wit_to_usize(len.val))
-            .map_err(self::exports::serde::serde::serde_serializer::OwnSerError::new)?;
+            .map_err(bindings::exports::serde::serde::serde_serializer::SerError::new)?;
 
         Ok(
-            self::exports::serde::serde::serde_serializer::OwnSerializeTuple::new(
+            bindings::exports::serde::serde::serde_serializer::SerializeTuple::new(
                 GuestsideSerializeTupleProvider {
-                    serialize_tuple: Some(serialize_tuple),
-                    _scope: this.try_extract_scope("serialize_tuple")?,
+                    serialize_tuple,
+                    _scope: scope,
                 },
             ),
         )
     }
 
     fn serialize_tuple_struct(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
         name: String,
-        len: self::serde::serde::serde_types::Usize,
+        len: bindings::serde::serde::serde_types::Usize,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerializeTupleStruct,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerializeTupleStruct,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        let serialize_tuple_struct = this
-            .try_extract_serializer("serialize_tuple_struct")?
+        let Self {
+            serializer, scope, ..
+        } = this.into_inner();
+
+        let serialize_tuple_struct = serializer
             .erased_serialize_tuple_struct(intern_string(name), wit_to_usize(len.val))
-            .map_err(self::exports::serde::serde::serde_serializer::OwnSerError::new)?;
+            .map_err(bindings::exports::serde::serde::serde_serializer::SerError::new)?;
 
         Ok(
-            self::exports::serde::serde::serde_serializer::OwnSerializeTupleStruct::new(
+            bindings::exports::serde::serde::serde_serializer::SerializeTupleStruct::new(
                 GuestsideSerializeTupleStructProvider {
-                    serialize_tuple_struct: Some(serialize_tuple_struct),
-                    _scope: this.try_extract_scope("serialize_tuple_struct")?,
+                    serialize_tuple_struct,
+                    _scope: scope,
                 },
             ),
         )
     }
 
     fn serialize_tuple_variant(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
         name: String,
         variant_index: u32,
         variant: String,
-        len: self::serde::serde::serde_types::Usize,
+        len: bindings::serde::serde::serde_types::Usize,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerializeTupleVariant,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerializeTupleVariant,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        let serialize_tuple_variant = this
-            .try_extract_serializer("serialize_tuple_variant")?
+        let Self {
+            serializer, scope, ..
+        } = this.into_inner();
+
+        let serialize_tuple_variant = serializer
             .erased_serialize_tuple_variant(
                 intern_string(name),
                 variant_index,
                 intern_string(variant),
                 wit_to_usize(len.val),
             )
-            .map_err(self::exports::serde::serde::serde_serializer::OwnSerError::new)?;
+            .map_err(bindings::exports::serde::serde::serde_serializer::SerError::new)?;
 
         Ok(
-            self::exports::serde::serde::serde_serializer::OwnSerializeTupleVariant::new(
+            bindings::exports::serde::serde::serde_serializer::SerializeTupleVariant::new(
                 GuestsideSerializeTupleVariantProvider {
-                    serialize_tuple_variant: Some(serialize_tuple_variant),
-                    _scope: this.try_extract_scope("serialize_tuple_variant")?,
+                    serialize_tuple_variant,
+                    _scope: scope,
                 },
             ),
         )
     }
 
     fn serialize_map(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
-        len: Option<self::serde::serde::serde_types::Usize>,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
+        len: Option<bindings::serde::serde::serde_types::Usize>,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerializeMap,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerializeMap,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        let serialize_map = this
-            .try_extract_serializer("serialize_map")?
+        let Self {
+            serializer, scope, ..
+        } = this.into_inner();
+
+        let serialize_map = serializer
             .erased_serialize_map(len.map(|len| wit_to_usize(len.val)))
-            .map_err(self::exports::serde::serde::serde_serializer::OwnSerError::new)?;
+            .map_err(bindings::exports::serde::serde::serde_serializer::SerError::new)?;
 
         Ok(
-            self::exports::serde::serde::serde_serializer::OwnSerializeMap::new(
+            bindings::exports::serde::serde::serde_serializer::SerializeMap::new(
                 GuestsideSerializeMapProvider {
-                    serialize_map: Some(serialize_map),
-                    _scope: this.try_extract_scope("serialize_map")?,
+                    serialize_map,
+                    _scope: scope,
                 },
             ),
         )
     }
 
     fn serialize_struct(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
         name: String,
-        len: self::serde::serde::serde_types::Usize,
+        len: bindings::serde::serde::serde_types::Usize,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerializeStruct,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerializeStruct,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        let serialize_struct = this
-            .try_extract_serializer("serialize_struct")?
+        let Self {
+            serializer, scope, ..
+        } = this.into_inner();
+
+        let serialize_struct = serializer
             .erased_serialize_struct(intern_string(name), wit_to_usize(len.val))
-            .map_err(self::exports::serde::serde::serde_serializer::OwnSerError::new)?;
+            .map_err(bindings::exports::serde::serde::serde_serializer::SerError::new)?;
 
         Ok(
-            self::exports::serde::serde::serde_serializer::OwnSerializeStruct::new(
+            bindings::exports::serde::serde::serde_serializer::SerializeStruct::new(
                 GuestsideSerializeStructProvider {
-                    serialize_struct: Some(serialize_struct),
-                    _scope: this.try_extract_scope("serialize_struct")?,
+                    serialize_struct,
+                    _scope: scope,
                 },
             ),
         )
     }
 
     fn serialize_struct_variant(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializer,
+        this: bindings::exports::serde::serde::serde_serializer::Serializer,
         name: String,
         variant_index: u32,
         variant: String,
-        len: self::serde::serde::serde_types::Usize,
+        len: bindings::serde::serde::serde_types::Usize,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerializeStructVariant,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerializeStructVariant,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        let serialize_struct_variant = this
-            .try_extract_serializer("serialize_struct_variant")?
+        let Self {
+            serializer, scope, ..
+        } = this.into_inner();
+
+        let serialize_struct_variant = serializer
             .erased_serialize_struct_variant(
                 intern_string(name),
                 variant_index,
                 intern_string(variant),
                 wit_to_usize(len.val),
             )
-            .map_err(self::exports::serde::serde::serde_serializer::OwnSerError::new)?;
+            .map_err(bindings::exports::serde::serde::serde_serializer::SerError::new)?;
 
         Ok(
-            self::exports::serde::serde::serde_serializer::OwnSerializeStructVariant::new(
+            bindings::exports::serde::serde::serde_serializer::SerializeStructVariant::new(
                 GuestsideSerializeStructVariantProvider {
-                    serialize_struct_variant: Some(serialize_struct_variant),
-                    _scope: this.try_extract_scope("serialize_struct_variant")?,
+                    serialize_struct_variant,
+                    _scope: scope,
                 },
             ),
         )
     }
 
-    fn is_human_readable(this: &Self) -> bool {
-        this.is_human_readable
+    fn is_human_readable(
+        this: bindings::exports::serde::serde::serde_serializer::SerializerBorrow,
+    ) -> bool {
+        this.get::<Self>().is_human_readable
     }
 }
 
@@ -578,8 +604,8 @@ impl GuestsideSerializerProvider {
 
             inner(Self {
                 is_human_readable: serializer.erased_is_human_readable(),
-                serializer: Some(serializer),
-                scope: Some(scope.borrow_mut()),
+                serializer,
+                scope: scope.borrow_mut(),
             })
         };
 
@@ -587,32 +613,6 @@ impl GuestsideSerializerProvider {
         core::mem::drop(scope);
 
         result
-    }
-
-    fn try_extract_serializer(
-        &mut self,
-        method: &'static str,
-    ) -> Result<Box<dyn ErasedSerializer>, self::exports::serde::serde::serde_serializer::OwnSerError>
-    {
-        let Some(serializer) = self.serializer.take() else {
-            return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(format!("bug: Serializer::{method} after free"))
-            }));
-        };
-        Ok(serializer)
-    }
-
-    fn try_extract_scope(
-        &mut self,
-        method: &'static str,
-    ) -> Result<ScopedBorrowMut<()>, self::exports::serde::serde::serde_serializer::OwnSerError>
-    {
-        let Some(scope) = self.scope.take() else {
-            return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(format!("bug: Serializer::{method} after free"))
-            }));
-        };
-        Ok(scope)
     }
 }
 
@@ -1129,17 +1129,19 @@ impl<T: SerializeStructVariant> ErasedSerializeStructVariant for T {
 }
 
 pub struct SerOk {
-    value: Option<Any>,
+    value: Any,
 }
 
 impl SerOk {
     fn wrap<T>(value: T) -> Self {
         // Safety: TODO
         Self {
-            value: unsafe { Some(Any::new(value)) },
+            value: unsafe { Any::new(value) },
         }
     }
 }
+
+impl bindings::exports::serde::serde::serde_serializer::GuestSerOk for SerOk {}
 
 pub struct SerError {
     inner: SerErrorOrCustom,
@@ -1147,14 +1149,14 @@ pub struct SerError {
 
 enum SerErrorOrCustom {
     Error {
-        err: Option<Any>,
+        err: Any,
         display: String,
         debug: String,
     },
     Custom(String),
 }
 
-impl self::exports::serde::serde::serde_serializer::GuestSerError for SerError {
+impl bindings::exports::serde::serde::serde_serializer::GuestSerError for SerError {
     fn display(&self) -> String {
         match &self.inner {
             SerErrorOrCustom::Error { display, .. } => String::from(display),
@@ -1173,12 +1175,12 @@ impl self::exports::serde::serde::serde_serializer::GuestSerError for SerError {
         }
     }
 
-    fn custom(msg: String) -> self::exports::serde::serde::serde_serializer::OwnSerError {
+    fn custom(msg: String) -> bindings::exports::serde::serde::serde_serializer::SerError {
         let error = Self {
             inner: SerErrorOrCustom::Custom(msg),
         };
 
-        self::exports::serde::serde::serde_serializer::OwnSerError::new(error)
+        bindings::exports::serde::serde::serde_serializer::SerError::new(error)
     }
 }
 
@@ -1190,7 +1192,7 @@ impl SerError {
         // Safety: TODO
         Self {
             inner: SerErrorOrCustom::Error {
-                err: Some(unsafe { Any::new(err) }),
+                err: unsafe { Any::new(err) },
                 display,
                 debug,
             },
@@ -1199,62 +1201,58 @@ impl SerError {
 }
 
 pub struct GuestsideSerializeSeqProvider {
-    serialize_seq: Option<Box<dyn ErasedSerializeSeq>>,
+    serialize_seq: Box<dyn ErasedSerializeSeq>,
     _scope: ScopedBorrowMut<()>,
 }
 
 pub struct GuestsideSerializeTupleProvider {
-    serialize_tuple: Option<Box<dyn ErasedSerializeTuple>>,
+    serialize_tuple: Box<dyn ErasedSerializeTuple>,
     _scope: ScopedBorrowMut<()>,
 }
 
 pub struct GuestsideSerializeTupleStructProvider {
-    serialize_tuple_struct: Option<Box<dyn ErasedSerializeTupleStruct>>,
+    serialize_tuple_struct: Box<dyn ErasedSerializeTupleStruct>,
     _scope: ScopedBorrowMut<()>,
 }
 
 pub struct GuestsideSerializeTupleVariantProvider {
-    serialize_tuple_variant: Option<Box<dyn ErasedSerializeTupleVariant>>,
+    serialize_tuple_variant: Box<dyn ErasedSerializeTupleVariant>,
     _scope: ScopedBorrowMut<()>,
 }
 
 pub struct GuestsideSerializeMapProvider {
-    serialize_map: Option<Box<dyn ErasedSerializeMap>>,
+    serialize_map: Box<dyn ErasedSerializeMap>,
     _scope: ScopedBorrowMut<()>,
 }
 
 pub struct GuestsideSerializeStructProvider {
-    serialize_struct: Option<Box<dyn ErasedSerializeStruct>>,
+    serialize_struct: Box<dyn ErasedSerializeStruct>,
     _scope: ScopedBorrowMut<()>,
 }
 
 pub struct GuestsideSerializeStructVariantProvider {
-    serialize_struct_variant: Option<Box<dyn ErasedSerializeStructVariant>>,
+    serialize_struct_variant: Box<dyn ErasedSerializeStructVariant>,
     _scope: ScopedBorrowMut<()>,
 }
 
-impl self::exports::serde::serde::serde_serializer::GuestSerializeSeq
+impl bindings::exports::serde::serde::serde_serializer::GuestSerializeSeq
     for GuestsideSerializeSeqProvider
 {
     fn serialize_element(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeSeq,
-        value: self::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
+        mut this: bindings::exports::serde::serde::serde_serializer::SerializeSeq,
+        value: bindings::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
     ) -> (
-        self::exports::serde::serde::serde_serializer::OwnSerializeSeq,
-        Result<(), self::exports::serde::serde::serde_serializer::OwnSerError>,
+        bindings::exports::serde::serde::serde_serializer::SerializeSeq,
+        Result<(), bindings::exports::serde::serde::serde_serializer::SerError>,
     ) {
-        let Some(serialize_seq) = this.serialize_seq.as_mut() else {
-            return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: SerializeSeq::serialize_element after free"))
-            })));
-        };
-
         // TODO: Safety
         let value = unsafe {
-            self::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
+            bindings::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
         };
 
-        let result = serialize_seq
+        let result = this
+            .get_mut::<Self>()
+            .serialize_seq
             .erased_serialize_element(&SerializableSerialize::new(&value))
             .wrap();
 
@@ -1262,42 +1260,33 @@ impl self::exports::serde::serde::serde_serializer::GuestSerializeSeq
     }
 
     fn end(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeSeq,
+        this: bindings::exports::serde::serde::serde_serializer::SerializeSeq,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        let Some(serialize_seq) = this.serialize_seq.take() else {
-            return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: SerializeSeq::end after free"))
-            }));
-        };
-        serialize_seq.erased_end().wrap()
+        this.into_inner::<Self>().serialize_seq.erased_end().wrap()
     }
 }
 
-impl self::exports::serde::serde::serde_serializer::GuestSerializeTuple
+impl bindings::exports::serde::serde::serde_serializer::GuestSerializeTuple
     for GuestsideSerializeTupleProvider
 {
     fn serialize_element(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeTuple,
-        value: self::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
+        mut this: bindings::exports::serde::serde::serde_serializer::SerializeTuple,
+        value: bindings::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
     ) -> (
-        self::exports::serde::serde::serde_serializer::OwnSerializeTuple,
-        Result<(), self::exports::serde::serde::serde_serializer::OwnSerError>,
+        bindings::exports::serde::serde::serde_serializer::SerializeTuple,
+        Result<(), bindings::exports::serde::serde::serde_serializer::SerError>,
     ) {
-        let Some(serialize_tuple) = this.serialize_tuple.as_mut() else {
-            return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: SerializeTuple::serialize_element after free"))
-            })));
-        };
-
         // TODO: Safety
         let value = unsafe {
-            self::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
+            bindings::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
         };
 
-        let result = serialize_tuple
+        let result = this
+            .get_mut::<Self>()
+            .serialize_tuple
             .erased_serialize_element(&SerializableSerialize::new(&value))
             .wrap();
 
@@ -1305,42 +1294,36 @@ impl self::exports::serde::serde::serde_serializer::GuestSerializeTuple
     }
 
     fn end(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeTuple,
+        this: bindings::exports::serde::serde::serde_serializer::SerializeTuple,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        let Some(serialize_tuple) = this.serialize_tuple.take() else {
-            return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: SerializeTuple::end after free"))
-            }));
-        };
-        serialize_tuple.erased_end().wrap()
+        this.into_inner::<Self>()
+            .serialize_tuple
+            .erased_end()
+            .wrap()
     }
 }
 
-impl self::exports::serde::serde::serde_serializer::GuestSerializeTupleStruct
+impl bindings::exports::serde::serde::serde_serializer::GuestSerializeTupleStruct
     for GuestsideSerializeTupleStructProvider
 {
     fn serialize_field(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeTupleStruct,
-        value: self::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
+        mut this: bindings::exports::serde::serde::serde_serializer::SerializeTupleStruct,
+        value: bindings::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
     ) -> (
-        self::exports::serde::serde::serde_serializer::OwnSerializeTupleStruct,
-        Result<(), self::exports::serde::serde::serde_serializer::OwnSerError>,
+        bindings::exports::serde::serde::serde_serializer::SerializeTupleStruct,
+        Result<(), bindings::exports::serde::serde::serde_serializer::SerError>,
     ) {
-        let Some(serialize_tuple_struct) = this.serialize_tuple_struct.as_mut() else {
-            return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: SerializeTupleStruct::serialize_field after free"))
-            })));
-        };
-
         // TODO: Safety
         let value = unsafe {
-            self::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
+            bindings::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
         };
 
-        let result = serialize_tuple_struct
+        let result = this
+            .get_mut::<Self>()
+            .serialize_tuple_struct
             .erased_serialize_field(&SerializableSerialize::new(&value))
             .wrap();
 
@@ -1348,42 +1331,36 @@ impl self::exports::serde::serde::serde_serializer::GuestSerializeTupleStruct
     }
 
     fn end(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeTupleStruct,
+        this: bindings::exports::serde::serde::serde_serializer::SerializeTupleStruct,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        let Some(serialize_tuple_struct) = this.serialize_tuple_struct.take() else {
-            return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: SerializeTupleStruct::end after free"))
-            }));
-        };
-        serialize_tuple_struct.erased_end().wrap()
+        this.into_inner::<Self>()
+            .serialize_tuple_struct
+            .erased_end()
+            .wrap()
     }
 }
 
-impl self::exports::serde::serde::serde_serializer::GuestSerializeTupleVariant
+impl bindings::exports::serde::serde::serde_serializer::GuestSerializeTupleVariant
     for GuestsideSerializeTupleVariantProvider
 {
     fn serialize_field(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeTupleVariant,
-        value: self::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
+        mut this: bindings::exports::serde::serde::serde_serializer::SerializeTupleVariant,
+        value: bindings::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
     ) -> (
-        self::exports::serde::serde::serde_serializer::OwnSerializeTupleVariant,
-        Result<(), self::exports::serde::serde::serde_serializer::OwnSerError>,
+        bindings::exports::serde::serde::serde_serializer::SerializeTupleVariant,
+        Result<(), bindings::exports::serde::serde::serde_serializer::SerError>,
     ) {
-        let Some(serialize_tuple_variant) = this.serialize_tuple_variant.as_mut() else {
-            return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: SerializeTupleVariant::serialize_field after free"))
-            })));
-        };
-
         // TODO: Safety
         let value = unsafe {
-            self::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
+            bindings::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
         };
 
-        let result = serialize_tuple_variant
+        let result = this
+            .get_mut::<Self>()
+            .serialize_tuple_variant
             .erased_serialize_field(&SerializableSerialize::new(&value))
             .wrap();
 
@@ -1391,42 +1368,36 @@ impl self::exports::serde::serde::serde_serializer::GuestSerializeTupleVariant
     }
 
     fn end(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeTupleVariant,
+        this: bindings::exports::serde::serde::serde_serializer::SerializeTupleVariant,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        let Some(serialize_tuple_variant) = this.serialize_tuple_variant.take() else {
-            return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: SerializeTupleVariant::end after free"))
-            }));
-        };
-        serialize_tuple_variant.erased_end().wrap()
+        this.into_inner::<Self>()
+            .serialize_tuple_variant
+            .erased_end()
+            .wrap()
     }
 }
 
-impl self::exports::serde::serde::serde_serializer::GuestSerializeMap
+impl bindings::exports::serde::serde::serde_serializer::GuestSerializeMap
     for GuestsideSerializeMapProvider
 {
     fn serialize_key(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeMap,
-        key: self::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
+        mut this: bindings::exports::serde::serde::serde_serializer::SerializeMap,
+        key: bindings::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
     ) -> (
-        self::exports::serde::serde::serde_serializer::OwnSerializeMap,
-        Result<(), self::exports::serde::serde::serde_serializer::OwnSerError>,
+        bindings::exports::serde::serde::serde_serializer::SerializeMap,
+        Result<(), bindings::exports::serde::serde::serde_serializer::SerError>,
     ) {
-        let Some(serialize_map) = this.serialize_map.as_mut() else {
-            return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: SerializeMap::serialize_key after free"))
-            })));
-        };
-
         // TODO: Safety
         let key = unsafe {
-            self::serde::serde::serde_serialize::Serialize::from_handle(key.borrowed_handle)
+            bindings::serde::serde::serde_serialize::Serialize::from_handle(key.borrowed_handle)
         };
 
-        let result = serialize_map
+        let result = this
+            .get_mut::<Self>()
+            .serialize_map
             .erased_serialize_key(&SerializableSerialize::new(&key))
             .wrap();
 
@@ -1434,68 +1405,55 @@ impl self::exports::serde::serde::serde_serializer::GuestSerializeMap
     }
 
     fn serialize_value(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeMap,
-        value: self::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
+        mut this: bindings::exports::serde::serde::serde_serializer::SerializeMap,
+        value: bindings::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
     ) -> (
-        self::exports::serde::serde::serde_serializer::OwnSerializeMap,
-        Result<(), self::exports::serde::serde::serde_serializer::OwnSerError>,
+        bindings::exports::serde::serde::serde_serializer::SerializeMap,
+        Result<(), bindings::exports::serde::serde::serde_serializer::SerError>,
     ) {
-        let Some(serialize_map) = this.serialize_map.as_mut() else {
-            return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: SerializeMap::serialize_value after free"))
-            })));
-        };
-
         // TODO: Safety
         let value = unsafe {
-            self::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
+            bindings::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
         };
 
-        let result = serialize_map
-            .erased_serialize_key(&SerializableSerialize::new(&value))
+        let result = this
+            .get_mut::<Self>()
+            .serialize_map
+            .erased_serialize_value(&SerializableSerialize::new(&value))
             .wrap();
 
         (this, result)
     }
 
     fn end(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeMap,
+        this: bindings::exports::serde::serde::serde_serializer::SerializeMap,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        let Some(serialize_map) = this.serialize_map.take() else {
-            return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: SerializeMap::end after free"))
-            }));
-        };
-        serialize_map.erased_end().wrap()
+        this.into_inner::<Self>().serialize_map.erased_end().wrap()
     }
 }
 
-impl self::exports::serde::serde::serde_serializer::GuestSerializeStruct
+impl bindings::exports::serde::serde::serde_serializer::GuestSerializeStruct
     for GuestsideSerializeStructProvider
 {
     fn serialize_field(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeStruct,
+        mut this: bindings::exports::serde::serde::serde_serializer::SerializeStruct,
         key: String,
-        value: self::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
+        value: bindings::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
     ) -> (
-        self::exports::serde::serde::serde_serializer::OwnSerializeStruct,
-        Result<(), self::exports::serde::serde::serde_serializer::OwnSerError>,
+        bindings::exports::serde::serde::serde_serializer::SerializeStruct,
+        Result<(), bindings::exports::serde::serde::serde_serializer::SerError>,
     ) {
-        let Some(serialize_struct) = this.serialize_struct.as_mut() else {
-            return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: SerializeStruct::serialize_field after free"))
-            })));
-        };
-
         // TODO: Safety
         let value = unsafe {
-            self::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
+            bindings::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
         };
 
-        let result = serialize_struct
+        let result = this
+            .get_mut::<Self>()
+            .serialize_struct
             .erased_serialize_field(intern_string(key), &SerializableSerialize::new(&value))
             .wrap();
 
@@ -1503,33 +1461,27 @@ impl self::exports::serde::serde::serde_serializer::GuestSerializeStruct
     }
 
     fn end(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeStruct,
+        this: bindings::exports::serde::serde::serde_serializer::SerializeStruct,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        let Some(serialize_struct) = this.serialize_struct.take() else {
-        return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-            inner: SerErrorOrCustom::Custom(String::from("bug: SerializeStruct::end after free"))
-        }));
-    };
-        serialize_struct.erased_end().wrap()
+        this.into_inner::<Self>()
+            .serialize_struct
+            .erased_end()
+            .wrap()
     }
 
     fn skip_field(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeStruct,
+        mut this: bindings::exports::serde::serde::serde_serializer::SerializeStruct,
         key: String,
     ) -> (
-        self::exports::serde::serde::serde_serializer::OwnSerializeStruct,
-        Result<(), self::exports::serde::serde::serde_serializer::OwnSerError>,
+        bindings::exports::serde::serde::serde_serializer::SerializeStruct,
+        Result<(), bindings::exports::serde::serde::serde_serializer::SerError>,
     ) {
-        let Some(serialize_struct) = this.serialize_struct.as_mut() else {
-            return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: SerializeStruct::skip_field after free"))
-            })));
-        };
-
-        let result = serialize_struct
+        let result = this
+            .get_mut::<Self>()
+            .serialize_struct
             .erased_skip_field(intern_string(key))
             .wrap();
 
@@ -1537,29 +1489,25 @@ impl self::exports::serde::serde::serde_serializer::GuestSerializeStruct
     }
 }
 
-impl self::exports::serde::serde::serde_serializer::GuestSerializeStructVariant
+impl bindings::exports::serde::serde::serde_serializer::GuestSerializeStructVariant
     for GuestsideSerializeStructVariantProvider
 {
     fn serialize_field(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeStructVariant,
+        mut this: bindings::exports::serde::serde::serde_serializer::SerializeStructVariant,
         key: String,
-        value: self::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
+        value: bindings::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
     ) -> (
-        self::exports::serde::serde::serde_serializer::OwnSerializeStructVariant,
-        Result<(), self::exports::serde::serde::serde_serializer::OwnSerError>,
+        bindings::exports::serde::serde::serde_serializer::SerializeStructVariant,
+        Result<(), bindings::exports::serde::serde::serde_serializer::SerError>,
     ) {
-        let Some(serialize_struct_variant) = this.serialize_struct_variant.as_mut() else {
-            return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: SerializeStructVariant::serialize_field after free"))
-            })));
-        };
-
         // TODO: Safety
         let value = unsafe {
-            self::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
+            bindings::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
         };
 
-        let result = serialize_struct_variant
+        let result = this
+            .get_mut::<Self>()
+            .serialize_struct_variant
             .erased_serialize_field(intern_string(key), &SerializableSerialize::new(&value))
             .wrap();
 
@@ -1567,33 +1515,27 @@ impl self::exports::serde::serde::serde_serializer::GuestSerializeStructVariant
     }
 
     fn end(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeStructVariant,
+        this: bindings::exports::serde::serde::serde_serializer::SerializeStructVariant,
     ) -> Result<
-        self::exports::serde::serde::serde_serializer::OwnSerOk,
-        self::exports::serde::serde::serde_serializer::OwnSerError,
+        bindings::exports::serde::serde::serde_serializer::SerOk,
+        bindings::exports::serde::serde::serde_serializer::SerError,
     > {
-        let Some(serialize_struct_variant) = this.serialize_struct_variant.take() else {
-            return Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: SerializeStructVariant::end after free"))
-            }));
-        };
-        serialize_struct_variant.erased_end().wrap()
+        this.into_inner::<Self>()
+            .serialize_struct_variant
+            .erased_end()
+            .wrap()
     }
 
     fn skip_field(
-        mut this: self::exports::serde::serde::serde_serializer::OwnSerializeStructVariant,
+        mut this: bindings::exports::serde::serde::serde_serializer::SerializeStructVariant,
         key: String,
     ) -> (
-        self::exports::serde::serde::serde_serializer::OwnSerializeStructVariant,
-        Result<(), self::exports::serde::serde::serde_serializer::OwnSerError>,
+        bindings::exports::serde::serde::serde_serializer::SerializeStructVariant,
+        Result<(), bindings::exports::serde::serde::serde_serializer::SerError>,
     ) {
-        let Some(serialize_struct_variant) = this.serialize_struct_variant.as_mut() else {
-            return (this, Err(self::exports::serde::serde::serde_serializer::OwnSerError::new(SerError {
-                inner: SerErrorOrCustom::Custom(String::from("bug: SerializeStructVariant::skip_field after free"))
-            })));
-        };
-
-        let result = serialize_struct_variant
+        let result = this
+            .get_mut::<Self>()
+            .serialize_struct_variant
             .erased_skip_field(intern_string(key))
             .wrap();
 
@@ -1602,11 +1544,11 @@ impl self::exports::serde::serde::serde_serializer::GuestSerializeStructVariant
 }
 
 struct SerializableSerialize<'a> {
-    serialize: &'a self::serde::serde::serde_serialize::Serialize,
+    serialize: &'a bindings::serde::serde::serde_serialize::Serialize,
 }
 
 impl<'a> SerializableSerialize<'a> {
-    fn new(serialize: &'a self::serde::serde::serde_serialize::Serialize) -> Self {
+    fn new(serialize: &'a bindings::serde::serde::serde_serialize::Serialize) -> Self {
         Self { serialize }
     }
 }
@@ -1614,56 +1556,48 @@ impl<'a> SerializableSerialize<'a> {
 impl<'a> ::serde::Serialize for SerializableSerialize<'a> {
     fn serialize<S: ::serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let result = GuestsideSerializerProvider::with_new(serializer, |serializer| {
-            let owned_handle = wit_bindgen::Resource::into_handle(
-                self::exports::serde::serde::serde_serializer::OwnSerializer::new(serializer),
-            );
             let serializer =
-                self::serde::serde::serde_serialize::OwnedSerializerHandle { owned_handle };
+                bindings::exports::serde::serde::serde_serializer::Serializer::new(serializer);
+            let owned_handle = core::mem::ManuallyDrop::new(serializer).handle();
+            let serializer =
+                bindings::serde::serde::serde_serialize::OwnedSerializerHandle { owned_handle };
             self.serialize.serialize(serializer)
         });
 
         match result {
             Ok(value) => {
                 // TODO: Safety
-                let mut value = unsafe {
-                    self::exports::serde::serde::serde_serializer::OwnSerOk::from_handle(
+                let value = unsafe {
+                    bindings::exports::serde::serde::serde_serializer::SerOk::from_handle(
                         value.owned_handle,
                     )
                 };
-                let Some(value) = value.value.take() else {
-                    return Err(::serde::ser::Error::custom(
-                        "bug: use of Serializer::Ok after free",
-                    ));
-                };
+                let SerOk { value } = value.into_inner();
                 // TODO: Safety
                 let Some(value): Option<S::Ok> = (unsafe { value.take() }) else {
                     return Err(::serde::ser::Error::custom(
                         "bug: Serializer::Ok type mismatch across the wit boundary",
-                    ))
+                    ));
                 };
                 Ok(value)
             }
             Err(err) => {
                 // TODO: Safety
-                let mut err = unsafe {
-                    self::exports::serde::serde::serde_serializer::OwnSerError::from_handle(
+                let err = unsafe {
+                    bindings::exports::serde::serde::serde_serializer::SerError::from_handle(
                         err.owned_handle,
                     )
                 };
-                let err = match &mut err.inner {
+                let SerError { inner: err } = err.into_inner();
+                let err = match err {
                     SerErrorOrCustom::Error { err, .. } => err,
                     SerErrorOrCustom::Custom(msg) => return Err(::serde::ser::Error::custom(msg)),
-                };
-                let Some(err) = err.take() else {
-                    return Err(::serde::ser::Error::custom(
-                        "bug: use of Serializer::Error after free",
-                    ));
                 };
                 // TODO: Safety
                 let Some(err): Option<S::Error> = (unsafe { err.take() }) else {
                     return Err(::serde::ser::Error::custom(
                         "bug: Serializer::Error type mismatch across the wit boundary",
-                    ))
+                    ));
                 };
                 Err(err)
             }

@@ -1,4 +1,4 @@
-package serde:serde
+package serde:serde;
 
 interface serde-types {
     record s128 {
