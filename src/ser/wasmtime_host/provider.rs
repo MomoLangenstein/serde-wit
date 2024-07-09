@@ -4,18 +4,20 @@ use ::serde::ser::{
 };
 use scoped_reference::{ScopedBorrowMut, ScopedReference};
 
-mod bindings {
-    #![allow(clippy::indexing_slicing)] // FIXME
-    wasmtime::component::bindgen!({
-        world: "serde-serializer-client",
-        with: {
-            "serde:serde/serde-serializer/serializer": super::HostsideSerializerProvider,
-            "serde:serde/serde-serializer/ser-ok": super::SerOk,
-            "serde:serde/serde-serializer/ser-error": super::SerError,
-        },
-        trappable_imports: true,
-    });
-}
+mod bindings;
+// mod bindings {
+//     #![allow(clippy::indexing_slicing)] // FIXME
+//     wasmtime::component::bindgen!({
+//         world: "serde-serializer-client",
+//         with: {
+//             "serde:serde/serde-serializer/serializer": super::HostsideSerializerProvider,
+//             "serde:serde/serde-serializer/ser-ok": super::SerOk,
+//             "serde:serde/serde-serializer/ser-error": super::SerError,
+//         },
+//         trappable_imports: true,
+//         // include_generated_code_from_file: true,
+//     });
+// }
 
 use crate::any::Any;
 use crate::intern::intern_string;
@@ -351,8 +353,9 @@ impl bindings::serde::serde::serde_serializer::HostSerializer for HostsideSerial
         serializer.serializer.erased_serialize_none().wrap(self)
     }
 
-    fn serialize_some(
+    fn serialize_some<T>(
         &mut self,
+        ctx: *mut wasmtime::StoreContextMut<'_, T>,
         this: wasmtime::component::Resource<HostsideSerializerProvider>,
         value: bindings::serde::serde::serde_serializer::BorrowedSerializeHandle,
     ) -> anyhow::Result<Result<
@@ -361,8 +364,13 @@ impl bindings::serde::serde::serde_serializer::HostSerializer for HostsideSerial
     >> {
         anyhow::ensure!(this.owned());
         let serializer = self.table.delete(this)?;
+        let ctx: *mut () = ctx.cast();
         serializer.serializer
-            .erased_serialize_some(&SerializableSerialize::new(self, &value))
+            .erased_serialize_some(&SerializableSerialize::new(self, Box::new(move |guest, serialize, serializer| {
+                let mut ctx = unsafe { &mut *(ctx.cast::<wasmtime::StoreContextMut<'_, T>>()) };
+                let serialize = serialize.try_into_resource_any(&mut ctx)?;
+                guest.call_serialize(ctx, serialize, serializer)
+            }), &value))
             .wrap(self)
     }
 
@@ -422,7 +430,7 @@ impl bindings::serde::serde::serde_serializer::HostSerializer for HostsideSerial
             .wrap(self)
     }
 
-    fn serialize_newtype_struct(
+    /*fn serialize_newtype_struct(
         &mut self,
         this: wasmtime::component::Resource<HostsideSerializerProvider>,
         name: String,
@@ -454,7 +462,7 @@ impl bindings::serde::serde::serde_serializer::HostSerializer for HostsideSerial
         serializer.serializer
             .erased_serialize_newtype_variant(intern_string(name), variant_index, intern_string(variant), &SerializableSerialize::new(self, &value))
             .wrap(self)
-    }
+    }*/
 
     /*fn serialize_seq(
         this: bindings::exports::serde::serde::serde_serializer::Serializer,
@@ -1632,17 +1640,19 @@ impl SerError {
 
 struct SerializableSerialize<'a> {
     state: &'a mut HostsideSerializerProviderState,
-    serialize: wasmtime::component::Resource<GuestSerialize>,
+    do_serialize: Box<dyn Fn(&bindings::exports::serde::serde::serde_serialize::GuestSerialize, wasmtime::component::Resource<GuestSerialize>, bindings::exports::serde::serde::serde_serialize::OwnedSerializerHandle) -> anyhow::Result<Result<bindings::exports::serde::serde::serde_serialize::OwnedSerOkHandle, bindings::exports::serde::serde::serde_serialize::OwnedSerErrorHandle>>>,
+    borrowed_serialize_handle: u32,
     _borrow: core::marker::PhantomData<&'a GuestSerialize>,
 }
 
 enum GuestSerialize {}
 
 impl<'a> SerializableSerialize<'a> {
-    fn new(state: &'a mut HostsideSerializerProviderState, serialize: &'a bindings::serde::serde::serde_serializer::BorrowedSerializeHandle) -> Self {
+    fn new(state: &'a mut HostsideSerializerProviderState, do_serialize: Box<dyn Fn(&bindings::exports::serde::serde::serde_serialize::GuestSerialize, wasmtime::component::Resource<GuestSerialize>, bindings::exports::serde::serde::serde_serialize::OwnedSerializerHandle) -> anyhow::Result<Result<bindings::exports::serde::serde::serde_serialize::OwnedSerOkHandle, bindings::exports::serde::serde::serde_serialize::OwnedSerErrorHandle>>>, serialize: &'a bindings::serde::serde::serde_serializer::BorrowedSerializeHandle) -> Self {
         Self {
             state,
-            serialize: wasmtime::component::Resource::new_borrow(serialize.borrowed_handle),
+            do_serialize,
+            borrowed_serialize_handle: serialize.borrowed_handle,
             _borrow: core::marker::PhantomData::<&'a GuestSerialize>,
         }
     }
@@ -1655,9 +1665,7 @@ impl<'a> ::serde::Serialize for SerializableSerialize<'a> {
             let serializer =
                 bindings::exports::serde::serde::serde_serialize::OwnedSerializerHandle { owned_handle: serializer.rep() };
             let guest = todo!();
-            let store = todo!();
-            let serialize = todo!();
-            bindings::exports::serde::serde::serde_serialize::GuestSerialize::call_serialize(&guest, store, serialize, serializer)
+            (self.do_serialize)(&guest,  wasmtime::component::Resource::new_borrow(self.borrowed_serialize_handle), serializer)
         }).map_err(|err| ::serde::ser::Error::custom(err))?;
 
         match result {
