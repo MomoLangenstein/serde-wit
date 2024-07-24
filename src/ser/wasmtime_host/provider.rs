@@ -74,607 +74,614 @@ impl WrapSerResult for Result<SerOk, SerError> {
 //     }
 // }
 
-impl bindings::serde::serde::serde_serializer::HostSerializer for HostsideSerializerProviderState {
-    fn serialize_bool(
-        &mut self,
-        this: wasmtime::component::Resource<HostsideSerializerProvider>,
-        v: bool,
-    ) -> anyhow::Result<
-        Result<
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
-        >,
-    > {
-        anyhow::ensure!(this.owned());
-        let serializer = self.table.delete(this)?;
-        serializer.serializer.erased_serialize_bool(v).wrap(self)
-    }
+// impl bindings::serde::serde::serde_serializer::HostSerializer for HostsideSerializerProviderState {
+//     fn serialize_bool(
+//         &mut self,
+//         this: wasmtime::component::Resource<HostsideSerializerProvider>,
+//         v: bool,
+//     ) -> anyhow::Result<
+//         Result<
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
+//         >,
+//     > {
+//         anyhow::ensure!(this.owned());
+//         let serializer = self.table.delete(this)?;
+//         serializer.serializer.erased_serialize_bool(v).wrap(self)
+//     }
 
-    fn serialize_i8(
-        &mut self,
-        this: wasmtime::component::Resource<HostsideSerializerProvider>,
-        v: i8,
-    ) -> anyhow::Result<
-        Result<
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
-        >,
-    > {
-        anyhow::ensure!(this.owned());
-        let serializer = self.table.delete(this)?;
-        serializer.serializer.erased_serialize_i8(v).wrap(self)
-    }
+//     fn serialize_i8(
+//         &mut self,
+//         this: wasmtime::component::Resource<HostsideSerializerProvider>,
+//         v: i8,
+//     ) -> anyhow::Result<
+//         Result<
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
+//         >,
+//     > {
+//         anyhow::ensure!(this.owned());
+//         let serializer = self.table.delete(this)?;
+//         serializer.serializer.erased_serialize_i8(v).wrap(self)
+//     }
 
-    fn serialize_i16(
-        &mut self,
-        this: wasmtime::component::Resource<HostsideSerializerProvider>,
-        v: i16,
-    ) -> anyhow::Result<
-        Result<
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
-        >,
-    > {
-        anyhow::ensure!(this.owned());
-        let serializer = self.table.delete(this)?;
-        serializer.serializer.erased_serialize_i16(v).wrap(self)
-    }
+//     fn serialize_i16(
+//         &mut self,
+//         this: wasmtime::component::Resource<HostsideSerializerProvider>,
+//         v: i16,
+//     ) -> anyhow::Result<
+//         Result<
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
+//         >,
+//     > {
+//         anyhow::ensure!(this.owned());
+//         let serializer = self.table.delete(this)?;
+//         serializer.serializer.erased_serialize_i16(v).wrap(self)
+//     }
 
-    fn serialize_i32(
-        &mut self,
-        this: wasmtime::component::Resource<HostsideSerializerProvider>,
-        v: i32,
-    ) -> anyhow::Result<
-        Result<
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
-        >,
-    > {
-        anyhow::ensure!(this.owned());
-        let serializer = self.table.delete(this)?;
-        serializer.serializer.erased_serialize_i32(v).wrap(self)
-    }
+//     fn serialize_i32(
+//         &mut self,
+//         this: wasmtime::component::Resource<HostsideSerializerProvider>,
+//         v: i32,
+//     ) -> anyhow::Result<
+//         Result<
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
+//         >,
+//     > {
+//         anyhow::ensure!(this.owned());
+//         let serializer = self.table.delete(this)?;
+//         serializer.serializer.erased_serialize_i32(v).wrap(self)
+//     }
 
-    fn serialize_i64(
-        &mut self,
-        this: wasmtime::component::Resource<HostsideSerializerProvider>,
-        v: i64,
-    ) -> anyhow::Result<
-        Result<
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
-        >,
-    > {
-        anyhow::ensure!(this.owned());
-        let serializer = self.table.delete(this)?;
-        serializer.serializer.erased_serialize_i64(v).wrap(self)
-    }
+//     fn serialize_i64(
+//         &mut self,
+//         this: wasmtime::component::Resource<HostsideSerializerProvider>,
+//         v: i64,
+//     ) -> anyhow::Result<
+//         Result<
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
+//         >,
+//     > {
+//         anyhow::ensure!(this.owned());
+//         let serializer = self.table.delete(this)?;
+//         serializer.serializer.erased_serialize_i64(v).wrap(self)
+//     }
 
-    fn serialize_i128(
-        &mut self,
-        this: wasmtime::component::Resource<HostsideSerializerProvider>,
-        v: bindings::serde::serde::serde_types::S128,
-    ) -> anyhow::Result<
-        Result<
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
-        >,
-    > {
-        anyhow::ensure!(this.owned());
-        let serializer = self.table.delete(this)?;
+//     fn serialize_i128(
+//         &mut self,
+//         this: wasmtime::component::Resource<HostsideSerializerProvider>,
+//         v: bindings::serde::serde::serde_types::S128,
+//     ) -> anyhow::Result<
+//         Result<
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
+//         >,
+//     > {
+//         anyhow::ensure!(this.owned());
+//         let serializer = self.table.delete(this)?;
 
-        let le_hi = v.le_hi.to_le_bytes();
-        let le_lo = v.le_lo.to_le_bytes();
+//         let le_hi = v.le_hi.to_le_bytes();
+//         let le_lo = v.le_lo.to_le_bytes();
 
-        let bytes = [
-            le_hi[0], le_hi[1], le_hi[2], le_hi[3], le_hi[4], le_hi[5], le_hi[6], le_hi[7],
-            le_lo[0], le_lo[1], le_lo[2], le_lo[3], le_lo[4], le_lo[5], le_lo[6], le_lo[7],
-        ];
+//         let bytes = [
+//             le_hi[0], le_hi[1], le_hi[2], le_hi[3], le_hi[4], le_hi[5], le_hi[6], le_hi[7],
+//             le_lo[0], le_lo[1], le_lo[2], le_lo[3], le_lo[4], le_lo[5], le_lo[6], le_lo[7],
+//         ];
 
-        serializer
-            .serializer
-            .erased_serialize_i128(i128::from_le_bytes(bytes))
-            .wrap(self)
-    }
+//         serializer
+//             .serializer
+//             .erased_serialize_i128(i128::from_le_bytes(bytes))
+//             .wrap(self)
+//     }
 
-    fn serialize_u8(
-        &mut self,
-        this: wasmtime::component::Resource<HostsideSerializerProvider>,
-        v: u8,
-    ) -> anyhow::Result<
-        Result<
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
-        >,
-    > {
-        anyhow::ensure!(this.owned());
-        let serializer = self.table.delete(this)?;
-        serializer.serializer.erased_serialize_u8(v).wrap(self)
-    }
+//     fn serialize_u8(
+//         &mut self,
+//         this: wasmtime::component::Resource<HostsideSerializerProvider>,
+//         v: u8,
+//     ) -> anyhow::Result<
+//         Result<
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
+//         >,
+//     > {
+//         anyhow::ensure!(this.owned());
+//         let serializer = self.table.delete(this)?;
+//         serializer.serializer.erased_serialize_u8(v).wrap(self)
+//     }
 
-    fn serialize_u16(
-        &mut self,
-        this: wasmtime::component::Resource<HostsideSerializerProvider>,
-        v: u16,
-    ) -> anyhow::Result<
-        Result<
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
-        >,
-    > {
-        anyhow::ensure!(this.owned());
-        let serializer = self.table.delete(this)?;
-        serializer.serializer.erased_serialize_u16(v).wrap(self)
-    }
+//     fn serialize_u16(
+//         &mut self,
+//         this: wasmtime::component::Resource<HostsideSerializerProvider>,
+//         v: u16,
+//     ) -> anyhow::Result<
+//         Result<
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
+//         >,
+//     > {
+//         anyhow::ensure!(this.owned());
+//         let serializer = self.table.delete(this)?;
+//         serializer.serializer.erased_serialize_u16(v).wrap(self)
+//     }
 
-    fn serialize_u32(
-        &mut self,
-        this: wasmtime::component::Resource<HostsideSerializerProvider>,
-        v: u32,
-    ) -> anyhow::Result<
-        Result<
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
-        >,
-    > {
-        anyhow::ensure!(this.owned());
-        let serializer = self.table.delete(this)?;
-        serializer.serializer.erased_serialize_u32(v).wrap(self)
-    }
+//     fn serialize_u32(
+//         &mut self,
+//         this: wasmtime::component::Resource<HostsideSerializerProvider>,
+//         v: u32,
+//     ) -> anyhow::Result<
+//         Result<
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
+//         >,
+//     > {
+//         anyhow::ensure!(this.owned());
+//         let serializer = self.table.delete(this)?;
+//         serializer.serializer.erased_serialize_u32(v).wrap(self)
+//     }
 
-    fn serialize_u64(
-        &mut self,
-        this: wasmtime::component::Resource<HostsideSerializerProvider>,
-        v: u64,
-    ) -> anyhow::Result<
-        Result<
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
-        >,
-    > {
-        anyhow::ensure!(this.owned());
-        let serializer = self.table.delete(this)?;
-        serializer.serializer.erased_serialize_u64(v).wrap(self)
-    }
+//     fn serialize_u64(
+//         &mut self,
+//         this: wasmtime::component::Resource<HostsideSerializerProvider>,
+//         v: u64,
+//     ) -> anyhow::Result<
+//         Result<
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
+//         >,
+//     > {
+//         anyhow::ensure!(this.owned());
+//         let serializer = self.table.delete(this)?;
+//         serializer.serializer.erased_serialize_u64(v).wrap(self)
+//     }
 
-    fn serialize_u128(
-        &mut self,
-        this: wasmtime::component::Resource<HostsideSerializerProvider>,
-        v: bindings::serde::serde::serde_types::U128,
-    ) -> anyhow::Result<
-        Result<
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
-        >,
-    > {
-        anyhow::ensure!(this.owned());
-        let serializer = self.table.delete(this)?;
+//     fn serialize_u128(
+//         &mut self,
+//         this: wasmtime::component::Resource<HostsideSerializerProvider>,
+//         v: bindings::serde::serde::serde_types::U128,
+//     ) -> anyhow::Result<
+//         Result<
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
+//         >,
+//     > {
+//         anyhow::ensure!(this.owned());
+//         let serializer = self.table.delete(this)?;
 
-        let le_hi = v.le_hi.to_le_bytes();
-        let le_lo = v.le_lo.to_le_bytes();
+//         let le_hi = v.le_hi.to_le_bytes();
+//         let le_lo = v.le_lo.to_le_bytes();
 
-        let bytes = [
-            le_hi[0], le_hi[1], le_hi[2], le_hi[3], le_hi[4], le_hi[5], le_hi[6], le_hi[7],
-            le_lo[0], le_lo[1], le_lo[2], le_lo[3], le_lo[4], le_lo[5], le_lo[6], le_lo[7],
-        ];
+//         let bytes = [
+//             le_hi[0], le_hi[1], le_hi[2], le_hi[3], le_hi[4], le_hi[5], le_hi[6], le_hi[7],
+//             le_lo[0], le_lo[1], le_lo[2], le_lo[3], le_lo[4], le_lo[5], le_lo[6], le_lo[7],
+//         ];
 
-        serializer
-            .serializer
-            .erased_serialize_u128(u128::from_le_bytes(bytes))
-            .wrap(self)
-    }
+//         serializer
+//             .serializer
+//             .erased_serialize_u128(u128::from_le_bytes(bytes))
+//             .wrap(self)
+//     }
 
-    fn serialize_f32(
-        &mut self,
-        this: wasmtime::component::Resource<HostsideSerializerProvider>,
-        v: f32,
-    ) -> anyhow::Result<
-        Result<
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
-        >,
-    > {
-        anyhow::ensure!(this.owned());
-        let serializer = self.table.delete(this)?;
-        serializer.serializer.erased_serialize_f32(v).wrap(self)
-    }
+//     fn serialize_f32(
+//         &mut self,
+//         this: wasmtime::component::Resource<HostsideSerializerProvider>,
+//         v: f32,
+//     ) -> anyhow::Result<
+//         Result<
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
+//         >,
+//     > {
+//         anyhow::ensure!(this.owned());
+//         let serializer = self.table.delete(this)?;
+//         serializer.serializer.erased_serialize_f32(v).wrap(self)
+//     }
 
-    fn serialize_f64(
-        &mut self,
-        this: wasmtime::component::Resource<HostsideSerializerProvider>,
-        v: f64,
-    ) -> anyhow::Result<
-        Result<
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
-        >,
-    > {
-        anyhow::ensure!(this.owned());
-        let serializer = self.table.delete(this)?;
-        serializer.serializer.erased_serialize_f64(v).wrap(self)
-    }
+//     fn serialize_f64(
+//         &mut self,
+//         this: wasmtime::component::Resource<HostsideSerializerProvider>,
+//         v: f64,
+//     ) -> anyhow::Result<
+//         Result<
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
+//         >,
+//     > {
+//         anyhow::ensure!(this.owned());
+//         let serializer = self.table.delete(this)?;
+//         serializer.serializer.erased_serialize_f64(v).wrap(self)
+//     }
 
-    fn serialize_char(
-        &mut self,
-        this: wasmtime::component::Resource<HostsideSerializerProvider>,
-        v: char,
-    ) -> anyhow::Result<
-        Result<
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
-        >,
-    > {
-        anyhow::ensure!(this.owned());
-        let serializer = self.table.delete(this)?;
-        serializer.serializer.erased_serialize_char(v).wrap(self)
-    }
+//     fn serialize_char(
+//         &mut self,
+//         this: wasmtime::component::Resource<HostsideSerializerProvider>,
+//         v: char,
+//     ) -> anyhow::Result<
+//         Result<
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
+//         >,
+//     > {
+//         anyhow::ensure!(this.owned());
+//         let serializer = self.table.delete(this)?;
+//         serializer.serializer.erased_serialize_char(v).wrap(self)
+//     }
 
-    fn serialize_str(
-        &mut self,
-        this: wasmtime::component::Resource<HostsideSerializerProvider>,
-        v: String,
-    ) -> anyhow::Result<
-        Result<
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
-        >,
-    > {
-        anyhow::ensure!(this.owned());
-        let serializer = self.table.delete(this)?;
-        serializer.serializer.erased_serialize_str(&v).wrap(self)
-    }
+//     fn serialize_str(
+//         &mut self,
+//         this: wasmtime::component::Resource<HostsideSerializerProvider>,
+//         v: String,
+//     ) -> anyhow::Result<
+//         Result<
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
+//         >,
+//     > {
+//         anyhow::ensure!(this.owned());
+//         let serializer = self.table.delete(this)?;
+//         serializer.serializer.erased_serialize_str(&v).wrap(self)
+//     }
 
-    fn serialize_bytes(
-        &mut self,
-        this: wasmtime::component::Resource<HostsideSerializerProvider>,
-        v: Vec<u8>,
-    ) -> anyhow::Result<
-        Result<
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
-        >,
-    > {
-        anyhow::ensure!(this.owned());
-        let serializer = self.table.delete(this)?;
-        serializer.serializer.erased_serialize_bytes(&v).wrap(self)
-    }
+//     fn serialize_bytes(
+//         &mut self,
+//         this: wasmtime::component::Resource<HostsideSerializerProvider>,
+//         v: Vec<u8>,
+//     ) -> anyhow::Result<
+//         Result<
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
+//         >,
+//     > {
+//         anyhow::ensure!(this.owned());
+//         let serializer = self.table.delete(this)?;
+//         serializer.serializer.erased_serialize_bytes(&v).wrap(self)
+//     }
 
-    fn serialize_none(
-        &mut self,
-        this: wasmtime::component::Resource<HostsideSerializerProvider>,
-    ) -> anyhow::Result<
-        Result<
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
-        >,
-    > {
-        anyhow::ensure!(this.owned());
-        let serializer = self.table.delete(this)?;
-        serializer.serializer.erased_serialize_none().wrap(self)
-    }
+//     fn serialize_none(
+//         &mut self,
+//         this: wasmtime::component::Resource<HostsideSerializerProvider>,
+//     ) -> anyhow::Result<
+//         Result<
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
+//         >,
+//     > {
+//         anyhow::ensure!(this.owned());
+//         let serializer = self.table.delete(this)?;
+//         serializer.serializer.erased_serialize_none().wrap(self)
+//     }
 
-    fn serialize_some<T>(
-        &mut self,
-        ctx: *mut wasmtime::StoreContextMut<'_, T>,
-        this: wasmtime::component::Resource<HostsideSerializerProvider>,
-        value: bindings::serde::serde::serde_serializer::BorrowedSerializeHandle,
-    ) -> anyhow::Result<Result<
-        wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
-        wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
-    >> {
-        anyhow::ensure!(this.owned());
-        let serializer = self.table.delete(this)?;
-        let ctx: *mut () = ctx.cast();
-        serializer.serializer
-            .erased_serialize_some(&SerializableSerialize::new(self, Box::new(move |guest, serialize, serializer| {
-                let mut ctx = unsafe { &mut *(ctx.cast::<wasmtime::StoreContextMut<'_, T>>()) };
-                let serialize = serialize.try_into_resource_any(&mut ctx)?;
-                guest.call_serialize(ctx, serialize, serializer)
-            }), &value))
-            .wrap(self)
-    }
+//     fn serialize_some<T>(
+//         &mut self,
+//         ctx: *mut wasmtime::StoreContextMut<'_, T>,
+//         this: wasmtime::component::Resource<HostsideSerializerProvider>,
+//         value: bindings::serde::serde::serde_serializer::BorrowedSerializeHandle,
+//     ) -> anyhow::Result<
+//         Result<
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
+//         >,
+//     > {
+//         anyhow::ensure!(this.owned());
+//         let serializer = self.table.delete(this)?;
+//         let ctx: *mut () = ctx.cast();
+//         serializer
+//             .serializer
+//             .erased_serialize_some(&SerializableSerialize::new(
+//                 self,
+//                 Box::new(move |guest, serialize, serializer| {
+//                     let mut ctx = unsafe { &mut *(ctx.cast::<wasmtime::StoreContextMut<'_, T>>()) };
+//                     let serialize = serialize.try_into_resource_any(&mut ctx)?;
+//                     guest.call_serialize(ctx, serialize, serializer)
+//                 }),
+//                 &value,
+//             ))
+//             .wrap(self)
+//     }
 
-    fn serialize_unit(
-        &mut self,
-        this: wasmtime::component::Resource<HostsideSerializerProvider>,
-    ) -> anyhow::Result<
-        Result<
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
-        >,
-    > {
-        anyhow::ensure!(this.owned());
-        let serializer = self.table.delete(this)?;
-        serializer.serializer.erased_serialize_unit().wrap(self)
-    }
+//     fn serialize_unit(
+//         &mut self,
+//         this: wasmtime::component::Resource<HostsideSerializerProvider>,
+//     ) -> anyhow::Result<
+//         Result<
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
+//         >,
+//     > {
+//         anyhow::ensure!(this.owned());
+//         let serializer = self.table.delete(this)?;
+//         serializer.serializer.erased_serialize_unit().wrap(self)
+//     }
 
-    fn serialize_unit_struct(
-        &mut self,
-        this: wasmtime::component::Resource<HostsideSerializerProvider>,
-        name: String,
-    ) -> anyhow::Result<
-        Result<
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
-        >,
-    > {
-        anyhow::ensure!(this.owned());
-        let serializer = self.table.delete(this)?;
-        serializer
-            .serializer
-            .erased_serialize_unit_struct(intern_string(name))
-            .wrap(self)
-    }
+//     fn serialize_unit_struct(
+//         &mut self,
+//         this: wasmtime::component::Resource<HostsideSerializerProvider>,
+//         name: String,
+//     ) -> anyhow::Result<
+//         Result<
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
+//         >,
+//     > {
+//         anyhow::ensure!(this.owned());
+//         let serializer = self.table.delete(this)?;
+//         serializer
+//             .serializer
+//             .erased_serialize_unit_struct(intern_string(name))
+//             .wrap(self)
+//     }
 
-    fn serialize_unit_variant(
-        &mut self,
-        this: wasmtime::component::Resource<HostsideSerializerProvider>,
-        name: String,
-        variant_index: u32,
-        variant: String,
-    ) -> anyhow::Result<
-        Result<
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
-        >,
-    > {
-        anyhow::ensure!(this.owned());
-        let serializer = self.table.delete(this)?;
-        serializer
-            .serializer
-            .erased_serialize_unit_variant(
-                intern_string(name),
-                variant_index,
-                intern_string(variant),
-            )
-            .wrap(self)
-    }
+//     fn serialize_unit_variant(
+//         &mut self,
+//         this: wasmtime::component::Resource<HostsideSerializerProvider>,
+//         name: String,
+//         variant_index: u32,
+//         variant: String,
+//     ) -> anyhow::Result<
+//         Result<
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
+//             wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
+//         >,
+//     > {
+//         anyhow::ensure!(this.owned());
+//         let serializer = self.table.delete(this)?;
+//         serializer
+//             .serializer
+//             .erased_serialize_unit_variant(
+//                 intern_string(name),
+//                 variant_index,
+//                 intern_string(variant),
+//             )
+//             .wrap(self)
+//     }
 
-    /*fn serialize_newtype_struct(
-        &mut self,
-        this: wasmtime::component::Resource<HostsideSerializerProvider>,
-        name: String,
-        value: bindings::serde::serde::serde_serializer::BorrowedSerializeHandle,
-    ) -> anyhow::Result<Result<
-        wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
-        wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
-    >> {
-        anyhow::ensure!(this.owned());
-        let serializer = self.table.delete(this)?;
-        serializer.serializer
-            .erased_serialize_newtype_struct(intern_string(name), &SerializableSerialize::new(self, &value))
-            .wrap(self)
-    }
+//     /*fn serialize_newtype_struct(
+//         &mut self,
+//         this: wasmtime::component::Resource<HostsideSerializerProvider>,
+//         name: String,
+//         value: bindings::serde::serde::serde_serializer::BorrowedSerializeHandle,
+//     ) -> anyhow::Result<Result<
+//         wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
+//         wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
+//     >> {
+//         anyhow::ensure!(this.owned());
+//         let serializer = self.table.delete(this)?;
+//         serializer.serializer
+//             .erased_serialize_newtype_struct(intern_string(name), &SerializableSerialize::new(self, &value))
+//             .wrap(self)
+//     }
 
-    fn serialize_newtype_variant(
-        &mut self,
-        this: wasmtime::component::Resource<HostsideSerializerProvider>,
-        name: String,
-        variant_index: u32,
-        variant: String,
-        value: bindings::serde::serde::serde_serializer::BorrowedSerializeHandle,
-    ) -> anyhow::Result<Result<
-        wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
-        wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
-    >> {
-        anyhow::ensure!(this.owned());
-        let serializer = self.table.delete(this)?;
-        serializer.serializer
-            .erased_serialize_newtype_variant(intern_string(name), variant_index, intern_string(variant), &SerializableSerialize::new(self, &value))
-            .wrap(self)
-    }*/
+//     fn serialize_newtype_variant(
+//         &mut self,
+//         this: wasmtime::component::Resource<HostsideSerializerProvider>,
+//         name: String,
+//         variant_index: u32,
+//         variant: String,
+//         value: bindings::serde::serde::serde_serializer::BorrowedSerializeHandle,
+//     ) -> anyhow::Result<Result<
+//         wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
+//         wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
+//     >> {
+//         anyhow::ensure!(this.owned());
+//         let serializer = self.table.delete(this)?;
+//         serializer.serializer
+//             .erased_serialize_newtype_variant(intern_string(name), variant_index, intern_string(variant), &SerializableSerialize::new(self, &value))
+//             .wrap(self)
+//     }*/
 
-    /*fn serialize_seq(
-        this: bindings::exports::serde::serde::serde_serializer::Serializer,
-        len: Option<bindings::serde::serde::serde_types::Usize>,
-    ) -> Result<
-        bindings::exports::serde::serde::serde_serializer::SerializeSeq,
-        bindings::exports::serde::serde::serde_serializer::SerError,
-    > {
-        let Self {
-            serializer, scope, ..
-        } = this.into_inner();
+//     /*fn serialize_seq(
+//         this: bindings::exports::serde::serde::serde_serializer::Serializer,
+//         len: Option<bindings::serde::serde::serde_types::Usize>,
+//     ) -> Result<
+//         bindings::exports::serde::serde::serde_serializer::SerializeSeq,
+//         bindings::exports::serde::serde::serde_serializer::SerError,
+//     > {
+//         let Self {
+//             serializer, scope, ..
+//         } = this.into_inner();
 
-        let serialize_seq = serializer
-            .erased_serialize_seq(len.map(|len| wit_to_usize(len.val)))
-            .map_err(bindings::exports::serde::serde::serde_serializer::SerError::new)?;
+//         let serialize_seq = serializer
+//             .erased_serialize_seq(len.map(|len| wit_to_usize(len.val)))
+//             .map_err(bindings::exports::serde::serde::serde_serializer::SerError::new)?;
 
-        Ok(
-            bindings::exports::serde::serde::serde_serializer::SerializeSeq::new(
-                HostsideSerializeSeqProvider {
-                    serialize_seq,
-                    _scope: scope,
-                },
-            ),
-        )
-    }
+//         Ok(
+//             bindings::exports::serde::serde::serde_serializer::SerializeSeq::new(
+//                 HostsideSerializeSeqProvider {
+//                     serialize_seq,
+//                     _scope: scope,
+//                 },
+//             ),
+//         )
+//     }
 
-    fn serialize_tuple(
-        this: bindings::exports::serde::serde::serde_serializer::Serializer,
-        len: bindings::serde::serde::serde_types::Usize,
-    ) -> Result<
-        bindings::exports::serde::serde::serde_serializer::SerializeTuple,
-        bindings::exports::serde::serde::serde_serializer::SerError,
-    > {
-        let Self {
-            serializer, scope, ..
-        } = this.into_inner();
+//     fn serialize_tuple(
+//         this: bindings::exports::serde::serde::serde_serializer::Serializer,
+//         len: bindings::serde::serde::serde_types::Usize,
+//     ) -> Result<
+//         bindings::exports::serde::serde::serde_serializer::SerializeTuple,
+//         bindings::exports::serde::serde::serde_serializer::SerError,
+//     > {
+//         let Self {
+//             serializer, scope, ..
+//         } = this.into_inner();
 
-        let serialize_tuple = serializer
-            .erased_serialize_tuple(wit_to_usize(len.val))
-            .map_err(bindings::exports::serde::serde::serde_serializer::SerError::new)?;
+//         let serialize_tuple = serializer
+//             .erased_serialize_tuple(wit_to_usize(len.val))
+//             .map_err(bindings::exports::serde::serde::serde_serializer::SerError::new)?;
 
-        Ok(
-            bindings::exports::serde::serde::serde_serializer::SerializeTuple::new(
-                HostsideSerializeTupleProvider {
-                    serialize_tuple,
-                    _scope: scope,
-                },
-            ),
-        )
-    }
+//         Ok(
+//             bindings::exports::serde::serde::serde_serializer::SerializeTuple::new(
+//                 HostsideSerializeTupleProvider {
+//                     serialize_tuple,
+//                     _scope: scope,
+//                 },
+//             ),
+//         )
+//     }
 
-    fn serialize_tuple_struct(
-        this: bindings::exports::serde::serde::serde_serializer::Serializer,
-        name: String,
-        len: bindings::serde::serde::serde_types::Usize,
-    ) -> Result<
-        bindings::exports::serde::serde::serde_serializer::SerializeTupleStruct,
-        bindings::exports::serde::serde::serde_serializer::SerError,
-    > {
-        let Self {
-            serializer, scope, ..
-        } = this.into_inner();
+//     fn serialize_tuple_struct(
+//         this: bindings::exports::serde::serde::serde_serializer::Serializer,
+//         name: String,
+//         len: bindings::serde::serde::serde_types::Usize,
+//     ) -> Result<
+//         bindings::exports::serde::serde::serde_serializer::SerializeTupleStruct,
+//         bindings::exports::serde::serde::serde_serializer::SerError,
+//     > {
+//         let Self {
+//             serializer, scope, ..
+//         } = this.into_inner();
 
-        let serialize_tuple_struct = serializer
-            .erased_serialize_tuple_struct(intern_string(name), wit_to_usize(len.val))
-            .map_err(bindings::exports::serde::serde::serde_serializer::SerError::new)?;
+//         let serialize_tuple_struct = serializer
+//             .erased_serialize_tuple_struct(intern_string(name), wit_to_usize(len.val))
+//             .map_err(bindings::exports::serde::serde::serde_serializer::SerError::new)?;
 
-        Ok(
-            bindings::exports::serde::serde::serde_serializer::SerializeTupleStruct::new(
-                HostsideSerializeTupleStructProvider {
-                    serialize_tuple_struct,
-                    _scope: scope,
-                },
-            ),
-        )
-    }
+//         Ok(
+//             bindings::exports::serde::serde::serde_serializer::SerializeTupleStruct::new(
+//                 HostsideSerializeTupleStructProvider {
+//                     serialize_tuple_struct,
+//                     _scope: scope,
+//                 },
+//             ),
+//         )
+//     }
 
-    fn serialize_tuple_variant(
-        this: bindings::exports::serde::serde::serde_serializer::Serializer,
-        name: String,
-        variant_index: u32,
-        variant: String,
-        len: bindings::serde::serde::serde_types::Usize,
-    ) -> Result<
-        bindings::exports::serde::serde::serde_serializer::SerializeTupleVariant,
-        bindings::exports::serde::serde::serde_serializer::SerError,
-    > {
-        let Self {
-            serializer, scope, ..
-        } = this.into_inner();
+//     fn serialize_tuple_variant(
+//         this: bindings::exports::serde::serde::serde_serializer::Serializer,
+//         name: String,
+//         variant_index: u32,
+//         variant: String,
+//         len: bindings::serde::serde::serde_types::Usize,
+//     ) -> Result<
+//         bindings::exports::serde::serde::serde_serializer::SerializeTupleVariant,
+//         bindings::exports::serde::serde::serde_serializer::SerError,
+//     > {
+//         let Self {
+//             serializer, scope, ..
+//         } = this.into_inner();
 
-        let serialize_tuple_variant = serializer
-            .erased_serialize_tuple_variant(
-                intern_string(name),
-                variant_index,
-                intern_string(variant),
-                wit_to_usize(len.val),
-            )
-            .map_err(bindings::exports::serde::serde::serde_serializer::SerError::new)?;
+//         let serialize_tuple_variant = serializer
+//             .erased_serialize_tuple_variant(
+//                 intern_string(name),
+//                 variant_index,
+//                 intern_string(variant),
+//                 wit_to_usize(len.val),
+//             )
+//             .map_err(bindings::exports::serde::serde::serde_serializer::SerError::new)?;
 
-        Ok(
-            bindings::exports::serde::serde::serde_serializer::SerializeTupleVariant::new(
-                HostsideSerializeTupleVariantProvider {
-                    serialize_tuple_variant,
-                    _scope: scope,
-                },
-            ),
-        )
-    }
+//         Ok(
+//             bindings::exports::serde::serde::serde_serializer::SerializeTupleVariant::new(
+//                 HostsideSerializeTupleVariantProvider {
+//                     serialize_tuple_variant,
+//                     _scope: scope,
+//                 },
+//             ),
+//         )
+//     }
 
-    fn serialize_map(
-        this: bindings::exports::serde::serde::serde_serializer::Serializer,
-        len: Option<bindings::serde::serde::serde_types::Usize>,
-    ) -> Result<
-        bindings::exports::serde::serde::serde_serializer::SerializeMap,
-        bindings::exports::serde::serde::serde_serializer::SerError,
-    > {
-        let Self {
-            serializer, scope, ..
-        } = this.into_inner();
+//     fn serialize_map(
+//         this: bindings::exports::serde::serde::serde_serializer::Serializer,
+//         len: Option<bindings::serde::serde::serde_types::Usize>,
+//     ) -> Result<
+//         bindings::exports::serde::serde::serde_serializer::SerializeMap,
+//         bindings::exports::serde::serde::serde_serializer::SerError,
+//     > {
+//         let Self {
+//             serializer, scope, ..
+//         } = this.into_inner();
 
-        let serialize_map = serializer
-            .erased_serialize_map(len.map(|len| wit_to_usize(len.val)))
-            .map_err(bindings::exports::serde::serde::serde_serializer::SerError::new)?;
+//         let serialize_map = serializer
+//             .erased_serialize_map(len.map(|len| wit_to_usize(len.val)))
+//             .map_err(bindings::exports::serde::serde::serde_serializer::SerError::new)?;
 
-        Ok(
-            bindings::exports::serde::serde::serde_serializer::SerializeMap::new(
-                HostsideSerializeMapProvider {
-                    serialize_map,
-                    _scope: scope,
-                },
-            ),
-        )
-    }
+//         Ok(
+//             bindings::exports::serde::serde::serde_serializer::SerializeMap::new(
+//                 HostsideSerializeMapProvider {
+//                     serialize_map,
+//                     _scope: scope,
+//                 },
+//             ),
+//         )
+//     }
 
-    fn serialize_struct(
-        this: bindings::exports::serde::serde::serde_serializer::Serializer,
-        name: String,
-        len: bindings::serde::serde::serde_types::Usize,
-    ) -> Result<
-        bindings::exports::serde::serde::serde_serializer::SerializeStruct,
-        bindings::exports::serde::serde::serde_serializer::SerError,
-    > {
-        let Self {
-            serializer, scope, ..
-        } = this.into_inner();
+//     fn serialize_struct(
+//         this: bindings::exports::serde::serde::serde_serializer::Serializer,
+//         name: String,
+//         len: bindings::serde::serde::serde_types::Usize,
+//     ) -> Result<
+//         bindings::exports::serde::serde::serde_serializer::SerializeStruct,
+//         bindings::exports::serde::serde::serde_serializer::SerError,
+//     > {
+//         let Self {
+//             serializer, scope, ..
+//         } = this.into_inner();
 
-        let serialize_struct = serializer
-            .erased_serialize_struct(intern_string(name), wit_to_usize(len.val))
-            .map_err(bindings::exports::serde::serde::serde_serializer::SerError::new)?;
+//         let serialize_struct = serializer
+//             .erased_serialize_struct(intern_string(name), wit_to_usize(len.val))
+//             .map_err(bindings::exports::serde::serde::serde_serializer::SerError::new)?;
 
-        Ok(
-            bindings::exports::serde::serde::serde_serializer::SerializeStruct::new(
-                HostsideSerializeStructProvider {
-                    serialize_struct,
-                    _scope: scope,
-                },
-            ),
-        )
-    }
+//         Ok(
+//             bindings::exports::serde::serde::serde_serializer::SerializeStruct::new(
+//                 HostsideSerializeStructProvider {
+//                     serialize_struct,
+//                     _scope: scope,
+//                 },
+//             ),
+//         )
+//     }
 
-    fn serialize_struct_variant(
-        this: bindings::exports::serde::serde::serde_serializer::Serializer,
-        name: String,
-        variant_index: u32,
-        variant: String,
-        len: bindings::serde::serde::serde_types::Usize,
-    ) -> Result<
-        bindings::exports::serde::serde::serde_serializer::SerializeStructVariant,
-        bindings::exports::serde::serde::serde_serializer::SerError,
-    > {
-        let Self {
-            serializer, scope, ..
-        } = this.into_inner();
+//     fn serialize_struct_variant(
+//         this: bindings::exports::serde::serde::serde_serializer::Serializer,
+//         name: String,
+//         variant_index: u32,
+//         variant: String,
+//         len: bindings::serde::serde::serde_types::Usize,
+//     ) -> Result<
+//         bindings::exports::serde::serde::serde_serializer::SerializeStructVariant,
+//         bindings::exports::serde::serde::serde_serializer::SerError,
+//     > {
+//         let Self {
+//             serializer, scope, ..
+//         } = this.into_inner();
 
-        let serialize_struct_variant = serializer
-            .erased_serialize_struct_variant(
-                intern_string(name),
-                variant_index,
-                intern_string(variant),
-                wit_to_usize(len.val),
-            )
-            .map_err(bindings::exports::serde::serde::serde_serializer::SerError::new)?;
+//         let serialize_struct_variant = serializer
+//             .erased_serialize_struct_variant(
+//                 intern_string(name),
+//                 variant_index,
+//                 intern_string(variant),
+//                 wit_to_usize(len.val),
+//             )
+//             .map_err(bindings::exports::serde::serde::serde_serializer::SerError::new)?;
 
-        Ok(
-            bindings::exports::serde::serde::serde_serializer::SerializeStructVariant::new(
-                HostsideSerializeStructVariantProvider {
-                    serialize_struct_variant,
-                    _scope: scope,
-                },
-            ),
-        )
-    }*/
+//         Ok(
+//             bindings::exports::serde::serde::serde_serializer::SerializeStructVariant::new(
+//                 HostsideSerializeStructVariantProvider {
+//                     serialize_struct_variant,
+//                     _scope: scope,
+//                 },
+//             ),
+//         )
+//     }*/
 
-    fn is_human_readable(
-        &mut self,
-        this: wasmtime::component::Resource<HostsideSerializerProvider>,
-    ) -> anyhow::Result<bool> {
-        anyhow::ensure!(!this.owned());
-        let serializer = self.table.get(&this)?;
-        Ok(serializer.serializer.erased_is_human_readable())
-    }
+//     fn is_human_readable(
+//         &mut self,
+//         this: wasmtime::component::Resource<HostsideSerializerProvider>,
+//     ) -> anyhow::Result<bool> {
+//         anyhow::ensure!(!this.owned());
+//         let serializer = self.table.get(&this)?;
+//         Ok(serializer.serializer.erased_is_human_readable())
+//     }
 
-    fn drop(
-        &mut self,
-        this: wasmtime::component::Resource<HostsideSerializerProvider>,
-    ) -> anyhow::Result<()> {
-        anyhow::ensure!(this.owned());
-        let _serializer = self.table.delete(this)?;
-        Ok(())
-    }
-}
+//     fn drop(
+//         &mut self,
+//         this: wasmtime::component::Resource<HostsideSerializerProvider>,
+//     ) -> anyhow::Result<()> {
+//         anyhow::ensure!(this.owned());
+//         let _serializer = self.table.delete(this)?;
+//         Ok(())
+//     }
+// }
 
 impl HostsideSerializerProvider {
     #[must_use]
@@ -1638,19 +1645,53 @@ impl SerError {
 //     }
 // }
 
-struct SerializableSerialize<'a> {
-    state: &'a mut HostsideSerializerProviderState,
-    do_serialize: Box<dyn Fn(&bindings::exports::serde::serde::serde_serialize::GuestSerialize, wasmtime::component::Resource<GuestSerialize>, bindings::exports::serde::serde::serde_serialize::OwnedSerializerHandle) -> anyhow::Result<Result<bindings::exports::serde::serde::serde_serialize::OwnedSerOkHandle, bindings::exports::serde::serde::serde_serialize::OwnedSerErrorHandle>>>,
+struct SerializableSerialize<'a, T, H: bindings::serde::serde::serde_serializer::GetHost<T>> {
+    ctx: &'a mut wasmtime::StoreContextMut<'a, T>,
+    host_getter: H,
+    // state: &'a mut HostsideSerializerProviderState,
+    do_serialize: Box<
+        dyn Fn(
+            &mut wasmtime::StoreContextMut<T>,
+            &bindings::exports::serde::serde::serde_serialize::GuestSerialize,
+            wasmtime::component::Resource<GuestSerialize>,
+            bindings::exports::serde::serde::serde_serialize::OwnedSerializerHandle,
+        ) -> anyhow::Result<
+            Result<
+                bindings::exports::serde::serde::serde_serialize::OwnedSerOkHandle,
+                bindings::exports::serde::serde::serde_serialize::OwnedSerErrorHandle,
+            >,
+        >,
+    >,
     borrowed_serialize_handle: u32,
     _borrow: core::marker::PhantomData<&'a GuestSerialize>,
 }
 
 enum GuestSerialize {}
 
-impl<'a> SerializableSerialize<'a> {
-    fn new(state: &'a mut HostsideSerializerProviderState, do_serialize: Box<dyn Fn(&bindings::exports::serde::serde::serde_serialize::GuestSerialize, wasmtime::component::Resource<GuestSerialize>, bindings::exports::serde::serde::serde_serialize::OwnedSerializerHandle) -> anyhow::Result<Result<bindings::exports::serde::serde::serde_serialize::OwnedSerOkHandle, bindings::exports::serde::serde::serde_serialize::OwnedSerErrorHandle>>>, serialize: &'a bindings::serde::serde::serde_serializer::BorrowedSerializeHandle) -> Self {
+impl<'a, T, H: bindings::serde::serde::serde_serializer::GetHost<T>> SerializableSerialize<'a, T, H> {
+    fn new(
+        ctx: &'a mut wasmtime::StoreContextMut<'a, T>,
+        host_getter: H,
+        // state: &'a mut HostsideSerializerProviderState,
+        do_serialize: Box<
+            dyn Fn(
+                &mut wasmtime::StoreContextMut<T>,
+                &bindings::exports::serde::serde::serde_serialize::GuestSerialize,
+                wasmtime::component::Resource<GuestSerialize>,
+                bindings::exports::serde::serde::serde_serialize::OwnedSerializerHandle,
+            ) -> anyhow::Result<
+                Result<
+                    bindings::exports::serde::serde::serde_serialize::OwnedSerOkHandle,
+                    bindings::exports::serde::serde::serde_serialize::OwnedSerErrorHandle,
+                >,
+            >,
+        >,
+        serialize: &'a bindings::serde::serde::serde_serializer::BorrowedSerializeHandle,
+    ) -> Self {
         Self {
-            state,
+            ctx,
+            host_getter,
+            // state,
             do_serialize,
             borrowed_serialize_handle: serialize.borrowed_handle,
             _borrow: core::marker::PhantomData::<&'a GuestSerialize>,
@@ -1658,21 +1699,39 @@ impl<'a> SerializableSerialize<'a> {
     }
 }
 
-impl<'a> ::serde::Serialize for SerializableSerialize<'a> {
+impl<'a, T, H: bindings::serde::serde::serde_serializer::GetHost<T>> ::serde::Serialize for SerializableSerialize<'a, T, H> {
     fn serialize<S: ::serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let result = HostsideSerializerProvider::with_new(serializer, |serializer| -> anyhow::Result<_> {
-            let serializer = self.state.table.push(serializer).map_err(|err| anyhow::anyhow!("bug: failed to create a Serializer resource: {err}"))?;
-            let serializer =
-                bindings::exports::serde::serde::serde_serialize::OwnedSerializerHandle { owned_handle: serializer.rep() };
-            let guest = todo!();
-            (self.do_serialize)(&guest,  wasmtime::component::Resource::new_borrow(self.borrowed_serialize_handle), serializer)
-        }).map_err(|err| ::serde::ser::Error::custom(err))?;
+        let result =
+            HostsideSerializerProvider::with_new(serializer, |serializer| -> anyhow::Result<_> {
+                let host = (self.host_getter)(self.ctx.data_mut());
+                let serializer = host.table.push(serializer).map_err(|err| {
+                    anyhow::anyhow!("bug: failed to create a Serializer resource: {err}")
+                })?;
+                let serializer =
+                    bindings::exports::serde::serde::serde_serialize::OwnedSerializerHandle {
+                        owned_handle: serializer.rep(),
+                    };
+                let guest = todo!();
+                (self.do_serialize)(
+                    self.ctx,
+                    &guest,
+                    wasmtime::component::Resource::new_borrow(self.borrowed_serialize_handle),
+                    serializer,
+                )
+            })
+            .map_err(|err| ::serde::ser::Error::custom(err))?;
 
+        let host = (self.host_getter)(self.ctx.data_mut());
         match result {
             Ok(value) => {
-                let SerOk { value } = self.state.table.delete(wasmtime::component::Resource::new_own(value.owned_handle)).map_err(|err| ::serde::ser::Error::custom(
-                    format!("bug: invalid Serializer::Ok handle: {err}"),
-                ))?;
+                let SerOk { value } = host
+                    .table
+                    .delete(wasmtime::component::Resource::new_own(value.owned_handle))
+                    .map_err(|err| {
+                        ::serde::ser::Error::custom(format!(
+                            "bug: invalid Serializer::Ok handle: {err}"
+                        ))
+                    })?;
                 // TODO: Safety
                 let Some(value): Option<S::Ok> = (unsafe { value.take() }) else {
                     return Err(::serde::ser::Error::custom(
@@ -1683,9 +1742,14 @@ impl<'a> ::serde::Serialize for SerializableSerialize<'a> {
             }
             Err(err) => {
                 // TODO: Safety
-                let SerError { inner: err } = self.state.table.delete(wasmtime::component::Resource::new_own(err.owned_handle)).map_err(|err| ::serde::ser::Error::custom(
-                    format!("bug: invalid Serializer::Error handle: {err}"),
-                ))?;
+                let SerError { inner: err } = host
+                    .table
+                    .delete(wasmtime::component::Resource::new_own(err.owned_handle))
+                    .map_err(|err| {
+                        ::serde::ser::Error::custom(format!(
+                            "bug: invalid Serializer::Error handle: {err}"
+                        ))
+                    })?;
                 let err = match err {
                     SerErrorOrCustom::Error { err, .. } => err,
                     SerErrorOrCustom::Custom(msg) => return Err(::serde::ser::Error::custom(msg)),

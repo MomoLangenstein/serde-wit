@@ -12,17 +12,17 @@ const _: () = {
     use wasmtime::component::__internal::anyhow;
 
     impl SerdeSerializerClient {
-        pub fn add_to_linker<T, U>(
-            linker: &mut wasmtime::component::Linker<T>,
-            get: impl Fn(&mut T) -> &mut U + Send + Sync + Copy + 'static,
-        ) -> wasmtime::Result<()>
-        where
-            U: serde::serde::serde_types::Host + serde::serde::serde_serializer::Host,
-        {
-            serde::serde::serde_types::add_to_linker(linker, get)?;
-            serde::serde::serde_serializer::add_to_linker(linker, get)?;
-            Ok(())
-        }
+        // pub fn add_to_linker<T, U>(
+        //     linker: &mut wasmtime::component::Linker<T>,
+        //     get: impl Fn(&mut T) -> &mut U + Send + Sync + Copy + 'static,
+        // ) -> wasmtime::Result<()>
+        // where
+        //     U: serde::serde::serde_types::Host /*+ serde::serde::serde_serializer::Host*/,
+        // {
+        //     serde::serde::serde_types::add_to_linker(linker, get)?;
+        //     serde::serde::serde_serializer::add_to_linker(linker, get)?;
+        //     Ok(())
+        // }
 
         /// Instantiates the provided `module` using the specified
         /// parameters, wrapping up the result in a structure that
@@ -244,8 +244,10 @@ where {
                     4 == <BorrowedSerializeHandle as wasmtime::component::ComponentType>::ALIGN32
                 );
             };
+            use crate::ser::wasmtime_host::provider::WrapSerResult;
+
             pub use super::super::super::__with_name2 as Serializer;
-            pub trait HostSerializer {
+            /*pub trait HostSerializer {
                 fn serialize_bool(
                     &mut self,
                     self_: wasmtime::component::Resource<Serializer>,
@@ -982,7 +984,7 @@ where {
                 ) -> wasmtime::Result<()> {
                     HostSerializer::drop(*self, rep)
                 }
-            }
+            }*/
             pub use super::super::super::__with_name1 as SerOk;
             pub trait HostSerOk {
                 fn drop(
@@ -1480,9 +1482,9 @@ where {
                     HostSerializeStructVariant::drop(*self, rep)
                 }
             }
-            pub trait Host:
-                HostSerializer
-                + HostSerOk
+            /*pub trait Host:
+                /* HostSerializer
+                +*/ HostSerOk
                 + HostSerError
                 + HostSerializeSeq
                 + HostSerializeTuple
@@ -1492,25 +1494,25 @@ where {
                 + HostSerializeStruct
                 + HostSerializeStructVariant
             {
-            }
+            }*/
 
             pub trait GetHost<T>:
-                Fn(T) -> <Self as GetHost<T>>::Host + Send + Sync + Copy + 'static
+                for<'a> Fn(&'a mut T) -> /*<Self as GetHost<T>>::Host*/&'a mut crate::ser::wasmtime_host::provider::HostsideSerializerProviderState + Send + Sync + Copy + 'static
             {
-                type Host: Host;
+                // type Host: Host;
             }
 
-            impl<F, T, O> GetHost<T> for F
+            impl<F, T/*, O*/> GetHost<T> for F
             where
-                F: Fn(T) -> O + Send + Sync + Copy + 'static,
-                O: Host,
+                F: for<'a> Fn(&'a mut T) -> /*O*/&'a mut crate::ser::wasmtime_host::provider::HostsideSerializerProviderState + Send + Sync + Copy + 'static,
+                // O: Host,
             {
-                type Host = O;
+                // type Host = O;
             }
 
             pub fn add_to_linker_get_host<T>(
                 linker: &mut wasmtime::component::Linker<T>,
-                host_getter: impl for<'a> GetHost<&'a mut T>,
+                host_getter: impl /*for<'a>*/ GetHost</*&'a mut*/ T>,
             ) -> wasmtime::Result<()>
 where {
                 let mut inst = linker.instance("serde:serde/serde-serializer")?;
@@ -1518,172 +1520,232 @@ where {
                     "serializer",
                     wasmtime::component::ResourceType::host::<Serializer>(),
                     move |mut store, rep| -> wasmtime::Result<()> {
-                        HostSerializer::drop(
-                            &mut host_getter(store.data_mut()),
-                            wasmtime::component::Resource::new_own(rep),
-                        )
+                        let host = host_getter(store.data_mut());
+                        let this = wasmtime::component::Resource::new_own(rep);
+                        let _serializer = host.table.delete(this)?;
+                        Ok(())
                     },
                 )?;
-                inst.resource(
-                    "ser-ok",
-                    wasmtime::component::ResourceType::host::<SerOk>(),
-                    move |mut store, rep| -> wasmtime::Result<()> {
-                        HostSerOk::drop(
-                            &mut host_getter(store.data_mut()),
-                            wasmtime::component::Resource::new_own(rep),
-                        )
-                    },
-                )?;
-                inst.resource(
-                    "ser-error",
-                    wasmtime::component::ResourceType::host::<SerError>(),
-                    move |mut store, rep| -> wasmtime::Result<()> {
-                        HostSerError::drop(
-                            &mut host_getter(store.data_mut()),
-                            wasmtime::component::Resource::new_own(rep),
-                        )
-                    },
-                )?;
-                inst.resource(
-                    "serialize-seq",
-                    wasmtime::component::ResourceType::host::<SerializeSeq>(),
-                    move |mut store, rep| -> wasmtime::Result<()> {
-                        HostSerializeSeq::drop(
-                            &mut host_getter(store.data_mut()),
-                            wasmtime::component::Resource::new_own(rep),
-                        )
-                    },
-                )?;
-                inst.resource(
-                    "serialize-tuple",
-                    wasmtime::component::ResourceType::host::<SerializeTuple>(),
-                    move |mut store, rep| -> wasmtime::Result<()> {
-                        HostSerializeTuple::drop(
-                            &mut host_getter(store.data_mut()),
-                            wasmtime::component::Resource::new_own(rep),
-                        )
-                    },
-                )?;
-                inst.resource(
-                    "serialize-tuple-struct",
-                    wasmtime::component::ResourceType::host::<SerializeTupleStruct>(),
-                    move |mut store, rep| -> wasmtime::Result<()> {
-                        HostSerializeTupleStruct::drop(
-                            &mut host_getter(store.data_mut()),
-                            wasmtime::component::Resource::new_own(rep),
-                        )
-                    },
-                )?;
-                inst.resource(
-                    "serialize-tuple-variant",
-                    wasmtime::component::ResourceType::host::<SerializeTupleVariant>(),
-                    move |mut store, rep| -> wasmtime::Result<()> {
-                        HostSerializeTupleVariant::drop(
-                            &mut host_getter(store.data_mut()),
-                            wasmtime::component::Resource::new_own(rep),
-                        )
-                    },
-                )?;
-                inst.resource(
-                    "serialize-map",
-                    wasmtime::component::ResourceType::host::<SerializeMap>(),
-                    move |mut store, rep| -> wasmtime::Result<()> {
-                        HostSerializeMap::drop(
-                            &mut host_getter(store.data_mut()),
-                            wasmtime::component::Resource::new_own(rep),
-                        )
-                    },
-                )?;
-                inst.resource(
-                    "serialize-struct",
-                    wasmtime::component::ResourceType::host::<SerializeStruct>(),
-                    move |mut store, rep| -> wasmtime::Result<()> {
-                        HostSerializeStruct::drop(
-                            &mut host_getter(store.data_mut()),
-                            wasmtime::component::Resource::new_own(rep),
-                        )
-                    },
-                )?;
-                inst.resource(
-                    "serialize-struct-variant",
-                    wasmtime::component::ResourceType::host::<SerializeStructVariant>(),
-                    move |mut store, rep| -> wasmtime::Result<()> {
-                        HostSerializeStructVariant::drop(
-                            &mut host_getter(store.data_mut()),
-                            wasmtime::component::Resource::new_own(rep),
-                        )
-                    },
-                )?;
+                // inst.resource(
+                //     "ser-ok",
+                //     wasmtime::component::ResourceType::host::<SerOk>(),
+                //     move |mut store, rep| -> wasmtime::Result<()> {
+                //         HostSerOk::drop(
+                //             host_getter(store.data_mut()),
+                //             wasmtime::component::Resource::new_own(rep),
+                //         )
+                //     },
+                // )?;
+                // inst.resource(
+                //     "ser-error",
+                //     wasmtime::component::ResourceType::host::<SerError>(),
+                //     move |mut store, rep| -> wasmtime::Result<()> {
+                //         HostSerError::drop(
+                //             host_getter(store.data_mut()),
+                //             wasmtime::component::Resource::new_own(rep),
+                //         )
+                //     },
+                // )?;
+                // inst.resource(
+                //     "serialize-seq",
+                //     wasmtime::component::ResourceType::host::<SerializeSeq>(),
+                //     move |mut store, rep| -> wasmtime::Result<()> {
+                //         HostSerializeSeq::drop(
+                //             host_getter(store.data_mut()),
+                //             wasmtime::component::Resource::new_own(rep),
+                //         )
+                //     },
+                // )?;
+                // inst.resource(
+                //     "serialize-tuple",
+                //     wasmtime::component::ResourceType::host::<SerializeTuple>(),
+                //     move |mut store, rep| -> wasmtime::Result<()> {
+                //         HostSerializeTuple::drop(
+                //             host_getter(store.data_mut()),
+                //             wasmtime::component::Resource::new_own(rep),
+                //         )
+                //     },
+                // )?;
+                // inst.resource(
+                //     "serialize-tuple-struct",
+                //     wasmtime::component::ResourceType::host::<SerializeTupleStruct>(),
+                //     move |mut store, rep| -> wasmtime::Result<()> {
+                //         HostSerializeTupleStruct::drop(
+                //             host_getter(store.data_mut()),
+                //             wasmtime::component::Resource::new_own(rep),
+                //         )
+                //     },
+                // )?;
+                // inst.resource(
+                //     "serialize-tuple-variant",
+                //     wasmtime::component::ResourceType::host::<SerializeTupleVariant>(),
+                //     move |mut store, rep| -> wasmtime::Result<()> {
+                //         HostSerializeTupleVariant::drop(
+                //             host_getter(store.data_mut()),
+                //             wasmtime::component::Resource::new_own(rep),
+                //         )
+                //     },
+                // )?;
+                // inst.resource(
+                //     "serialize-map",
+                //     wasmtime::component::ResourceType::host::<SerializeMap>(),
+                //     move |mut store, rep| -> wasmtime::Result<()> {
+                //         HostSerializeMap::drop(
+                //             host_getter(store.data_mut()),
+                //             wasmtime::component::Resource::new_own(rep),
+                //         )
+                //     },
+                // )?;
+                // inst.resource(
+                //     "serialize-struct",
+                //     wasmtime::component::ResourceType::host::<SerializeStruct>(),
+                //     move |mut store, rep| -> wasmtime::Result<()> {
+                //         HostSerializeStruct::drop(
+                //             host_getter(store.data_mut()),
+                //             wasmtime::component::Resource::new_own(rep),
+                //         )
+                //     },
+                // )?;
+                // inst.resource(
+                //     "serialize-struct-variant",
+                //     wasmtime::component::ResourceType::host::<SerializeStructVariant>(),
+                //     move |mut store, rep| -> wasmtime::Result<()> {
+                //         HostSerializeStructVariant::drop(
+                //             host_getter(store.data_mut()),
+                //             wasmtime::component::Resource::new_own(rep),
+                //         )
+                //     },
+                // )?;
                 inst.func_wrap("[static]serializer.serialize-bool", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,arg1,) : (wasmtime::component::Resource<Serializer>, bool, ) | { 
-                              let host = &mut host_getter(caller.data_mut());
-                              let r = HostSerializer::serialize_bool(host, arg0,arg1,);
-                              Ok((r?,))
-                            })?;
+                    let host = host_getter(caller.data_mut());
+                    let (this, v) = (arg0, arg1);
+                    anyhow::ensure!(this.owned());
+                    let serializer = host.table.delete(this)?;
+                    let r = serializer.serializer.erased_serialize_bool(v).wrap(host);
+                    Ok((r?,))
+                })?;
                 inst.func_wrap("[static]serializer.serialize-i8", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,arg1,) : (wasmtime::component::Resource<Serializer>, i8, ) | { 
-                              let host = &mut host_getter(caller.data_mut());
-                              let r = HostSerializer::serialize_i8(host, arg0,arg1,);
-                              Ok((r?,))
-                            })?;
+                    let host = host_getter(caller.data_mut());
+                    let (this, v) = (arg0, arg1);
+                    anyhow::ensure!(this.owned());
+                    let serializer = host.table.delete(this)?;
+                    let r = serializer.serializer.erased_serialize_i8(v).wrap(host);
+                    Ok((r?,))
+                })?;
                 inst.func_wrap("[static]serializer.serialize-i16", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,arg1,) : (wasmtime::component::Resource<Serializer>, i16, ) | { 
-                              let host = &mut host_getter(caller.data_mut());
-                              let r = HostSerializer::serialize_i16(host, arg0,arg1,);
-                              Ok((r?,))
-                            })?;
+                    let host = host_getter(caller.data_mut());
+                    let (this, v) = (arg0, arg1);
+                    anyhow::ensure!(this.owned());
+                    let serializer = host.table.delete(this)?;
+                    let r = serializer.serializer.erased_serialize_i16(v).wrap(host);
+                    Ok((r?,))
+                })?;
                 inst.func_wrap("[static]serializer.serialize-i32", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,arg1,) : (wasmtime::component::Resource<Serializer>, i32, ) | { 
-                              let host = &mut host_getter(caller.data_mut());
-                              let r = HostSerializer::serialize_i32(host, arg0,arg1,);
-                              Ok((r?,))
-                            })?;
+                    let host = host_getter(caller.data_mut());
+                    let (this, v) = (arg0, arg1);
+                    anyhow::ensure!(this.owned());
+                    let serializer = host.table.delete(this)?;
+                    let r = serializer.serializer.erased_serialize_i32(v).wrap(host);
+                    Ok((r?,))
+                })?;
                 inst.func_wrap("[static]serializer.serialize-i64", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,arg1,) : (wasmtime::component::Resource<Serializer>, i64, ) | { 
-                              let host = &mut host_getter(caller.data_mut());
-                              let r = HostSerializer::serialize_i64(host, arg0,arg1,);
-                              Ok((r?,))
-                            })?;
+                    let host = host_getter(caller.data_mut());
+                    let (this, v) = (arg0, arg1);
+                    anyhow::ensure!(this.owned());
+                    let serializer = host.table.delete(this)?;
+                    let r = serializer.serializer.erased_serialize_i64(v).wrap(host);
+                    Ok((r?,))
+                })?;
                 inst.func_wrap("[static]serializer.serialize-i128", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,arg1,) : (wasmtime::component::Resource<Serializer>, S128, ) | { 
-                              let host = &mut host_getter(caller.data_mut());
-                              let r = HostSerializer::serialize_i128(host, arg0,arg1,);
-                              Ok((r?,))
-                            })?;
+                    let host = host_getter(caller.data_mut());
+                    let (this, v) = (arg0, arg1);
+                    anyhow::ensure!(this.owned());
+                    let serializer = host.table.delete(this)?;
+                    let le_hi = v.le_hi.to_le_bytes();
+                    let le_lo = v.le_lo.to_le_bytes();
+                    let bytes = [
+                        le_hi[0], le_hi[1], le_hi[2], le_hi[3], le_hi[4], le_hi[5], le_hi[6], le_hi[7],
+                        le_lo[0], le_lo[1], le_lo[2], le_lo[3], le_lo[4], le_lo[5], le_lo[6], le_lo[7],
+                    ];
+                    let r = serializer
+                        .serializer
+                        .erased_serialize_i128(i128::from_le_bytes(bytes))
+                        .wrap(host);
+                    Ok((r?,))
+                })?;
                 inst.func_wrap("[static]serializer.serialize-u8", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,arg1,) : (wasmtime::component::Resource<Serializer>, u8, ) | { 
-                              let host = &mut host_getter(caller.data_mut());
-                              let r = HostSerializer::serialize_u8(host, arg0,arg1,);
-                              Ok((r?,))
-                            })?;
+                    let host = host_getter(caller.data_mut());
+                    let (this, v) = (arg0, arg1);
+                    anyhow::ensure!(this.owned());
+                    let serializer = host.table.delete(this)?;
+                    let r = serializer.serializer.erased_serialize_u8(v).wrap(host);
+                    Ok((r?,))
+                })?;
                 inst.func_wrap("[static]serializer.serialize-u16", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,arg1,) : (wasmtime::component::Resource<Serializer>, u16, ) | { 
-                              let host = &mut host_getter(caller.data_mut());
-                              let r = HostSerializer::serialize_u16(host, arg0,arg1,);
-                              Ok((r?,))
-                            })?;
+                    let host = host_getter(caller.data_mut());
+                    let (this, v) = (arg0, arg1);
+                    anyhow::ensure!(this.owned());
+                    let serializer = host.table.delete(this)?;
+                    let r = serializer.serializer.erased_serialize_u16(v).wrap(host);
+                    Ok((r?,))
+                })?;
                 inst.func_wrap("[static]serializer.serialize-u32", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,arg1,) : (wasmtime::component::Resource<Serializer>, u32, ) | { 
-                              let host = &mut host_getter(caller.data_mut());
-                              let r = HostSerializer::serialize_u32(host, arg0,arg1,);
-                              Ok((r?,))
-                            })?;
+                    let host = host_getter(caller.data_mut());
+                    let (this, v) = (arg0, arg1);
+                    anyhow::ensure!(this.owned());
+                    let serializer = host.table.delete(this)?;
+                    let r = serializer.serializer.erased_serialize_u32(v).wrap(host);
+                    Ok((r?,))
+                })?;
                 inst.func_wrap("[static]serializer.serialize-u64", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,arg1,) : (wasmtime::component::Resource<Serializer>, u64, ) | { 
-                              let host = &mut host_getter(caller.data_mut());
-                              let r = HostSerializer::serialize_u64(host, arg0,arg1,);
-                              Ok((r?,))
-                            })?;
+                    let host = host_getter(caller.data_mut());
+                    let (this, v) = (arg0, arg1);
+                    anyhow::ensure!(this.owned());
+                    let serializer = host.table.delete(this)?;
+                    let r = serializer.serializer.erased_serialize_u64(v).wrap(host);
+                    Ok((r?,))
+                })?;
                 inst.func_wrap("[static]serializer.serialize-u128", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,arg1,) : (wasmtime::component::Resource<Serializer>, U128, ) | { 
-                              let host = &mut host_getter(caller.data_mut());
-                              let r = HostSerializer::serialize_u128(host, arg0,arg1,);
-                              Ok((r?,))
-                            })?;
+                    let host = host_getter(caller.data_mut());
+                    let (this, v) = (arg0, arg1);
+                    anyhow::ensure!(this.owned());
+                    let serializer = host.table.delete(this)?;
+                    let le_hi = v.le_hi.to_le_bytes();
+                    let le_lo = v.le_lo.to_le_bytes();
+                    let bytes = [
+                        le_hi[0], le_hi[1], le_hi[2], le_hi[3], le_hi[4], le_hi[5], le_hi[6], le_hi[7],
+                        le_lo[0], le_lo[1], le_lo[2], le_lo[3], le_lo[4], le_lo[5], le_lo[6], le_lo[7],
+                    ];
+                    let r = serializer
+                        .serializer
+                        .erased_serialize_u128(u128::from_le_bytes(bytes))
+                        .wrap(host);
+                    Ok((r?,))
+                })?;
                 inst.func_wrap("[static]serializer.serialize-f32", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,arg1,) : (wasmtime::component::Resource<Serializer>, f32, ) | { 
-                              let host = &mut host_getter(caller.data_mut());
-                              let r = HostSerializer::serialize_f32(host, arg0,arg1,);
-                              Ok((r?,))
-                            })?;
+                    let host = host_getter(caller.data_mut());
+                    let (this, v) = (arg0, arg1);
+                    anyhow::ensure!(this.owned());
+                    let serializer = host.table.delete(this)?;
+                    let r = serializer.serializer.erased_serialize_f32(v).wrap(host);
+                    Ok((r?,))
+                })?;
                 inst.func_wrap("[static]serializer.serialize-f64", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,arg1,) : (wasmtime::component::Resource<Serializer>, f64, ) | { 
-                              let host = &mut host_getter(caller.data_mut());
-                              let r = HostSerializer::serialize_f64(host, arg0,arg1,);
-                              Ok((r?,))
-                            })?;
+                    let host = host_getter(caller.data_mut());
+                    let (this, v) = (arg0, arg1);
+                    anyhow::ensure!(this.owned());
+                    let serializer = host.table.delete(this)?;
+                    let r = serializer.serializer.erased_serialize_f64(v).wrap(host);
+                    Ok((r?,))
+                })?;
                 inst.func_wrap("[static]serializer.serialize-char", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,arg1,) : (wasmtime::component::Resource<Serializer>, char, ) | { 
-                              let host = &mut host_getter(caller.data_mut());
-                              let r = HostSerializer::serialize_char(host, arg0,arg1,);
-                              Ok((r?,))
-                            })?;
+                    let host = host_getter(caller.data_mut());
+                    let (this, v) = (arg0, arg1);
+                    anyhow::ensure!(this.owned());
+                    let serializer = host.table.delete(this)?;
+                    let r = serializer.serializer.erased_serialize_char(v).wrap(host);
+                    Ok((r?,))
+                })?;
                 inst.func_wrap(
                     "[static]serializer.serialize-str",
                     move |mut caller: wasmtime::StoreContextMut<'_, T>,
@@ -1691,8 +1753,11 @@ where {
                         wasmtime::component::Resource<Serializer>,
                         wasmtime::component::__internal::String,
                     )| {
-                        let host = &mut host_getter(caller.data_mut());
-                        let r = HostSerializer::serialize_str(host, arg0, arg1);
+                        let host = host_getter(caller.data_mut());
+                        let (this, v) = (arg0, arg1);
+                        anyhow::ensure!(this.owned());
+                        let serializer = host.table.delete(this)?;
+                        let r = serializer.serializer.erased_serialize_str(&v).wrap(host);
                         Ok((r?,))
                     },
                 )?;
@@ -1703,16 +1768,22 @@ where {
                         wasmtime::component::Resource<Serializer>,
                         wasmtime::component::__internal::Vec<u8>,
                     )| {
-                        let host = &mut host_getter(caller.data_mut());
-                        let r = HostSerializer::serialize_bytes(host, arg0, arg1);
+                        let host = host_getter(caller.data_mut());
+                        let (this, v) = (arg0, arg1);
+                        anyhow::ensure!(this.owned());
+                        let serializer = host.table.delete(this)?;
+                        let r = serializer.serializer.erased_serialize_bytes(&v).wrap(host);
                         Ok((r?,))
                     },
                 )?;
                 inst.func_wrap("[static]serializer.serialize-none", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<Serializer>, ) | { 
-                              let host = &mut host_getter(caller.data_mut());
-                              let r = HostSerializer::serialize_none(host, arg0,);
-                              Ok((r?,))
-                            })?;
+                    let host = host_getter(caller.data_mut());
+                    let this = arg0;
+                    anyhow::ensure!(this.owned());
+                    let serializer = host.table.delete(this)?;
+                    let r = serializer.serializer.erased_serialize_none().wrap(host);
+                    Ok((r?,))
+                })?;
                 inst.func_wrap(
                     "[static]serializer.serialize-some",
                     move |mut caller: wasmtime::StoreContextMut<'_, T>,
@@ -1720,18 +1791,41 @@ where {
                         wasmtime::component::Resource<Serializer>,
                         BorrowedSerializeHandle,
                     )| {
-                        let caller = &mut caller;
-                        let ctx = core::ptr::from_mut(caller);
-                        let host = &mut host_getter(caller.data_mut());
-                        let r = HostSerializer::serialize_some(host, ctx, arg0, arg1);
+                        // let caller = &mut caller;
+                        // // TODO: store ctx in SerializableSerialize instead of host
+                        // let ctx = core::ptr::from_mut(caller);
+                        let (this, value) = (arg0, arg1);
+                        anyhow::ensure!(this.owned());
+                        let serializer = {
+                            let host = host_getter(caller.data_mut());
+                            host.table.delete(this)
+                        }?;
+                        let r = serializer
+                            .serializer
+                            .erased_serialize_some(&crate::ser::wasmtime_host::provider::SerializableSerialize::new(
+                                &mut caller,
+                                host_getter,
+                                Box::new(move |mut ctx, guest, serialize, serializer| {
+                                    let serialize = serialize.try_into_resource_any(&mut ctx)?;
+                                    guest.call_serialize(ctx, serialize, serializer)
+                                }),
+                                &value,
+                            ));
+                        let r = {
+                            let host = host_getter(caller.data_mut());
+                            r.wrap(host)
+                        };
                         Ok((r?,))
                     },
                 )?;
                 inst.func_wrap("[static]serializer.serialize-unit", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<Serializer>, ) | { 
-                              let host = &mut host_getter(caller.data_mut());
-                              let r = HostSerializer::serialize_unit(host, arg0,);
-                              Ok((r?,))
-                            })?;
+                    let host = host_getter(caller.data_mut());
+                    let this = arg0;
+                    anyhow::ensure!(this.owned());
+                    let serializer = host.table.delete(this)?;
+                    let r = serializer.serializer.erased_serialize_unit().wrap(host);
+                    Ok((r?,))
+                })?;
                 inst.func_wrap(
                     "[static]serializer.serialize-unit-struct",
                     move |mut caller: wasmtime::StoreContextMut<'_, T>,
@@ -1739,8 +1833,11 @@ where {
                         wasmtime::component::Resource<Serializer>,
                         wasmtime::component::__internal::String,
                     )| {
-                        let host = &mut host_getter(caller.data_mut());
-                        let r = HostSerializer::serialize_unit_struct(host, arg0, arg1);
+                        let host = host_getter(caller.data_mut());
+                        let (this, name) = (arg0, arg1);
+                        anyhow::ensure!(this.owned());
+                        let serializer = host.table.delete(this)?;
+                        let r = serializer.serializer.erased_serialize_unit_struct(crate::intern::intern_string(name)).wrap(host);
                         Ok((r?,))
                     },
                 )?;
@@ -1753,9 +1850,11 @@ where {
                         u32,
                         wasmtime::component::__internal::String,
                     )| {
-                        let host = &mut host_getter(caller.data_mut());
-                        let r =
-                            HostSerializer::serialize_unit_variant(host, arg0, arg1, arg2, arg3);
+                        let host = host_getter(caller.data_mut());
+                        let (this, name, variant_index, variant) = (arg0, arg1, arg2, arg3);
+                        anyhow::ensure!(this.owned());
+                        let serializer = host.table.delete(this)?;
+                        let r = serializer.serializer.erased_serialize_unit_variant(crate::intern::intern_string(name), variant_index, crate::intern::intern_string(variant)).wrap(host);
                         Ok((r?,))
                     },
                 )?;
@@ -1767,9 +1866,10 @@ where {
                         wasmtime::component::__internal::String,
                         BorrowedSerializeHandle,
                     )| {
-                        let host = &mut host_getter(caller.data_mut());
-                        let r = HostSerializer::serialize_newtype_struct(host, arg0, arg1, arg2);
-                        Ok((r?,))
+                        // let host = host_getter(caller.data_mut());
+                        // let r = HostSerializer::serialize_newtype_struct(host, arg0, arg1, arg2);
+                        // Ok((r?,))
+                        todo!()
                     },
                 )?;
                 inst.func_wrap(
@@ -1782,11 +1882,12 @@ where {
                         wasmtime::component::__internal::String,
                         BorrowedSerializeHandle,
                     )| {
-                        let host = &mut host_getter(caller.data_mut());
-                        let r = HostSerializer::serialize_newtype_variant(
-                            host, arg0, arg1, arg2, arg3, arg4,
-                        );
-                        Ok((r?,))
+                        // let host = host_getter(caller.data_mut());
+                        // let r = HostSerializer::serialize_newtype_variant(
+                        //     host, arg0, arg1, arg2, arg3, arg4,
+                        // );
+                        // Ok((r?,))
+                        todo!()
                     },
                 )?;
                 inst.func_wrap(
@@ -1796,16 +1897,18 @@ where {
                         wasmtime::component::Resource<Serializer>,
                         Option<Usize>,
                     )| {
-                        let host = &mut host_getter(caller.data_mut());
-                        let r = HostSerializer::serialize_seq(host, arg0, arg1);
-                        Ok((r?,))
+                        // let host = host_getter(caller.data_mut());
+                        // let r = HostSerializer::serialize_seq(host, arg0, arg1);
+                        // Ok((r?,))
+                        todo!()
                     },
                 )?;
                 inst.func_wrap("[static]serializer.serialize-tuple", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,arg1,) : (wasmtime::component::Resource<Serializer>, Usize, ) | { 
-                              let host = &mut host_getter(caller.data_mut());
-                              let r = HostSerializer::serialize_tuple(host, arg0,arg1,);
-                              Ok((r?,))
-                            })?;
+                    // let host = host_getter(caller.data_mut());
+                    // let r = HostSerializer::serialize_tuple(host, arg0,arg1,);
+                    // Ok((r?,))
+                    todo!()
+                })?;
                 inst.func_wrap(
                     "[static]serializer.serialize-tuple-struct",
                     move |mut caller: wasmtime::StoreContextMut<'_, T>,
@@ -1814,9 +1917,10 @@ where {
                         wasmtime::component::__internal::String,
                         Usize,
                     )| {
-                        let host = &mut host_getter(caller.data_mut());
-                        let r = HostSerializer::serialize_tuple_struct(host, arg0, arg1, arg2);
-                        Ok((r?,))
+                        // let host = host_getter(caller.data_mut());
+                        // let r = HostSerializer::serialize_tuple_struct(host, arg0, arg1, arg2);
+                        // Ok((r?,))
+                        todo!()
                     },
                 )?;
                 inst.func_wrap(
@@ -1829,11 +1933,12 @@ where {
                         wasmtime::component::__internal::String,
                         Usize,
                     )| {
-                        let host = &mut host_getter(caller.data_mut());
-                        let r = HostSerializer::serialize_tuple_variant(
-                            host, arg0, arg1, arg2, arg3, arg4,
-                        );
-                        Ok((r?,))
+                        // let host = host_getter(caller.data_mut());
+                        // let r = HostSerializer::serialize_tuple_variant(
+                        //     host, arg0, arg1, arg2, arg3, arg4,
+                        // );
+                        // Ok((r?,))
+                        todo!()
                     },
                 )?;
                 inst.func_wrap(
@@ -1843,9 +1948,10 @@ where {
                         wasmtime::component::Resource<Serializer>,
                         Option<Usize>,
                     )| {
-                        let host = &mut host_getter(caller.data_mut());
-                        let r = HostSerializer::serialize_map(host, arg0, arg1);
-                        Ok((r?,))
+                        // let host = host_getter(caller.data_mut());
+                        // let r = HostSerializer::serialize_map(host, arg0, arg1);
+                        // Ok((r?,))
+                        todo!()
                     },
                 )?;
                 inst.func_wrap(
@@ -1856,9 +1962,10 @@ where {
                         wasmtime::component::__internal::String,
                         Usize,
                     )| {
-                        let host = &mut host_getter(caller.data_mut());
-                        let r = HostSerializer::serialize_struct(host, arg0, arg1, arg2);
-                        Ok((r?,))
+                        // let host = host_getter(caller.data_mut());
+                        // let r = HostSerializer::serialize_struct(host, arg0, arg1, arg2);
+                        // Ok((r?,))
+                        todo!()
                     },
                 )?;
                 inst.func_wrap(
@@ -1871,216 +1978,220 @@ where {
                         wasmtime::component::__internal::String,
                         Usize,
                     )| {
-                        let host = &mut host_getter(caller.data_mut());
-                        let r = HostSerializer::serialize_struct_variant(
-                            host, arg0, arg1, arg2, arg3, arg4,
-                        );
-                        Ok((r?,))
+                        // let host = host_getter(caller.data_mut());
+                        // let r = HostSerializer::serialize_struct_variant(
+                        //     host, arg0, arg1, arg2, arg3, arg4,
+                        // );
+                        // Ok((r?,))
+                        todo!()
                     },
                 )?;
                 inst.func_wrap("[static]serializer.is-human-readable", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<Serializer>, ) | { 
-                              let host = &mut host_getter(caller.data_mut());
-                              let r = HostSerializer::is_human_readable(host, arg0,);
-                              Ok((r?,))
-                            })?;
-                inst.func_wrap(
-                    "[method]ser-error.display",
-                    move |mut caller: wasmtime::StoreContextMut<'_, T>,
-                          (arg0,): (wasmtime::component::Resource<SerError>,)| {
-                        let host = &mut host_getter(caller.data_mut());
-                        let r = HostSerError::display(host, arg0);
-                        Ok((r?,))
-                    },
-                )?;
-                inst.func_wrap(
-                    "[method]ser-error.debug",
-                    move |mut caller: wasmtime::StoreContextMut<'_, T>,
-                          (arg0,): (wasmtime::component::Resource<SerError>,)| {
-                        let host = &mut host_getter(caller.data_mut());
-                        let r = HostSerError::debug(host, arg0);
-                        Ok((r?,))
-                    },
-                )?;
-                inst.func_wrap(
-                    "[static]ser-error.custom",
-                    move |mut caller: wasmtime::StoreContextMut<'_, T>,
-                          (arg0,): (wasmtime::component::__internal::String,)| {
-                        let host = &mut host_getter(caller.data_mut());
-                        let r = HostSerError::custom(host, arg0);
-                        Ok((r?,))
-                    },
-                )?;
-                inst.func_wrap(
-                    "[static]serialize-seq.serialize-element",
-                    move |mut caller: wasmtime::StoreContextMut<'_, T>,
-                          (arg0, arg1): (
-                        wasmtime::component::Resource<SerializeSeq>,
-                        BorrowedSerializeHandle,
-                    )| {
-                        let host = &mut host_getter(caller.data_mut());
-                        let r = HostSerializeSeq::serialize_element(host, arg0, arg1);
-                        Ok((r?,))
-                    },
-                )?;
-                inst.func_wrap("[static]serialize-seq.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeSeq>, ) | { 
-                              let host = &mut host_getter(caller.data_mut());
-                              let r = HostSerializeSeq::end(host, arg0,);
-                              Ok((r?,))
-                            })?;
-                inst.func_wrap(
-                    "[static]serialize-tuple.serialize-element",
-                    move |mut caller: wasmtime::StoreContextMut<'_, T>,
-                          (arg0, arg1): (
-                        wasmtime::component::Resource<SerializeTuple>,
-                        BorrowedSerializeHandle,
-                    )| {
-                        let host = &mut host_getter(caller.data_mut());
-                        let r = HostSerializeTuple::serialize_element(host, arg0, arg1);
-                        Ok((r?,))
-                    },
-                )?;
-                inst.func_wrap("[static]serialize-tuple.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeTuple>, ) | { 
-                              let host = &mut host_getter(caller.data_mut());
-                              let r = HostSerializeTuple::end(host, arg0,);
-                              Ok((r?,))
-                            })?;
-                inst.func_wrap(
-                    "[static]serialize-tuple-struct.serialize-field",
-                    move |mut caller: wasmtime::StoreContextMut<'_, T>,
-                          (arg0, arg1): (
-                        wasmtime::component::Resource<SerializeTupleStruct>,
-                        BorrowedSerializeHandle,
-                    )| {
-                        let host = &mut host_getter(caller.data_mut());
-                        let r = HostSerializeTupleStruct::serialize_field(host, arg0, arg1);
-                        Ok((r?,))
-                    },
-                )?;
-                inst.func_wrap("[static]serialize-tuple-struct.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeTupleStruct>, ) | { 
-                              let host = &mut host_getter(caller.data_mut());
-                              let r = HostSerializeTupleStruct::end(host, arg0,);
-                              Ok((r?,))
-                            })?;
-                inst.func_wrap(
-                    "[static]serialize-tuple-variant.serialize-field",
-                    move |mut caller: wasmtime::StoreContextMut<'_, T>,
-                          (arg0, arg1): (
-                        wasmtime::component::Resource<SerializeTupleVariant>,
-                        BorrowedSerializeHandle,
-                    )| {
-                        let host = &mut host_getter(caller.data_mut());
-                        let r = HostSerializeTupleVariant::serialize_field(host, arg0, arg1);
-                        Ok((r?,))
-                    },
-                )?;
-                inst.func_wrap("[static]serialize-tuple-variant.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeTupleVariant>, ) | { 
-                              let host = &mut host_getter(caller.data_mut());
-                              let r = HostSerializeTupleVariant::end(host, arg0,);
-                              Ok((r?,))
-                            })?;
-                inst.func_wrap(
-                    "[static]serialize-map.serialize-key",
-                    move |mut caller: wasmtime::StoreContextMut<'_, T>,
-                          (arg0, arg1): (
-                        wasmtime::component::Resource<SerializeMap>,
-                        BorrowedSerializeHandle,
-                    )| {
-                        let host = &mut host_getter(caller.data_mut());
-                        let r = HostSerializeMap::serialize_key(host, arg0, arg1);
-                        Ok((r?,))
-                    },
-                )?;
-                inst.func_wrap(
-                    "[static]serialize-map.serialize-value",
-                    move |mut caller: wasmtime::StoreContextMut<'_, T>,
-                          (arg0, arg1): (
-                        wasmtime::component::Resource<SerializeMap>,
-                        BorrowedSerializeHandle,
-                    )| {
-                        let host = &mut host_getter(caller.data_mut());
-                        let r = HostSerializeMap::serialize_value(host, arg0, arg1);
-                        Ok((r?,))
-                    },
-                )?;
-                inst.func_wrap("[static]serialize-map.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeMap>, ) | { 
-                              let host = &mut host_getter(caller.data_mut());
-                              let r = HostSerializeMap::end(host, arg0,);
-                              Ok((r?,))
-                            })?;
-                inst.func_wrap(
-                    "[static]serialize-struct.serialize-field",
-                    move |mut caller: wasmtime::StoreContextMut<'_, T>,
-                          (arg0, arg1, arg2): (
-                        wasmtime::component::Resource<SerializeStruct>,
-                        wasmtime::component::__internal::String,
-                        BorrowedSerializeHandle,
-                    )| {
-                        let host = &mut host_getter(caller.data_mut());
-                        let r = HostSerializeStruct::serialize_field(host, arg0, arg1, arg2);
-                        Ok((r?,))
-                    },
-                )?;
-                inst.func_wrap("[static]serialize-struct.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeStruct>, ) | { 
-                              let host = &mut host_getter(caller.data_mut());
-                              let r = HostSerializeStruct::end(host, arg0,);
-                              Ok((r?,))
-                            })?;
-                inst.func_wrap(
-                    "[static]serialize-struct.skip-field",
-                    move |mut caller: wasmtime::StoreContextMut<'_, T>,
-                          (arg0, arg1): (
-                        wasmtime::component::Resource<SerializeStruct>,
-                        wasmtime::component::__internal::String,
-                    )| {
-                        let host = &mut host_getter(caller.data_mut());
-                        let r = HostSerializeStruct::skip_field(host, arg0, arg1);
-                        Ok((r?,))
-                    },
-                )?;
-                inst.func_wrap(
-                    "[static]serialize-struct-variant.serialize-field",
-                    move |mut caller: wasmtime::StoreContextMut<'_, T>,
-                          (arg0, arg1, arg2): (
-                        wasmtime::component::Resource<SerializeStructVariant>,
-                        wasmtime::component::__internal::String,
-                        BorrowedSerializeHandle,
-                    )| {
-                        let host = &mut host_getter(caller.data_mut());
-                        let r = HostSerializeStructVariant::serialize_field(host, arg0, arg1, arg2);
-                        Ok((r?,))
-                    },
-                )?;
-                inst.func_wrap("[static]serialize-struct-variant.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeStructVariant>, ) | { 
-                              let host = &mut host_getter(caller.data_mut());
-                              let r = HostSerializeStructVariant::end(host, arg0,);
-                              Ok((r?,))
-                            })?;
-                inst.func_wrap(
-                    "[static]serialize-struct-variant.skip-field",
-                    move |mut caller: wasmtime::StoreContextMut<'_, T>,
-                          (arg0, arg1): (
-                        wasmtime::component::Resource<SerializeStructVariant>,
-                        wasmtime::component::__internal::String,
-                    )| {
-                        let host = &mut host_getter(caller.data_mut());
-                        let r = HostSerializeStructVariant::skip_field(host, arg0, arg1);
-                        Ok((r?,))
-                    },
-                )?;
+                    let host = host_getter(caller.data_mut());
+                    let this = arg0;
+                    anyhow::ensure!(!this.owned());
+                    let serializer = host.table.get(&this)?;
+                    let r = serializer.serializer.erased_is_human_readable();
+                    Ok((r,))
+                })?;
+                // inst.func_wrap(
+                //     "[method]ser-error.display",
+                //     move |mut caller: wasmtime::StoreContextMut<'_, T>,
+                //           (arg0,): (wasmtime::component::Resource<SerError>,)| {
+                //         let host = host_getter(caller.data_mut());
+                //         let r = HostSerError::display(host, arg0);
+                //         Ok((r?,))
+                //     },
+                // )?;
+                // inst.func_wrap(
+                //     "[method]ser-error.debug",
+                //     move |mut caller: wasmtime::StoreContextMut<'_, T>,
+                //           (arg0,): (wasmtime::component::Resource<SerError>,)| {
+                //         let host = host_getter(caller.data_mut());
+                //         let r = HostSerError::debug(host, arg0);
+                //         Ok((r?,))
+                //     },
+                // )?;
+                // inst.func_wrap(
+                //     "[static]ser-error.custom",
+                //     move |mut caller: wasmtime::StoreContextMut<'_, T>,
+                //           (arg0,): (wasmtime::component::__internal::String,)| {
+                //         let host = host_getter(caller.data_mut());
+                //         let r = HostSerError::custom(host, arg0);
+                //         Ok((r?,))
+                //     },
+                // )?;
+                // inst.func_wrap(
+                //     "[static]serialize-seq.serialize-element",
+                //     move |mut caller: wasmtime::StoreContextMut<'_, T>,
+                //           (arg0, arg1): (
+                //         wasmtime::component::Resource<SerializeSeq>,
+                //         BorrowedSerializeHandle,
+                //     )| {
+                //         let host = host_getter(caller.data_mut());
+                //         let r = HostSerializeSeq::serialize_element(host, arg0, arg1);
+                //         Ok((r?,))
+                //     },
+                // )?;
+                // inst.func_wrap("[static]serialize-seq.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeSeq>, ) | { 
+                //               let host = host_getter(caller.data_mut());
+                //               let r = HostSerializeSeq::end(host, arg0,);
+                //               Ok((r?,))
+                //             })?;
+                // inst.func_wrap(
+                //     "[static]serialize-tuple.serialize-element",
+                //     move |mut caller: wasmtime::StoreContextMut<'_, T>,
+                //           (arg0, arg1): (
+                //         wasmtime::component::Resource<SerializeTuple>,
+                //         BorrowedSerializeHandle,
+                //     )| {
+                //         let host = host_getter(caller.data_mut());
+                //         let r = HostSerializeTuple::serialize_element(host, arg0, arg1);
+                //         Ok((r?,))
+                //     },
+                // )?;
+                // inst.func_wrap("[static]serialize-tuple.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeTuple>, ) | { 
+                //               let host = host_getter(caller.data_mut());
+                //               let r = HostSerializeTuple::end(host, arg0,);
+                //               Ok((r?,))
+                //             })?;
+                // inst.func_wrap(
+                //     "[static]serialize-tuple-struct.serialize-field",
+                //     move |mut caller: wasmtime::StoreContextMut<'_, T>,
+                //           (arg0, arg1): (
+                //         wasmtime::component::Resource<SerializeTupleStruct>,
+                //         BorrowedSerializeHandle,
+                //     )| {
+                //         let host = host_getter(caller.data_mut());
+                //         let r = HostSerializeTupleStruct::serialize_field(host, arg0, arg1);
+                //         Ok((r?,))
+                //     },
+                // )?;
+                // inst.func_wrap("[static]serialize-tuple-struct.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeTupleStruct>, ) | { 
+                //               let host = host_getter(caller.data_mut());
+                //               let r = HostSerializeTupleStruct::end(host, arg0,);
+                //               Ok((r?,))
+                //             })?;
+                // inst.func_wrap(
+                //     "[static]serialize-tuple-variant.serialize-field",
+                //     move |mut caller: wasmtime::StoreContextMut<'_, T>,
+                //           (arg0, arg1): (
+                //         wasmtime::component::Resource<SerializeTupleVariant>,
+                //         BorrowedSerializeHandle,
+                //     )| {
+                //         let host = host_getter(caller.data_mut());
+                //         let r = HostSerializeTupleVariant::serialize_field(host, arg0, arg1);
+                //         Ok((r?,))
+                //     },
+                // )?;
+                // inst.func_wrap("[static]serialize-tuple-variant.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeTupleVariant>, ) | { 
+                //               let host = host_getter(caller.data_mut());
+                //               let r = HostSerializeTupleVariant::end(host, arg0,);
+                //               Ok((r?,))
+                //             })?;
+                // inst.func_wrap(
+                //     "[static]serialize-map.serialize-key",
+                //     move |mut caller: wasmtime::StoreContextMut<'_, T>,
+                //           (arg0, arg1): (
+                //         wasmtime::component::Resource<SerializeMap>,
+                //         BorrowedSerializeHandle,
+                //     )| {
+                //         let host = host_getter(caller.data_mut());
+                //         let r = HostSerializeMap::serialize_key(host, arg0, arg1);
+                //         Ok((r?,))
+                //     },
+                // )?;
+                // inst.func_wrap(
+                //     "[static]serialize-map.serialize-value",
+                //     move |mut caller: wasmtime::StoreContextMut<'_, T>,
+                //           (arg0, arg1): (
+                //         wasmtime::component::Resource<SerializeMap>,
+                //         BorrowedSerializeHandle,
+                //     )| {
+                //         let host = host_getter(caller.data_mut());
+                //         let r = HostSerializeMap::serialize_value(host, arg0, arg1);
+                //         Ok((r?,))
+                //     },
+                // )?;
+                // inst.func_wrap("[static]serialize-map.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeMap>, ) | { 
+                //               let host = host_getter(caller.data_mut());
+                //               let r = HostSerializeMap::end(host, arg0,);
+                //               Ok((r?,))
+                //             })?;
+                // inst.func_wrap(
+                //     "[static]serialize-struct.serialize-field",
+                //     move |mut caller: wasmtime::StoreContextMut<'_, T>,
+                //           (arg0, arg1, arg2): (
+                //         wasmtime::component::Resource<SerializeStruct>,
+                //         wasmtime::component::__internal::String,
+                //         BorrowedSerializeHandle,
+                //     )| {
+                //         let host = host_getter(caller.data_mut());
+                //         let r = HostSerializeStruct::serialize_field(host, arg0, arg1, arg2);
+                //         Ok((r?,))
+                //     },
+                // )?;
+                // inst.func_wrap("[static]serialize-struct.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeStruct>, ) | { 
+                //               let host = host_getter(caller.data_mut());
+                //               let r = HostSerializeStruct::end(host, arg0,);
+                //               Ok((r?,))
+                //             })?;
+                // inst.func_wrap(
+                //     "[static]serialize-struct.skip-field",
+                //     move |mut caller: wasmtime::StoreContextMut<'_, T>,
+                //           (arg0, arg1): (
+                //         wasmtime::component::Resource<SerializeStruct>,
+                //         wasmtime::component::__internal::String,
+                //     )| {
+                //         let host = host_getter(caller.data_mut());
+                //         let r = HostSerializeStruct::skip_field(host, arg0, arg1);
+                //         Ok((r?,))
+                //     },
+                // )?;
+                // inst.func_wrap(
+                //     "[static]serialize-struct-variant.serialize-field",
+                //     move |mut caller: wasmtime::StoreContextMut<'_, T>,
+                //           (arg0, arg1, arg2): (
+                //         wasmtime::component::Resource<SerializeStructVariant>,
+                //         wasmtime::component::__internal::String,
+                //         BorrowedSerializeHandle,
+                //     )| {
+                //         let host = host_getter(caller.data_mut());
+                //         let r = HostSerializeStructVariant::serialize_field(host, arg0, arg1, arg2);
+                //         Ok((r?,))
+                //     },
+                // )?;
+                // inst.func_wrap("[static]serialize-struct-variant.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeStructVariant>, ) | { 
+                //               let host = host_getter(caller.data_mut());
+                //               let r = HostSerializeStructVariant::end(host, arg0,);
+                //               Ok((r?,))
+                //             })?;
+                // inst.func_wrap(
+                //     "[static]serialize-struct-variant.skip-field",
+                //     move |mut caller: wasmtime::StoreContextMut<'_, T>,
+                //           (arg0, arg1): (
+                //         wasmtime::component::Resource<SerializeStructVariant>,
+                //         wasmtime::component::__internal::String,
+                //     )| {
+                //         let host = host_getter(caller.data_mut());
+                //         let r = HostSerializeStructVariant::skip_field(host, arg0, arg1);
+                //         Ok((r?,))
+                //     },
+                // )?;
                 Ok(())
             }
 
             pub fn add_to_linker<T, U>(
                 linker: &mut wasmtime::component::Linker<T>,
-                get: impl Fn(&mut T) -> &mut U + Send + Sync + Copy + 'static,
+                get: impl Fn(&mut T) -> &mut /*U*/ crate::ser::wasmtime_host::provider::HostsideSerializerProviderState + Send + Sync + Copy + 'static,
             ) -> wasmtime::Result<()>
             where
-                U: Host,
+                // U: Host,
             {
                 add_to_linker_get_host(linker, get)
             }
 
-            impl<_T: Host + ?Sized> Host for &mut _T {}
+            // impl<_T: Host + ?Sized> Host for &mut _T {}
         }
     }
 }
