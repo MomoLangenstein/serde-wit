@@ -973,7 +973,7 @@ where {
                         let (this, len) = (arg0, arg1);
                         anyhow::ensure!(this.owned());
                         let Serializer {
-                            serializer, scope, ..
+                            serializer, scope,
                         } = host.table.delete(this)?;
                         let r = match serializer
                             .take()
@@ -996,7 +996,7 @@ where {
                         let (this, len) = (arg0, arg1);
                         anyhow::ensure!(this.owned());
                         let Serializer {
-                            serializer, scope, ..
+                            serializer, scope,
                         } = host.table.delete(this)?;
                         let r = match serializer
                             .take()
@@ -1023,7 +1023,7 @@ where {
                         let (this, name, len) = (arg0, arg1, arg2);
                         anyhow::ensure!(this.owned());
                         let Serializer {
-                            serializer, scope, ..
+                            serializer, scope,
                         } = host.table.delete(this)?;
                         let r = match serializer.take().erased_serialize_tuple_struct(
                             crate::intern::intern_string(name),
@@ -1063,7 +1063,7 @@ where {
                             (arg0, arg1, arg2, arg3, arg4);
                         anyhow::ensure!(this.owned());
                         let Serializer {
-                            serializer, scope, ..
+                            serializer, scope,
                         } = host.table.delete(this)?;
                         let r = match serializer.take().erased_serialize_tuple_variant(
                             crate::intern::intern_string(name),

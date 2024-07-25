@@ -32,7 +32,6 @@ pub struct HostsideSerializerProviderState {
 
 pub struct HostsideSerializerProvider {
     serializer: SendWrapper<Box<dyn ErasedSerializer>>,
-    is_human_readable: bool,
     scope: ScopedBorrowMut<()>,
 }
 
@@ -711,7 +710,6 @@ impl HostsideSerializerProvider {
                 unsafe { core::mem::transmute(serializer) };
 
             inner(Self {
-                is_human_readable: serializer.erased_is_human_readable(),
                 serializer: SendWrapper::new(serializer),
                 scope: scope.borrow_mut(),
             })
