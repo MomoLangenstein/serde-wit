@@ -1,10 +1,11 @@
-use std::sync::{Mutex, MutexGuard};
+use std::sync::Mutex;
 
 use ::serde::ser::{
     SerializeMap, SerializeSeq, SerializeStruct, SerializeStructVariant, SerializeTuple,
     SerializeTupleStruct, SerializeTupleVariant,
 };
 use scoped_reference::{ScopedBorrowMut, ScopedReference};
+use send_wrapper::SendWrapper;
 
 mod bindings;
 // mod bindings {
@@ -30,7 +31,7 @@ pub struct HostsideSerializerProviderState {
 }
 
 pub struct HostsideSerializerProvider {
-    serializer: Box<dyn ErasedSerializer>,
+    serializer: SendWrapper<Box<dyn ErasedSerializer>>,
     is_human_readable: bool,
     scope: ScopedBorrowMut<()>,
 }
@@ -68,13 +69,24 @@ impl WrapSerResult for Result<SerOk, SerError> {
     }
 }
 
-// impl WrapSerResult for Result<(), SerError> {
-//     type Ok = ();
+impl WrapSerResult for Result<(), SerError> {
+    type Ok = ();
 
-//     fn wrap(self) -> Result<(), bindings::exports::serde::serde::serde_serializer::SerError> {
-//         self.map_err(bindings::exports::serde::serde::serde_serializer::SerError::new)
-//     }
-// }
+    fn wrap(
+        self,
+        state: &mut HostsideSerializerProviderState,
+    ) -> anyhow::Result<
+        Result<
+            (),
+            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
+        >,
+    > {
+        match self {
+            Ok(()) => Ok(Ok(())),
+            Err(error) => Ok(Err(state.table.push(error)?)),
+        }
+    }
+}
 
 // impl bindings::serde::serde::serde_serializer::HostSerializer for HostsideSerializerProviderState {
 //     fn serialize_bool(
@@ -700,7 +712,7 @@ impl HostsideSerializerProvider {
 
             inner(Self {
                 is_human_readable: serializer.erased_is_human_readable(),
-                serializer,
+                serializer: SendWrapper::new(serializer),
                 scope: scope.borrow_mut(),
             })
         };
@@ -753,34 +765,34 @@ trait ErasedSerializer {
         variant: &'static str,
         v: &SerializableSerialize,
     ) -> Result<SerOk, SerError>;
-    // fn erased_serialize_seq<'a>(
-    //     self: Box<Self>,
-    //     len: Option<usize>,
-    // ) -> Result<Box<dyn ErasedSerializeSeq + 'a>, SerError>
-    // where
-    //     Self: 'a;
-    // fn erased_serialize_tuple<'a>(
-    //     self: Box<Self>,
-    //     len: usize,
-    // ) -> Result<Box<dyn ErasedSerializeTuple + 'a>, SerError>
-    // where
-    //     Self: 'a;
-    // fn erased_serialize_tuple_struct<'a>(
-    //     self: Box<Self>,
-    //     name: &'static str,
-    //     len: usize,
-    // ) -> Result<Box<dyn ErasedSerializeTupleStruct + 'a>, SerError>
-    // where
-    //     Self: 'a;
-    // fn erased_serialize_tuple_variant<'a>(
-    //     self: Box<Self>,
-    //     name: &'static str,
-    //     variant_index: u32,
-    //     variant: &'static str,
-    //     len: usize,
-    // ) -> Result<Box<dyn ErasedSerializeTupleVariant + 'a>, SerError>
-    // where
-    //     Self: 'a;
+    fn erased_serialize_seq<'a>(
+        self: Box<Self>,
+        len: Option<usize>,
+    ) -> Result<Box<dyn ErasedSerializeSeq + 'a>, SerError>
+    where
+        Self: 'a;
+    fn erased_serialize_tuple<'a>(
+        self: Box<Self>,
+        len: usize,
+    ) -> Result<Box<dyn ErasedSerializeTuple + 'a>, SerError>
+    where
+        Self: 'a;
+    fn erased_serialize_tuple_struct<'a>(
+        self: Box<Self>,
+        name: &'static str,
+        len: usize,
+    ) -> Result<Box<dyn ErasedSerializeTupleStruct + 'a>, SerError>
+    where
+        Self: 'a;
+    fn erased_serialize_tuple_variant<'a>(
+        self: Box<Self>,
+        name: &'static str,
+        variant_index: u32,
+        variant: &'static str,
+        len: usize,
+    ) -> Result<Box<dyn ErasedSerializeTupleVariant + 'a>, SerError>
+    where
+        Self: 'a;
     // fn erased_serialize_map<'a>(
     //     self: Box<Self>,
     //     len: Option<usize>,
@@ -806,25 +818,25 @@ trait ErasedSerializer {
     fn erased_is_human_readable(&self) -> bool;
 }
 
-// trait ErasedSerializeSeq {
-//     fn erased_serialize_element(&mut self, value: &SerializableSerialize) -> Result<(), SerError>;
-//     fn erased_end(self: Box<Self>) -> Result<SerOk, SerError>;
-// }
+trait ErasedSerializeSeq {
+    fn erased_serialize_element(&mut self, value: &SerializableSerialize) -> Result<(), SerError>;
+    fn erased_end(self: Box<Self>) -> Result<SerOk, SerError>;
+}
 
-// trait ErasedSerializeTuple {
-//     fn erased_serialize_element(&mut self, value: &SerializableSerialize) -> Result<(), SerError>;
-//     fn erased_end(self: Box<Self>) -> Result<SerOk, SerError>;
-// }
+trait ErasedSerializeTuple {
+    fn erased_serialize_element(&mut self, value: &SerializableSerialize) -> Result<(), SerError>;
+    fn erased_end(self: Box<Self>) -> Result<SerOk, SerError>;
+}
 
-// trait ErasedSerializeTupleStruct {
-//     fn erased_serialize_field(&mut self, value: &SerializableSerialize) -> Result<(), SerError>;
-//     fn erased_end(self: Box<Self>) -> Result<SerOk, SerError>;
-// }
+trait ErasedSerializeTupleStruct {
+    fn erased_serialize_field(&mut self, value: &SerializableSerialize) -> Result<(), SerError>;
+    fn erased_end(self: Box<Self>) -> Result<SerOk, SerError>;
+}
 
-// trait ErasedSerializeTupleVariant {
-//     fn erased_serialize_field(&mut self, value: &SerializableSerialize) -> Result<(), SerError>;
-//     fn erased_end(self: Box<Self>) -> Result<SerOk, SerError>;
-// }
+trait ErasedSerializeTupleVariant {
+    fn erased_serialize_field(&mut self, value: &SerializableSerialize) -> Result<(), SerError>;
+    fn erased_end(self: Box<Self>) -> Result<SerOk, SerError>;
+}
 
 // trait ErasedSerializeMap {
 //     fn erased_serialize_key(&mut self, key: &SerializableSerialize) -> Result<(), SerError>;
@@ -1012,71 +1024,71 @@ impl<T: ::serde::Serializer> ErasedSerializer for T {
             .map_err(SerError::wrap)
     }
 
-    // fn erased_serialize_seq<'a>(
-    //     self: Box<Self>,
-    //     len: Option<usize>,
-    // ) -> Result<Box<dyn ErasedSerializeSeq + 'a>, SerError>
-    // where
-    //     Self: 'a,
-    // {
-    //     self.serialize_seq(len)
-    //         .map(|serialize_seq| {
-    //             let serialize_seq: Box<dyn ErasedSerializeSeq + 'a> = Box::new(serialize_seq);
-    //             serialize_seq
-    //         })
-    //         .map_err(SerError::wrap)
-    // }
+    fn erased_serialize_seq<'a>(
+        self: Box<Self>,
+        len: Option<usize>,
+    ) -> Result<Box<dyn ErasedSerializeSeq + 'a>, SerError>
+    where
+        Self: 'a,
+    {
+        self.serialize_seq(len)
+            .map(|serialize_seq| {
+                let serialize_seq: Box<dyn ErasedSerializeSeq + 'a> = Box::new(serialize_seq);
+                serialize_seq
+            })
+            .map_err(SerError::wrap)
+    }
 
-    // fn erased_serialize_tuple<'a>(
-    //     self: Box<Self>,
-    //     len: usize,
-    // ) -> Result<Box<dyn ErasedSerializeTuple + 'a>, SerError>
-    // where
-    //     Self: 'a,
-    // {
-    //     self.serialize_tuple(len)
-    //         .map(|serialize_tuple| {
-    //             let serialize_tuple: Box<dyn ErasedSerializeTuple + 'a> = Box::new(serialize_tuple);
-    //             serialize_tuple
-    //         })
-    //         .map_err(SerError::wrap)
-    // }
+    fn erased_serialize_tuple<'a>(
+        self: Box<Self>,
+        len: usize,
+    ) -> Result<Box<dyn ErasedSerializeTuple + 'a>, SerError>
+    where
+        Self: 'a,
+    {
+        self.serialize_tuple(len)
+            .map(|serialize_tuple| {
+                let serialize_tuple: Box<dyn ErasedSerializeTuple + 'a> = Box::new(serialize_tuple);
+                serialize_tuple
+            })
+            .map_err(SerError::wrap)
+    }
 
-    // fn erased_serialize_tuple_struct<'a>(
-    //     self: Box<Self>,
-    //     name: &'static str,
-    //     len: usize,
-    // ) -> Result<Box<dyn ErasedSerializeTupleStruct + 'a>, SerError>
-    // where
-    //     Self: 'a,
-    // {
-    //     self.serialize_tuple_struct(name, len)
-    //         .map(|serialize_tuple_struct| {
-    //             let serialize_tuple_struct: Box<dyn ErasedSerializeTupleStruct + 'a> =
-    //                 Box::new(serialize_tuple_struct);
-    //             serialize_tuple_struct
-    //         })
-    //         .map_err(SerError::wrap)
-    // }
+    fn erased_serialize_tuple_struct<'a>(
+        self: Box<Self>,
+        name: &'static str,
+        len: usize,
+    ) -> Result<Box<dyn ErasedSerializeTupleStruct + 'a>, SerError>
+    where
+        Self: 'a,
+    {
+        self.serialize_tuple_struct(name, len)
+            .map(|serialize_tuple_struct| {
+                let serialize_tuple_struct: Box<dyn ErasedSerializeTupleStruct + 'a> =
+                    Box::new(serialize_tuple_struct);
+                serialize_tuple_struct
+            })
+            .map_err(SerError::wrap)
+    }
 
-    // fn erased_serialize_tuple_variant<'a>(
-    //     self: Box<Self>,
-    //     name: &'static str,
-    //     variant_index: u32,
-    //     variant: &'static str,
-    //     len: usize,
-    // ) -> Result<Box<dyn ErasedSerializeTupleVariant + 'a>, SerError>
-    // where
-    //     Self: 'a,
-    // {
-    //     self.serialize_tuple_variant(name, variant_index, variant, len)
-    //         .map(|serialize_tuple_variant| {
-    //             let serialize_tuple_variant: Box<dyn ErasedSerializeTupleVariant + 'a> =
-    //                 Box::new(serialize_tuple_variant);
-    //             serialize_tuple_variant
-    //         })
-    //         .map_err(SerError::wrap)
-    // }
+    fn erased_serialize_tuple_variant<'a>(
+        self: Box<Self>,
+        name: &'static str,
+        variant_index: u32,
+        variant: &'static str,
+        len: usize,
+    ) -> Result<Box<dyn ErasedSerializeTupleVariant + 'a>, SerError>
+    where
+        Self: 'a,
+    {
+        self.serialize_tuple_variant(name, variant_index, variant, len)
+            .map(|serialize_tuple_variant| {
+                let serialize_tuple_variant: Box<dyn ErasedSerializeTupleVariant + 'a> =
+                    Box::new(serialize_tuple_variant);
+                serialize_tuple_variant
+            })
+            .map_err(SerError::wrap)
+    }
 
     // fn erased_serialize_map<'a>(
     //     self: Box<Self>,
@@ -1134,45 +1146,45 @@ impl<T: ::serde::Serializer> ErasedSerializer for T {
     }
 }
 
-// impl<T: SerializeSeq> ErasedSerializeSeq for T {
-//     fn erased_serialize_element(&mut self, value: &SerializableSerialize) -> Result<(), SerError> {
-//         self.serialize_element(value).map_err(SerError::wrap)
-//     }
+impl<T: SerializeSeq> ErasedSerializeSeq for T {
+    fn erased_serialize_element(&mut self, value: &SerializableSerialize) -> Result<(), SerError> {
+        self.serialize_element(value).map_err(SerError::wrap)
+    }
 
-//     fn erased_end(self: Box<Self>) -> Result<SerOk, SerError> {
-//         self.end().map(SerOk::wrap).map_err(SerError::wrap)
-//     }
-// }
+    fn erased_end(self: Box<Self>) -> Result<SerOk, SerError> {
+        self.end().map(SerOk::wrap).map_err(SerError::wrap)
+    }
+}
 
-// impl<T: SerializeTuple> ErasedSerializeTuple for T {
-//     fn erased_serialize_element(&mut self, value: &SerializableSerialize) -> Result<(), SerError> {
-//         self.serialize_element(value).map_err(SerError::wrap)
-//     }
+impl<T: SerializeTuple> ErasedSerializeTuple for T {
+    fn erased_serialize_element(&mut self, value: &SerializableSerialize) -> Result<(), SerError> {
+        self.serialize_element(value).map_err(SerError::wrap)
+    }
 
-//     fn erased_end(self: Box<Self>) -> Result<SerOk, SerError> {
-//         self.end().map(SerOk::wrap).map_err(SerError::wrap)
-//     }
-// }
+    fn erased_end(self: Box<Self>) -> Result<SerOk, SerError> {
+        self.end().map(SerOk::wrap).map_err(SerError::wrap)
+    }
+}
 
-// impl<T: SerializeTupleStruct> ErasedSerializeTupleStruct for T {
-//     fn erased_serialize_field(&mut self, value: &SerializableSerialize) -> Result<(), SerError> {
-//         self.serialize_field(value).map_err(SerError::wrap)
-//     }
+impl<T: SerializeTupleStruct> ErasedSerializeTupleStruct for T {
+    fn erased_serialize_field(&mut self, value: &SerializableSerialize) -> Result<(), SerError> {
+        self.serialize_field(value).map_err(SerError::wrap)
+    }
 
-//     fn erased_end(self: Box<Self>) -> Result<SerOk, SerError> {
-//         self.end().map(SerOk::wrap).map_err(SerError::wrap)
-//     }
-// }
+    fn erased_end(self: Box<Self>) -> Result<SerOk, SerError> {
+        self.end().map(SerOk::wrap).map_err(SerError::wrap)
+    }
+}
 
-// impl<T: SerializeTupleVariant> ErasedSerializeTupleVariant for T {
-//     fn erased_serialize_field(&mut self, value: &SerializableSerialize) -> Result<(), SerError> {
-//         self.serialize_field(value).map_err(SerError::wrap)
-//     }
+impl<T: SerializeTupleVariant> ErasedSerializeTupleVariant for T {
+    fn erased_serialize_field(&mut self, value: &SerializableSerialize) -> Result<(), SerError> {
+        self.serialize_field(value).map_err(SerError::wrap)
+    }
 
-//     fn erased_end(self: Box<Self>) -> Result<SerOk, SerError> {
-//         self.end().map(SerOk::wrap).map_err(SerError::wrap)
-//     }
-// }
+    fn erased_end(self: Box<Self>) -> Result<SerOk, SerError> {
+        self.end().map(SerOk::wrap).map_err(SerError::wrap)
+    }
+}
 
 // impl<T: SerializeMap> ErasedSerializeMap for T {
 //     fn erased_serialize_key(&mut self, key: &SerializableSerialize) -> Result<(), SerError> {
@@ -1225,17 +1237,14 @@ impl<T: ::serde::Serializer> ErasedSerializer for T {
 // }
 
 pub struct SerOk {
-    value: Any,
+    value: SendWrapper<Any>,
 }
-
-// TODO: safety
-unsafe impl Send for SerOk {}
 
 impl SerOk {
     fn wrap<T>(value: T) -> Self {
         // Safety: TODO
         Self {
-            value: unsafe { Any::new(value) },
+            value: SendWrapper::new(unsafe { Any::new(value) }),
         }
     }
 }
@@ -1246,12 +1255,9 @@ pub struct SerError {
     inner: SerErrorOrCustom,
 }
 
-// TODO: safety
-unsafe impl Send for SerError {}
-
 enum SerErrorOrCustom {
     Error {
-        err: Any,
+        err: SendWrapper<Any>,
         display: String,
         debug: String,
     },
@@ -1266,7 +1272,7 @@ impl SerError {
         // Safety: TODO
         Self {
             inner: SerErrorOrCustom::Error {
-                err: unsafe { Any::new(err) },
+                err: SendWrapper::new(unsafe { Any::new(err) }),
                 display,
                 debug,
             },
@@ -1274,25 +1280,25 @@ impl SerError {
     }
 }
 
-// pub struct HostsideSerializeSeqProvider {
-//     serialize_seq: Box<dyn ErasedSerializeSeq>,
-//     _scope: ScopedBorrowMut<()>,
-// }
+pub struct HostsideSerializeSeqProvider {
+    serialize_seq: SendWrapper<Box<dyn ErasedSerializeSeq>>,
+    _scope: ScopedBorrowMut<()>,
+}
 
-// pub struct HostsideSerializeTupleProvider {
-//     serialize_tuple: Box<dyn ErasedSerializeTuple>,
-//     _scope: ScopedBorrowMut<()>,
-// }
+pub struct HostsideSerializeTupleProvider {
+    serialize_tuple: SendWrapper<Box<dyn ErasedSerializeTuple>>,
+    _scope: ScopedBorrowMut<()>,
+}
 
-// pub struct HostsideSerializeTupleStructProvider {
-//     serialize_tuple_struct: Box<dyn ErasedSerializeTupleStruct>,
-//     _scope: ScopedBorrowMut<()>,
-// }
+pub struct HostsideSerializeTupleStructProvider {
+    serialize_tuple_struct: SendWrapper<Box<dyn ErasedSerializeTupleStruct>>,
+    _scope: ScopedBorrowMut<()>,
+}
 
-// pub struct HostsideSerializeTupleVariantProvider {
-//     serialize_tuple_variant: Box<dyn ErasedSerializeTupleVariant>,
-//     _scope: ScopedBorrowMut<()>,
-// }
+pub struct HostsideSerializeTupleVariantProvider {
+    serialize_tuple_variant: SendWrapper<Box<dyn ErasedSerializeTupleVariant>>,
+    _scope: ScopedBorrowMut<()>,
+}
 
 // pub struct HostsideSerializeMapProvider {
 //     serialize_map: Box<dyn ErasedSerializeMap>,
@@ -1307,151 +1313,6 @@ impl SerError {
 // pub struct HostsideSerializeStructVariantProvider {
 //     serialize_struct_variant: Box<dyn ErasedSerializeStructVariant>,
 //     _scope: ScopedBorrowMut<()>,
-// }
-
-// impl bindings::exports::serde::serde::serde_serializer::HostSerializeSeq
-//     for HostsideSerializeSeqProvider
-// {
-//     fn serialize_element(
-//         mut this: bindings::exports::serde::serde::serde_serializer::SerializeSeq,
-//         value: bindings::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
-//     ) -> (
-//         bindings::exports::serde::serde::serde_serializer::SerializeSeq,
-//         Result<(), bindings::exports::serde::serde::serde_serializer::SerError>,
-//     ) {
-//         // TODO: Safety
-//         let value = unsafe {
-//             bindings::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
-//         };
-
-//         let result = this
-//             .get_mut::<Self>()
-//             .serialize_seq
-//             .erased_serialize_element(&SerializableSerialize::new(&value))
-//             .wrap();
-
-//         (this, result)
-//     }
-
-//     fn end(
-//         this: bindings::exports::serde::serde::serde_serializer::SerializeSeq,
-//     ) -> Result<
-//         bindings::exports::serde::serde::serde_serializer::SerOk,
-//         bindings::exports::serde::serde::serde_serializer::SerError,
-//     > {
-//         this.into_inner::<Self>().serialize_seq.erased_end().wrap()
-//     }
-// }
-
-// impl bindings::exports::serde::serde::serde_serializer::HostSerializeTuple
-//     for HostsideSerializeTupleProvider
-// {
-//     fn serialize_element(
-//         mut this: bindings::exports::serde::serde::serde_serializer::SerializeTuple,
-//         value: bindings::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
-//     ) -> (
-//         bindings::exports::serde::serde::serde_serializer::SerializeTuple,
-//         Result<(), bindings::exports::serde::serde::serde_serializer::SerError>,
-//     ) {
-//         // TODO: Safety
-//         let value = unsafe {
-//             bindings::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
-//         };
-
-//         let result = this
-//             .get_mut::<Self>()
-//             .serialize_tuple
-//             .erased_serialize_element(&SerializableSerialize::new(&value))
-//             .wrap();
-
-//         (this, result)
-//     }
-
-//     fn end(
-//         this: bindings::exports::serde::serde::serde_serializer::SerializeTuple,
-//     ) -> Result<
-//         bindings::exports::serde::serde::serde_serializer::SerOk,
-//         bindings::exports::serde::serde::serde_serializer::SerError,
-//     > {
-//         this.into_inner::<Self>()
-//             .serialize_tuple
-//             .erased_end()
-//             .wrap()
-//     }
-// }
-
-// impl bindings::exports::serde::serde::serde_serializer::HostSerializeTupleStruct
-//     for HostsideSerializeTupleStructProvider
-// {
-//     fn serialize_field(
-//         mut this: bindings::exports::serde::serde::serde_serializer::SerializeTupleStruct,
-//         value: bindings::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
-//     ) -> (
-//         bindings::exports::serde::serde::serde_serializer::SerializeTupleStruct,
-//         Result<(), bindings::exports::serde::serde::serde_serializer::SerError>,
-//     ) {
-//         // TODO: Safety
-//         let value = unsafe {
-//             bindings::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
-//         };
-
-//         let result = this
-//             .get_mut::<Self>()
-//             .serialize_tuple_struct
-//             .erased_serialize_field(&SerializableSerialize::new(&value))
-//             .wrap();
-
-//         (this, result)
-//     }
-
-//     fn end(
-//         this: bindings::exports::serde::serde::serde_serializer::SerializeTupleStruct,
-//     ) -> Result<
-//         bindings::exports::serde::serde::serde_serializer::SerOk,
-//         bindings::exports::serde::serde::serde_serializer::SerError,
-//     > {
-//         this.into_inner::<Self>()
-//             .serialize_tuple_struct
-//             .erased_end()
-//             .wrap()
-//     }
-// }
-
-// impl bindings::exports::serde::serde::serde_serializer::HostSerializeTupleVariant
-//     for HostsideSerializeTupleVariantProvider
-// {
-//     fn serialize_field(
-//         mut this: bindings::exports::serde::serde::serde_serializer::SerializeTupleVariant,
-//         value: bindings::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
-//     ) -> (
-//         bindings::exports::serde::serde::serde_serializer::SerializeTupleVariant,
-//         Result<(), bindings::exports::serde::serde::serde_serializer::SerError>,
-//     ) {
-//         // TODO: Safety
-//         let value = unsafe {
-//             bindings::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
-//         };
-
-//         let result = this
-//             .get_mut::<Self>()
-//             .serialize_tuple_variant
-//             .erased_serialize_field(&SerializableSerialize::new(&value))
-//             .wrap();
-
-//         (this, result)
-//     }
-
-//     fn end(
-//         this: bindings::exports::serde::serde::serde_serializer::SerializeTupleVariant,
-//     ) -> Result<
-//         bindings::exports::serde::serde::serde_serializer::SerOk,
-//         bindings::exports::serde::serde::serde_serializer::SerError,
-//     > {
-//         this.into_inner::<Self>()
-//             .serialize_tuple_variant
-//             .erased_end()
-//             .wrap()
-//     }
 // }
 
 // impl bindings::exports::serde::serde::serde_serializer::HostSerializeMap
@@ -1700,7 +1561,7 @@ impl<
         let mut ctx = self
             .ctx
             .lock()
-            .expect("SerializableSerialize should not be poisoned");
+            .map_err(|_| anyhow::anyhow!("SerializableSerialize should not be poisoned"))?;
         (self.do_serialize)(&mut *ctx, guest, serialize, serializer)
     }
 
@@ -1711,7 +1572,7 @@ impl<
         let mut ctx = self
             .ctx
             .lock()
-            .expect("SerializableSerialize should not be poisoned");
+            .map_err(|_| anyhow::anyhow!("SerializableSerialize should not be poisoned"))?;
         let host = (self.host_getter)(ctx.data_mut());
         host.table
             .push(serializer)
@@ -1725,7 +1586,7 @@ impl<
         let mut ctx = self
             .ctx
             .lock()
-            .expect("SerializableSerialize should not be poisoned");
+            .map_err(|_| anyhow::anyhow!("SerializableSerialize should not be poisoned"))?;
         let host = (self.host_getter)(ctx.data_mut());
         host.table
             .delete(ok)
@@ -1739,7 +1600,7 @@ impl<
         let mut ctx = self
             .ctx
             .lock()
-            .expect("SerializableSerialize should not be poisoned");
+            .map_err(|_| anyhow::anyhow!("SerializableSerialize should not be poisoned"))?;
         let host = (self.host_getter)(ctx.data_mut());
         host.table
             .delete(error)
@@ -1799,6 +1660,7 @@ impl<'a> ::serde::Serialize for SerializableSerialize<'a> {
                     bindings::exports::serde::serde::serde_serialize::OwnedSerializerHandle {
                         owned_handle: serializer.rep(),
                     };
+                #[allow(clippy::todo)] // FIXME
                 let guest = todo!();
                 self.serialize.serialize(
                     &guest,
@@ -1817,7 +1679,7 @@ impl<'a> ::serde::Serialize for SerializableSerialize<'a> {
                     ))
                     .map_err(::serde::ser::Error::custom)?;
                 // TODO: Safety
-                let Some(value): Option<S::Ok> = (unsafe { value.take() }) else {
+                let Some(value): Option<S::Ok> = (unsafe { value.take().take() }) else {
                     return Err(::serde::ser::Error::custom(
                         "bug: Serializer::Ok type mismatch across the wit boundary",
                     ));
@@ -1837,7 +1699,7 @@ impl<'a> ::serde::Serialize for SerializableSerialize<'a> {
                     SerErrorOrCustom::Custom(msg) => return Err(::serde::ser::Error::custom(msg)),
                 };
                 // TODO: Safety
-                let Some(err): Option<S::Error> = (unsafe { err.take() }) else {
+                let Some(err): Option<S::Error> = (unsafe { err.take().take() }) else {
                     return Err(::serde::ser::Error::custom(
                         "bug: Serializer::Error type mismatch across the wit boundary",
                     ));
