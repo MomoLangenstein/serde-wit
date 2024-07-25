@@ -246,806 +246,9 @@ where {
             };
             use crate::ser::wasmtime_host::provider::WrapSerResult;
 
-            pub use super::super::super::__with_name2 as Serializer;
-            /*pub trait HostSerializer {
-                fn serialize_bool(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: bool,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_i8(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: i8,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_i16(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: i16,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_i32(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: i32,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_i64(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: i64,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_i128(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: S128,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_u8(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: u8,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_u16(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: u16,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_u32(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: u32,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_u64(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: u64,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_u128(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: U128,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_f32(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: f32,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_f64(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: f64,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_char(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: char,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_str(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: wasmtime::component::__internal::String,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_bytes(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: wasmtime::component::__internal::Vec<u8>,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_none(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_some<T>(
-                    &mut self,
-                    ctx: *mut wasmtime::StoreContextMut<'_, T>,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    value: BorrowedSerializeHandle,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_unit(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_unit_struct(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    name: wasmtime::component::__internal::String,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_unit_variant(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    name: wasmtime::component::__internal::String,
-                    variant_index: u32,
-                    variant: wasmtime::component::__internal::String,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_newtype_struct(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    name: wasmtime::component::__internal::String,
-                    value: BorrowedSerializeHandle,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_newtype_variant(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    name: wasmtime::component::__internal::String,
-                    variant_index: u32,
-                    variant: wasmtime::component::__internal::String,
-                    value: BorrowedSerializeHandle,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_seq(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    len: Option<Usize>,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerializeSeq>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_tuple(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    len: Usize,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerializeTuple>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_tuple_struct(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    name: wasmtime::component::__internal::String,
-                    len: Usize,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerializeTupleStruct>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_tuple_variant(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    name: wasmtime::component::__internal::String,
-                    variant_index: u32,
-                    variant: wasmtime::component::__internal::String,
-                    len: Usize,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerializeTupleVariant>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_map(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    len: Option<Usize>,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerializeMap>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_struct(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    name: wasmtime::component::__internal::String,
-                    len: Usize,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerializeStruct>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn serialize_struct_variant(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    name: wasmtime::component::__internal::String,
-                    variant_index: u32,
-                    variant: wasmtime::component::__internal::String,
-                    len: Usize,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerializeStructVariant>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn is_human_readable(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                ) -> wasmtime::Result<bool>;
-                fn drop(
-                    &mut self,
-                    rep: wasmtime::component::Resource<Serializer>,
-                ) -> wasmtime::Result<()>;
-            }
-            impl<_T: HostSerializer + ?Sized> HostSerializer for &mut _T {
-                fn serialize_bool(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: bool,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_bool(*self, self_, v)
-                }
-                fn serialize_i8(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: i8,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_i8(*self, self_, v)
-                }
-                fn serialize_i16(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: i16,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_i16(*self, self_, v)
-                }
-                fn serialize_i32(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: i32,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_i32(*self, self_, v)
-                }
-                fn serialize_i64(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: i64,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_i64(*self, self_, v)
-                }
-                fn serialize_i128(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: S128,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_i128(*self, self_, v)
-                }
-                fn serialize_u8(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: u8,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_u8(*self, self_, v)
-                }
-                fn serialize_u16(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: u16,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_u16(*self, self_, v)
-                }
-                fn serialize_u32(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: u32,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_u32(*self, self_, v)
-                }
-                fn serialize_u64(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: u64,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_u64(*self, self_, v)
-                }
-                fn serialize_u128(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: U128,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_u128(*self, self_, v)
-                }
-                fn serialize_f32(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: f32,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_f32(*self, self_, v)
-                }
-                fn serialize_f64(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: f64,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_f64(*self, self_, v)
-                }
-                fn serialize_char(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: char,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_char(*self, self_, v)
-                }
-                fn serialize_str(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: wasmtime::component::__internal::String,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_str(*self, self_, v)
-                }
-                fn serialize_bytes(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    v: wasmtime::component::__internal::Vec<u8>,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_bytes(*self, self_, v)
-                }
-                fn serialize_none(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_none(*self, self_)
-                }
-                fn serialize_some<T>(
-                    &mut self,
-                    ctx: *mut wasmtime::StoreContextMut<'_, T>,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    value: BorrowedSerializeHandle,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    <_T as HostSerializer>::serialize_some(*self, ctx, self_, value)
-                }
-                fn serialize_unit(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_unit(*self, self_)
-                }
-                fn serialize_unit_struct(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    name: wasmtime::component::__internal::String,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_unit_struct(*self, self_, name)
-                }
-                fn serialize_unit_variant(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    name: wasmtime::component::__internal::String,
-                    variant_index: u32,
-                    variant: wasmtime::component::__internal::String,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_unit_variant(
-                        *self,
-                        self_,
-                        name,
-                        variant_index,
-                        variant,
-                    )
-                }
-                fn serialize_newtype_struct(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    name: wasmtime::component::__internal::String,
-                    value: BorrowedSerializeHandle,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_newtype_struct(*self, self_, name, value)
-                }
-                fn serialize_newtype_variant(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    name: wasmtime::component::__internal::String,
-                    variant_index: u32,
-                    variant: wasmtime::component::__internal::String,
-                    value: BorrowedSerializeHandle,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_newtype_variant(
-                        *self,
-                        self_,
-                        name,
-                        variant_index,
-                        variant,
-                        value,
-                    )
-                }
-                fn serialize_seq(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    len: Option<Usize>,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerializeSeq>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_seq(*self, self_, len)
-                }
-                fn serialize_tuple(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    len: Usize,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerializeTuple>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_tuple(*self, self_, len)
-                }
-                fn serialize_tuple_struct(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    name: wasmtime::component::__internal::String,
-                    len: Usize,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerializeTupleStruct>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_tuple_struct(*self, self_, name, len)
-                }
-                fn serialize_tuple_variant(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    name: wasmtime::component::__internal::String,
-                    variant_index: u32,
-                    variant: wasmtime::component::__internal::String,
-                    len: Usize,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerializeTupleVariant>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_tuple_variant(
-                        *self,
-                        self_,
-                        name,
-                        variant_index,
-                        variant,
-                        len,
-                    )
-                }
-                fn serialize_map(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    len: Option<Usize>,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerializeMap>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_map(*self, self_, len)
-                }
-                fn serialize_struct(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    name: wasmtime::component::__internal::String,
-                    len: Usize,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerializeStruct>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_struct(*self, self_, name, len)
-                }
-                fn serialize_struct_variant(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                    name: wasmtime::component::__internal::String,
-                    variant_index: u32,
-                    variant: wasmtime::component::__internal::String,
-                    len: Usize,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerializeStructVariant>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializer::serialize_struct_variant(
-                        *self,
-                        self_,
-                        name,
-                        variant_index,
-                        variant,
-                        len,
-                    )
-                }
-                fn is_human_readable(
-                    &mut self,
-                    self_: wasmtime::component::Resource<Serializer>,
-                ) -> wasmtime::Result<bool> {
-                    HostSerializer::is_human_readable(*self, self_)
-                }
-
-                fn drop(
-                    &mut self,
-                    rep: wasmtime::component::Resource<Serializer>,
-                ) -> wasmtime::Result<()> {
-                    HostSerializer::drop(*self, rep)
-                }
-            }*/
-            pub use super::super::super::__with_name1 as SerOk;
-            pub trait HostSerOk {
-                fn drop(
-                    &mut self,
-                    rep: wasmtime::component::Resource<SerOk>,
-                ) -> wasmtime::Result<()>;
-            }
-            impl<_T: HostSerOk + ?Sized> HostSerOk for &mut _T {
-                fn drop(
-                    &mut self,
-                    rep: wasmtime::component::Resource<SerOk>,
-                ) -> wasmtime::Result<()> {
-                    HostSerOk::drop(*self, rep)
-                }
-            }
             pub use super::super::super::__with_name0 as SerError;
-            pub trait HostSerError {
-                fn display(
-                    &mut self,
-                    self_: wasmtime::component::Resource<SerError>,
-                ) -> wasmtime::Result<wasmtime::component::__internal::String>;
-                fn debug(
-                    &mut self,
-                    self_: wasmtime::component::Resource<SerError>,
-                ) -> wasmtime::Result<wasmtime::component::__internal::String>;
-                fn custom(
-                    &mut self,
-                    msg: wasmtime::component::__internal::String,
-                ) -> wasmtime::Result<wasmtime::component::Resource<SerError>>;
-                fn drop(
-                    &mut self,
-                    rep: wasmtime::component::Resource<SerError>,
-                ) -> wasmtime::Result<()>;
-            }
-            impl<_T: HostSerError + ?Sized> HostSerError for &mut _T {
-                fn display(
-                    &mut self,
-                    self_: wasmtime::component::Resource<SerError>,
-                ) -> wasmtime::Result<wasmtime::component::__internal::String> {
-                    HostSerError::display(*self, self_)
-                }
-                fn debug(
-                    &mut self,
-                    self_: wasmtime::component::Resource<SerError>,
-                ) -> wasmtime::Result<wasmtime::component::__internal::String> {
-                    HostSerError::debug(*self, self_)
-                }
-                fn custom(
-                    &mut self,
-                    msg: wasmtime::component::__internal::String,
-                ) -> wasmtime::Result<wasmtime::component::Resource<SerError>> {
-                    HostSerError::custom(*self, msg)
-                }
-
-                fn drop(
-                    &mut self,
-                    rep: wasmtime::component::Resource<SerError>,
-                ) -> wasmtime::Result<()> {
-                    HostSerError::drop(*self, rep)
-                }
-            }
+            pub use super::super::super::__with_name1 as SerOk;
+            pub use super::super::super::__with_name2 as Serializer;
             pub enum SerializeSeq {}
             pub trait HostSerializeSeq {
                 fn serialize_element(
@@ -1483,10 +686,7 @@ where {
                 }
             }
             /*pub trait Host:
-                /* HostSerializer
-                +*/ HostSerOk
-                + HostSerError
-                + HostSerializeSeq
+                HostSerializeSeq
                 + HostSerializeTuple
                 + HostSerializeTupleStruct
                 + HostSerializeTupleVariant
@@ -1512,7 +712,7 @@ where {
 
             pub fn add_to_linker_get_host<T>(
                 linker: &mut wasmtime::component::Linker<T>,
-                host_getter: impl /*for<'a>*/ GetHost</*&'a mut*/ T>,
+                host_getter: impl GetHost</*&'a mut*/ T>,
             ) -> wasmtime::Result<()>
 where {
                 let mut inst = linker.instance("serde:serde/serde-serializer")?;
@@ -1521,31 +721,31 @@ where {
                     wasmtime::component::ResourceType::host::<Serializer>(),
                     move |mut store, rep| -> wasmtime::Result<()> {
                         let host = host_getter(store.data_mut());
-                        let this = wasmtime::component::Resource::new_own(rep);
+                        let this = wasmtime::component::Resource::<Serializer>::new_own(rep);
                         let _serializer = host.table.delete(this)?;
                         Ok(())
                     },
                 )?;
-                // inst.resource(
-                //     "ser-ok",
-                //     wasmtime::component::ResourceType::host::<SerOk>(),
-                //     move |mut store, rep| -> wasmtime::Result<()> {
-                //         HostSerOk::drop(
-                //             host_getter(store.data_mut()),
-                //             wasmtime::component::Resource::new_own(rep),
-                //         )
-                //     },
-                // )?;
-                // inst.resource(
-                //     "ser-error",
-                //     wasmtime::component::ResourceType::host::<SerError>(),
-                //     move |mut store, rep| -> wasmtime::Result<()> {
-                //         HostSerError::drop(
-                //             host_getter(store.data_mut()),
-                //             wasmtime::component::Resource::new_own(rep),
-                //         )
-                //     },
-                // )?;
+                inst.resource(
+                    "ser-ok",
+                    wasmtime::component::ResourceType::host::<SerOk>(),
+                    move |mut store, rep| -> wasmtime::Result<()> {
+                        let host = host_getter(store.data_mut());
+                        let this = wasmtime::component::Resource::<SerOk>::new_own(rep);
+                        let _ok = host.table.delete(this)?;
+                        Ok(())
+                    },
+                )?;
+                inst.resource(
+                    "ser-error",
+                    wasmtime::component::ResourceType::host::<SerError>(),
+                    move |mut store, rep| -> wasmtime::Result<()> {
+                        let host = host_getter(store.data_mut());
+                        let this = wasmtime::component::Resource::<SerError>::new_own(rep);
+                        let _error = host.table.delete(this)?;
+                        Ok(())
+                    },
+                )?;
                 // inst.resource(
                 //     "serialize-seq",
                 //     wasmtime::component::ResourceType::host::<SerializeSeq>(),
@@ -1791,26 +991,23 @@ where {
                         wasmtime::component::Resource<Serializer>,
                         BorrowedSerializeHandle,
                     )| {
-                        // let caller = &mut caller;
-                        // // TODO: store ctx in SerializableSerialize instead of host
-                        // let ctx = core::ptr::from_mut(caller);
                         let (this, value) = (arg0, arg1);
                         anyhow::ensure!(this.owned());
                         let serializer = {
                             let host = host_getter(caller.data_mut());
                             host.table.delete(this)
                         }?;
-                        let r = serializer
-                            .serializer
-                            .erased_serialize_some(&crate::ser::wasmtime_host::provider::SerializableSerialize::new(
+                        let r = serializer.serializer.erased_serialize_some(
+                            &crate::ser::wasmtime_host::provider::SerializableSerialize::new(
                                 &mut caller,
                                 host_getter,
-                                Box::new(move |mut ctx, guest, serialize, serializer| {
+                                move |mut ctx, guest, serialize, serializer| {
                                     let serialize = serialize.try_into_resource_any(&mut ctx)?;
                                     guest.call_serialize(ctx, serialize, serializer)
-                                }),
+                                },
                                 &value,
-                            ));
+                            ),
+                        );
                         let r = {
                             let host = host_getter(caller.data_mut());
                             r.wrap(host)
@@ -1837,7 +1034,10 @@ where {
                         let (this, name) = (arg0, arg1);
                         anyhow::ensure!(this.owned());
                         let serializer = host.table.delete(this)?;
-                        let r = serializer.serializer.erased_serialize_unit_struct(crate::intern::intern_string(name)).wrap(host);
+                        let r = serializer
+                            .serializer
+                            .erased_serialize_unit_struct(crate::intern::intern_string(name))
+                            .wrap(host);
                         Ok((r?,))
                     },
                 )?;
@@ -1854,7 +1054,14 @@ where {
                         let (this, name, variant_index, variant) = (arg0, arg1, arg2, arg3);
                         anyhow::ensure!(this.owned());
                         let serializer = host.table.delete(this)?;
-                        let r = serializer.serializer.erased_serialize_unit_variant(crate::intern::intern_string(name), variant_index, crate::intern::intern_string(variant)).wrap(host);
+                        let r = serializer
+                            .serializer
+                            .erased_serialize_unit_variant(
+                                crate::intern::intern_string(name),
+                                variant_index,
+                                crate::intern::intern_string(variant),
+                            )
+                            .wrap(host);
                         Ok((r?,))
                     },
                 )?;
@@ -1866,10 +1073,29 @@ where {
                         wasmtime::component::__internal::String,
                         BorrowedSerializeHandle,
                     )| {
-                        // let host = host_getter(caller.data_mut());
-                        // let r = HostSerializer::serialize_newtype_struct(host, arg0, arg1, arg2);
-                        // Ok((r?,))
-                        todo!()
+                        let (this, name, value) = (arg0, arg1, arg2);
+                        anyhow::ensure!(this.owned());
+                        let serializer = {
+                            let host = host_getter(caller.data_mut());
+                            host.table.delete(this)
+                        }?;
+                        let r = serializer.serializer.erased_serialize_newtype_struct(
+                            crate::intern::intern_string(name),
+                            &crate::ser::wasmtime_host::provider::SerializableSerialize::new(
+                                &mut caller,
+                                host_getter,
+                                move |mut ctx, guest, serialize, serializer| {
+                                    let serialize = serialize.try_into_resource_any(&mut ctx)?;
+                                    guest.call_serialize(ctx, serialize, serializer)
+                                },
+                                &value,
+                            ),
+                        );
+                        let r = {
+                            let host = host_getter(caller.data_mut());
+                            r.wrap(host)
+                        };
+                        Ok((r?,))
                     },
                 )?;
                 inst.func_wrap(
@@ -1882,12 +1108,32 @@ where {
                         wasmtime::component::__internal::String,
                         BorrowedSerializeHandle,
                     )| {
-                        // let host = host_getter(caller.data_mut());
-                        // let r = HostSerializer::serialize_newtype_variant(
-                        //     host, arg0, arg1, arg2, arg3, arg4,
-                        // );
-                        // Ok((r?,))
-                        todo!()
+                        let (this, name, variant_index, variant, value) =
+                            (arg0, arg1, arg2, arg3, arg4);
+                        anyhow::ensure!(this.owned());
+                        let serializer = {
+                            let host = host_getter(caller.data_mut());
+                            host.table.delete(this)
+                        }?;
+                        let r = serializer.serializer.erased_serialize_newtype_variant(
+                            crate::intern::intern_string(name),
+                            variant_index,
+                            crate::intern::intern_string(variant),
+                            &crate::ser::wasmtime_host::provider::SerializableSerialize::new(
+                                &mut caller,
+                                host_getter,
+                                move |mut ctx, guest, serialize, serializer| {
+                                    let serialize = serialize.try_into_resource_any(&mut ctx)?;
+                                    guest.call_serialize(ctx, serialize, serializer)
+                                },
+                                &value,
+                            ),
+                        );
+                        let r = {
+                            let host = host_getter(caller.data_mut());
+                            r.wrap(host)
+                        };
+                        Ok((r?,))
                     },
                 )?;
                 inst.func_wrap(
@@ -1896,19 +1142,35 @@ where {
                           (arg0, arg1): (
                         wasmtime::component::Resource<Serializer>,
                         Option<Usize>,
-                    )| {
+                    )|
+                          -> anyhow::Result<(
+                        Result<
+                            wasmtime::component::Resource<SerializeSeq>,
+                            wasmtime::component::Resource<SerError>,
+                        >,
+                    )> {
                         // let host = host_getter(caller.data_mut());
                         // let r = HostSerializer::serialize_seq(host, arg0, arg1);
                         // Ok((r?,))
                         todo!()
                     },
                 )?;
-                inst.func_wrap("[static]serializer.serialize-tuple", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,arg1,) : (wasmtime::component::Resource<Serializer>, Usize, ) | { 
-                    // let host = host_getter(caller.data_mut());
-                    // let r = HostSerializer::serialize_tuple(host, arg0,arg1,);
-                    // Ok((r?,))
-                    todo!()
-                })?;
+                inst.func_wrap(
+                    "[static]serializer.serialize-tuple",
+                    move |mut caller: wasmtime::StoreContextMut<'_, T>,
+                          (arg0, arg1): (wasmtime::component::Resource<Serializer>, Usize)|
+                          -> anyhow::Result<(
+                        Result<
+                            wasmtime::component::Resource<SerializeTuple>,
+                            wasmtime::component::Resource<SerError>,
+                        >,
+                    )> {
+                        // let host = host_getter(caller.data_mut());
+                        // let r = HostSerializer::serialize_tuple(host, arg0,arg1,);
+                        // Ok((r?,))
+                        todo!()
+                    },
+                )?;
                 inst.func_wrap(
                     "[static]serializer.serialize-tuple-struct",
                     move |mut caller: wasmtime::StoreContextMut<'_, T>,
@@ -1916,7 +1178,13 @@ where {
                         wasmtime::component::Resource<Serializer>,
                         wasmtime::component::__internal::String,
                         Usize,
-                    )| {
+                    )|
+                          -> anyhow::Result<(
+                        Result<
+                            wasmtime::component::Resource<SerializeTupleStruct>,
+                            wasmtime::component::Resource<SerError>,
+                        >,
+                    )> {
                         // let host = host_getter(caller.data_mut());
                         // let r = HostSerializer::serialize_tuple_struct(host, arg0, arg1, arg2);
                         // Ok((r?,))
@@ -1932,7 +1200,13 @@ where {
                         u32,
                         wasmtime::component::__internal::String,
                         Usize,
-                    )| {
+                    )|
+                          -> anyhow::Result<(
+                        Result<
+                            wasmtime::component::Resource<SerializeTupleVariant>,
+                            wasmtime::component::Resource<SerError>,
+                        >,
+                    )> {
                         // let host = host_getter(caller.data_mut());
                         // let r = HostSerializer::serialize_tuple_variant(
                         //     host, arg0, arg1, arg2, arg3, arg4,
@@ -1947,7 +1221,13 @@ where {
                           (arg0, arg1): (
                         wasmtime::component::Resource<Serializer>,
                         Option<Usize>,
-                    )| {
+                    )|
+                          -> anyhow::Result<(
+                        Result<
+                            wasmtime::component::Resource<SerializeMap>,
+                            wasmtime::component::Resource<SerError>,
+                        >,
+                    )> {
                         // let host = host_getter(caller.data_mut());
                         // let r = HostSerializer::serialize_map(host, arg0, arg1);
                         // Ok((r?,))
@@ -1961,7 +1241,13 @@ where {
                         wasmtime::component::Resource<Serializer>,
                         wasmtime::component::__internal::String,
                         Usize,
-                    )| {
+                    )|
+                          -> anyhow::Result<(
+                        Result<
+                            wasmtime::component::Resource<SerializeStruct>,
+                            wasmtime::component::Resource<SerError>,
+                        >,
+                    )> {
                         // let host = host_getter(caller.data_mut());
                         // let r = HostSerializer::serialize_struct(host, arg0, arg1, arg2);
                         // Ok((r?,))
@@ -1977,7 +1263,13 @@ where {
                         u32,
                         wasmtime::component::__internal::String,
                         Usize,
-                    )| {
+                    )|
+                          -> anyhow::Result<(
+                        Result<
+                            wasmtime::component::Resource<SerializeStructVariant>,
+                            wasmtime::component::Resource<SerError>,
+                        >,
+                    )> {
                         // let host = host_getter(caller.data_mut());
                         // let r = HostSerializer::serialize_struct_variant(
                         //     host, arg0, arg1, arg2, arg3, arg4,
@@ -1994,33 +1286,63 @@ where {
                     let r = serializer.serializer.erased_is_human_readable();
                     Ok((r,))
                 })?;
-                // inst.func_wrap(
-                //     "[method]ser-error.display",
-                //     move |mut caller: wasmtime::StoreContextMut<'_, T>,
-                //           (arg0,): (wasmtime::component::Resource<SerError>,)| {
-                //         let host = host_getter(caller.data_mut());
-                //         let r = HostSerError::display(host, arg0);
-                //         Ok((r?,))
-                //     },
-                // )?;
-                // inst.func_wrap(
-                //     "[method]ser-error.debug",
-                //     move |mut caller: wasmtime::StoreContextMut<'_, T>,
-                //           (arg0,): (wasmtime::component::Resource<SerError>,)| {
-                //         let host = host_getter(caller.data_mut());
-                //         let r = HostSerError::debug(host, arg0);
-                //         Ok((r?,))
-                //     },
-                // )?;
-                // inst.func_wrap(
-                //     "[static]ser-error.custom",
-                //     move |mut caller: wasmtime::StoreContextMut<'_, T>,
-                //           (arg0,): (wasmtime::component::__internal::String,)| {
-                //         let host = host_getter(caller.data_mut());
-                //         let r = HostSerError::custom(host, arg0);
-                //         Ok((r?,))
-                //     },
-                // )?;
+                inst.func_wrap(
+                    "[method]ser-error.display",
+                    move |mut caller: wasmtime::StoreContextMut<'_, T>,
+                          (arg0,): (wasmtime::component::Resource<SerError>,)| {
+                        let host = host_getter(caller.data_mut());
+                        let this = arg0;
+                        anyhow::ensure!(!this.owned());
+                        let error = host.table.get(&this)?;
+                        let r = match &error.inner {
+                            crate::ser::wasmtime_host::provider::SerErrorOrCustom::Error {
+                                display,
+                                ..
+                            } => String::from(display),
+                            crate::ser::wasmtime_host::provider::SerErrorOrCustom::Custom(msg) => {
+                                String::from(msg)
+                            }
+                        };
+                        Ok((r,))
+                    },
+                )?;
+                inst.func_wrap(
+                    "[method]ser-error.debug",
+                    move |mut caller: wasmtime::StoreContextMut<'_, T>,
+                          (arg0,): (wasmtime::component::Resource<SerError>,)| {
+                        let host = host_getter(caller.data_mut());
+                        let this = arg0;
+                        anyhow::ensure!(!this.owned());
+                        let error = host.table.get(&this)?;
+                        let r = match &error.inner {
+                            crate::ser::wasmtime_host::provider::SerErrorOrCustom::Error {
+                                debug,
+                                ..
+                            } => {
+                                format!("serde_wit::ser::Error {{ err: {debug} }}")
+                            }
+                            crate::ser::wasmtime_host::provider::SerErrorOrCustom::Custom(msg) => {
+                                format!("serde_wit::ser::Error {{ err: Custom({msg}) }}")
+                            }
+                        };
+                        Ok((r,))
+                    },
+                )?;
+                inst.func_wrap(
+                    "[static]ser-error.custom",
+                    move |mut caller: wasmtime::StoreContextMut<'_, T>,
+                          (arg0,): (wasmtime::component::__internal::String,)| {
+                        let host = host_getter(caller.data_mut());
+                        let msg = arg0;
+                        let error = crate::ser::wasmtime_host::provider::SerError {
+                            inner: crate::ser::wasmtime_host::provider::SerErrorOrCustom::Custom(
+                                msg,
+                            ),
+                        };
+                        let r = host.table.push(error);
+                        Ok((r?,))
+                    },
+                )?;
                 // inst.func_wrap(
                 //     "[static]serialize-seq.serialize-element",
                 //     move |mut caller: wasmtime::StoreContextMut<'_, T>,
@@ -2033,7 +1355,7 @@ where {
                 //         Ok((r?,))
                 //     },
                 // )?;
-                // inst.func_wrap("[static]serialize-seq.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeSeq>, ) | { 
+                // inst.func_wrap("[static]serialize-seq.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeSeq>, ) | {
                 //               let host = host_getter(caller.data_mut());
                 //               let r = HostSerializeSeq::end(host, arg0,);
                 //               Ok((r?,))
@@ -2050,7 +1372,7 @@ where {
                 //         Ok((r?,))
                 //     },
                 // )?;
-                // inst.func_wrap("[static]serialize-tuple.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeTuple>, ) | { 
+                // inst.func_wrap("[static]serialize-tuple.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeTuple>, ) | {
                 //               let host = host_getter(caller.data_mut());
                 //               let r = HostSerializeTuple::end(host, arg0,);
                 //               Ok((r?,))
@@ -2067,7 +1389,7 @@ where {
                 //         Ok((r?,))
                 //     },
                 // )?;
-                // inst.func_wrap("[static]serialize-tuple-struct.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeTupleStruct>, ) | { 
+                // inst.func_wrap("[static]serialize-tuple-struct.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeTupleStruct>, ) | {
                 //               let host = host_getter(caller.data_mut());
                 //               let r = HostSerializeTupleStruct::end(host, arg0,);
                 //               Ok((r?,))
@@ -2084,7 +1406,7 @@ where {
                 //         Ok((r?,))
                 //     },
                 // )?;
-                // inst.func_wrap("[static]serialize-tuple-variant.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeTupleVariant>, ) | { 
+                // inst.func_wrap("[static]serialize-tuple-variant.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeTupleVariant>, ) | {
                 //               let host = host_getter(caller.data_mut());
                 //               let r = HostSerializeTupleVariant::end(host, arg0,);
                 //               Ok((r?,))
@@ -2113,7 +1435,7 @@ where {
                 //         Ok((r?,))
                 //     },
                 // )?;
-                // inst.func_wrap("[static]serialize-map.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeMap>, ) | { 
+                // inst.func_wrap("[static]serialize-map.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeMap>, ) | {
                 //               let host = host_getter(caller.data_mut());
                 //               let r = HostSerializeMap::end(host, arg0,);
                 //               Ok((r?,))
@@ -2131,7 +1453,7 @@ where {
                 //         Ok((r?,))
                 //     },
                 // )?;
-                // inst.func_wrap("[static]serialize-struct.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeStruct>, ) | { 
+                // inst.func_wrap("[static]serialize-struct.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeStruct>, ) | {
                 //               let host = host_getter(caller.data_mut());
                 //               let r = HostSerializeStruct::end(host, arg0,);
                 //               Ok((r?,))
@@ -2161,7 +1483,7 @@ where {
                 //         Ok((r?,))
                 //     },
                 // )?;
-                // inst.func_wrap("[static]serialize-struct-variant.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeStructVariant>, ) | { 
+                // inst.func_wrap("[static]serialize-struct-variant.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeStructVariant>, ) | {
                 //               let host = host_getter(caller.data_mut());
                 //               let r = HostSerializeStructVariant::end(host, arg0,);
                 //               Ok((r?,))
@@ -2183,9 +1505,16 @@ where {
 
             pub fn add_to_linker<T, U>(
                 linker: &mut wasmtime::component::Linker<T>,
-                get: impl Fn(&mut T) -> &mut /*U*/ crate::ser::wasmtime_host::provider::HostsideSerializerProviderState + Send + Sync + Copy + 'static,
+                get: impl Fn(
+                        &mut T,
+                    ) -> &mut /*U*/
+                    crate::ser::wasmtime_host::provider::HostsideSerializerProviderState
+                    + Send
+                    + Sync
+                    + Copy
+                    + 'static,
             ) -> wasmtime::Result<()>
-            where
+where
                 // U: Host,
             {
                 add_to_linker_get_host(linker, get)

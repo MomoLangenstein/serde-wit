@@ -1,3 +1,5 @@
+use std::sync::{Mutex, MutexGuard};
+
 use ::serde::ser::{
     SerializeMap, SerializeSeq, SerializeStruct, SerializeStructVariant, SerializeTuple,
     SerializeTupleStruct, SerializeTupleVariant,
@@ -470,7 +472,6 @@ impl WrapSerResult for Result<SerOk, SerError> {
 //             .erased_serialize_newtype_variant(intern_string(name), variant_index, intern_string(variant), &SerializableSerialize::new(self, &value))
 //             .wrap(self)
 //     }*/
-
 //     /*fn serialize_seq(
 //         this: bindings::exports::serde::serde::serde_serializer::Serializer,
 //         len: Option<bindings::serde::serde::serde_types::Usize>,
@@ -663,7 +664,6 @@ impl WrapSerResult for Result<SerOk, SerError> {
 //             ),
 //         )
 //     }*/
-
 //     fn is_human_readable(
 //         &mut self,
 //         this: wasmtime::component::Resource<HostsideSerializerProvider>,
@@ -1258,34 +1258,6 @@ enum SerErrorOrCustom {
     Custom(String),
 }
 
-// impl bindings::exports::serde::serde::serde_serializer::HostSerError for SerError {
-//     fn display(&self) -> String {
-//         match &self.inner {
-//             SerErrorOrCustom::Error { display, .. } => String::from(display),
-//             SerErrorOrCustom::Custom(msg) => String::from(msg),
-//         }
-//     }
-
-//     fn debug(&self) -> String {
-//         match &self.inner {
-//             SerErrorOrCustom::Error { debug, .. } => {
-//                 format!("serde_wit::ser::Error {{ err: {debug} }}")
-//             }
-//             SerErrorOrCustom::Custom(msg) => {
-//                 format!("serde_wit::ser::Error {{ err: Custom({msg}) }}")
-//             }
-//         }
-//     }
-
-//     fn custom(msg: String) -> bindings::exports::serde::serde::serde_serializer::SerError {
-//         let error = Self {
-//             inner: SerErrorOrCustom::Custom(msg),
-//         };
-
-//         bindings::exports::serde::serde::serde_serializer::SerError::new(error)
-//     }
-// }
-
 impl SerError {
     fn wrap<T: ::serde::ser::Error>(err: T) -> Self {
         let display = format!("{err}");
@@ -1645,12 +1617,63 @@ impl SerError {
 //     }
 // }
 
-struct SerializableSerialize<'a, T, H: bindings::serde::serde::serde_serializer::GetHost<T>> {
-    ctx: &'a mut wasmtime::StoreContextMut<'a, T>,
+trait SerializeWithContext {
+    fn serialize(
+        &self,
+        guest: &bindings::exports::serde::serde::serde_serialize::GuestSerialize,
+        serialize: wasmtime::component::Resource<GuestSerialize>,
+        serializer: bindings::exports::serde::serde::serde_serialize::OwnedSerializerHandle,
+    ) -> anyhow::Result<
+        Result<
+            bindings::exports::serde::serde::serde_serialize::OwnedSerOkHandle,
+            bindings::exports::serde::serde::serde_serialize::OwnedSerErrorHandle,
+        >,
+    >;
+
+    fn new_serializer_resource(
+        &self,
+        serializer: HostsideSerializerProvider,
+    ) -> anyhow::Result<wasmtime::component::Resource<HostsideSerializerProvider>>;
+
+    fn delete_ser_ok_resource(
+        &self,
+        ok: wasmtime::component::Resource<SerOk>,
+    ) -> anyhow::Result<SerOk>;
+
+    fn delete_ser_error_resource(
+        &self,
+        error: wasmtime::component::Resource<SerError>,
+    ) -> anyhow::Result<SerError>;
+}
+
+struct SpecificSerializeWithContext<
+    'a,
+    'b,
+    T,
+    H: bindings::serde::serde::serde_serializer::GetHost<T>,
+    S: Fn(
+        &mut wasmtime::StoreContextMut<T>,
+        &bindings::exports::serde::serde::serde_serialize::GuestSerialize,
+        wasmtime::component::Resource<GuestSerialize>,
+        bindings::exports::serde::serde::serde_serialize::OwnedSerializerHandle,
+    ) -> anyhow::Result<
+        Result<
+            bindings::exports::serde::serde::serde_serialize::OwnedSerOkHandle,
+            bindings::exports::serde::serde::serde_serialize::OwnedSerErrorHandle,
+        >,
+    >,
+> {
+    ctx: Mutex<&'b mut wasmtime::StoreContextMut<'a, T>>,
     host_getter: H,
-    // state: &'a mut HostsideSerializerProviderState,
-    do_serialize: Box<
-        dyn Fn(
+    do_serialize: S,
+}
+
+impl<
+        'a,
+        'b,
+        T,
+        H: bindings::serde::serde::serde_serializer::GetHost<T>,
+        S: Fn(
             &mut wasmtime::StoreContextMut<T>,
             &bindings::exports::serde::serde::serde_serialize::GuestSerialize,
             wasmtime::component::Resource<GuestSerialize>,
@@ -1661,20 +1684,84 @@ struct SerializableSerialize<'a, T, H: bindings::serde::serde::serde_serializer:
                 bindings::exports::serde::serde::serde_serialize::OwnedSerErrorHandle,
             >,
         >,
-    >,
+    > SerializeWithContext for SpecificSerializeWithContext<'a, 'b, T, H, S>
+{
+    fn serialize(
+        &self,
+        guest: &bindings::exports::serde::serde::serde_serialize::GuestSerialize,
+        serialize: wasmtime::component::Resource<GuestSerialize>,
+        serializer: bindings::exports::serde::serde::serde_serialize::OwnedSerializerHandle,
+    ) -> anyhow::Result<
+        Result<
+            bindings::exports::serde::serde::serde_serialize::OwnedSerOkHandle,
+            bindings::exports::serde::serde::serde_serialize::OwnedSerErrorHandle,
+        >,
+    > {
+        let mut ctx = self
+            .ctx
+            .lock()
+            .expect("SerializableSerialize should not be poisoned");
+        (self.do_serialize)(&mut *ctx, guest, serialize, serializer)
+    }
+
+    fn new_serializer_resource(
+        &self,
+        serializer: HostsideSerializerProvider,
+    ) -> anyhow::Result<wasmtime::component::Resource<HostsideSerializerProvider>> {
+        let mut ctx = self
+            .ctx
+            .lock()
+            .expect("SerializableSerialize should not be poisoned");
+        let host = (self.host_getter)(ctx.data_mut());
+        host.table
+            .push(serializer)
+            .map_err(|err| anyhow::anyhow!("bug: failed to create a Serializer resource: {err}"))
+    }
+
+    fn delete_ser_ok_resource(
+        &self,
+        ok: wasmtime::component::Resource<SerOk>,
+    ) -> anyhow::Result<SerOk> {
+        let mut ctx = self
+            .ctx
+            .lock()
+            .expect("SerializableSerialize should not be poisoned");
+        let host = (self.host_getter)(ctx.data_mut());
+        host.table
+            .delete(ok)
+            .map_err(|err| anyhow::anyhow!("bug: invalid Serializer::Ok handle: {err}"))
+    }
+
+    fn delete_ser_error_resource(
+        &self,
+        error: wasmtime::component::Resource<SerError>,
+    ) -> anyhow::Result<SerError> {
+        let mut ctx = self
+            .ctx
+            .lock()
+            .expect("SerializableSerialize should not be poisoned");
+        let host = (self.host_getter)(ctx.data_mut());
+        host.table
+            .delete(error)
+            .map_err(|err| anyhow::anyhow!("bug: invalid Serializer::Error handle: {err}"))
+    }
+}
+
+struct SerializableSerialize<'a> {
+    serialize: Box<dyn SerializeWithContext + 'a>,
     borrowed_serialize_handle: u32,
     _borrow: core::marker::PhantomData<&'a GuestSerialize>,
 }
 
 enum GuestSerialize {}
 
-impl<'a, T, H: bindings::serde::serde::serde_serializer::GetHost<T>> SerializableSerialize<'a, T, H> {
-    fn new(
-        ctx: &'a mut wasmtime::StoreContextMut<'a, T>,
-        host_getter: H,
-        // state: &'a mut HostsideSerializerProviderState,
-        do_serialize: Box<
-            dyn Fn(
+impl<'b> SerializableSerialize<'b> {
+    fn new<
+        'a: 'b,
+        T,
+        H: bindings::serde::serde::serde_serializer::GetHost<T>,
+        S: 'b
+            + Fn(
                 &mut wasmtime::StoreContextMut<T>,
                 &bindings::exports::serde::serde::serde_serialize::GuestSerialize,
                 wasmtime::component::Resource<GuestSerialize>,
@@ -1685,53 +1772,50 @@ impl<'a, T, H: bindings::serde::serde::serde_serializer::GetHost<T>> Serializabl
                     bindings::exports::serde::serde::serde_serialize::OwnedSerErrorHandle,
                 >,
             >,
-        >,
-        serialize: &'a bindings::serde::serde::serde_serializer::BorrowedSerializeHandle,
+    >(
+        ctx: &'b mut wasmtime::StoreContextMut<'a, T>,
+        host_getter: H,
+        do_serialize: S,
+        serialize: &'b bindings::serde::serde::serde_serializer::BorrowedSerializeHandle,
     ) -> Self {
         Self {
-            ctx,
-            host_getter,
-            // state,
-            do_serialize,
+            serialize: Box::new(SpecificSerializeWithContext {
+                ctx: Mutex::new(ctx),
+                host_getter,
+                do_serialize,
+            }),
             borrowed_serialize_handle: serialize.borrowed_handle,
             _borrow: core::marker::PhantomData::<&'a GuestSerialize>,
         }
     }
 }
 
-impl<'a, T, H: bindings::serde::serde::serde_serializer::GetHost<T>> ::serde::Serialize for SerializableSerialize<'a, T, H> {
+impl<'a> ::serde::Serialize for SerializableSerialize<'a> {
     fn serialize<S: ::serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let result =
             HostsideSerializerProvider::with_new(serializer, |serializer| -> anyhow::Result<_> {
-                let host = (self.host_getter)(self.ctx.data_mut());
-                let serializer = host.table.push(serializer).map_err(|err| {
-                    anyhow::anyhow!("bug: failed to create a Serializer resource: {err}")
-                })?;
+                let serializer = self.serialize.new_serializer_resource(serializer)?;
                 let serializer =
                     bindings::exports::serde::serde::serde_serialize::OwnedSerializerHandle {
                         owned_handle: serializer.rep(),
                     };
                 let guest = todo!();
-                (self.do_serialize)(
-                    self.ctx,
+                self.serialize.serialize(
                     &guest,
                     wasmtime::component::Resource::new_borrow(self.borrowed_serialize_handle),
                     serializer,
                 )
             })
-            .map_err(|err| ::serde::ser::Error::custom(err))?;
+            .map_err(::serde::ser::Error::custom)?;
 
-        let host = (self.host_getter)(self.ctx.data_mut());
         match result {
             Ok(value) => {
-                let SerOk { value } = host
-                    .table
-                    .delete(wasmtime::component::Resource::new_own(value.owned_handle))
-                    .map_err(|err| {
-                        ::serde::ser::Error::custom(format!(
-                            "bug: invalid Serializer::Ok handle: {err}"
-                        ))
-                    })?;
+                let SerOk { value } = self
+                    .serialize
+                    .delete_ser_ok_resource(wasmtime::component::Resource::new_own(
+                        value.owned_handle,
+                    ))
+                    .map_err(::serde::ser::Error::custom)?;
                 // TODO: Safety
                 let Some(value): Option<S::Ok> = (unsafe { value.take() }) else {
                     return Err(::serde::ser::Error::custom(
@@ -1742,14 +1826,12 @@ impl<'a, T, H: bindings::serde::serde::serde_serializer::GetHost<T>> ::serde::Se
             }
             Err(err) => {
                 // TODO: Safety
-                let SerError { inner: err } = host
-                    .table
-                    .delete(wasmtime::component::Resource::new_own(err.owned_handle))
-                    .map_err(|err| {
-                        ::serde::ser::Error::custom(format!(
-                            "bug: invalid Serializer::Error handle: {err}"
-                        ))
-                    })?;
+                let SerError { inner: err } = self
+                    .serialize
+                    .delete_ser_error_resource(wasmtime::component::Resource::new_own(
+                        err.owned_handle,
+                    ))
+                    .map_err(::serde::ser::Error::custom)?;
                 let err = match err {
                     SerErrorOrCustom::Error { err, .. } => err,
                     SerErrorOrCustom::Custom(msg) => return Err(::serde::ser::Error::custom(msg)),
