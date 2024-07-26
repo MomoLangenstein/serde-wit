@@ -1,27 +1,6 @@
 #![allow(clippy::module_inception)] // FIXME
 #![allow(clippy::indexing_slicing)] // FIXME
-#![allow(clippy::todo)] // FIXME
 
-#[doc(hidden)]
-pub use super::HostsideSerializeMapProvider as __with_name7;
-#[doc(hidden)]
-pub use super::HostsideSerializeSeqProvider as __with_name3;
-#[doc(hidden)]
-pub use super::HostsideSerializeStructProvider as __with_name8;
-#[doc(hidden)]
-pub use super::HostsideSerializeStructVariantProvider as __with_name9;
-#[doc(hidden)]
-pub use super::HostsideSerializeTupleProvider as __with_name4;
-#[doc(hidden)]
-pub use super::HostsideSerializeTupleStructProvider as __with_name5;
-#[doc(hidden)]
-pub use super::HostsideSerializeTupleVariantProvider as __with_name6;
-#[doc(hidden)]
-pub use super::HostsideSerializerProvider as __with_name2;
-#[doc(hidden)]
-pub use super::SerError as __with_name0;
-#[doc(hidden)]
-pub use super::SerOk as __with_name1;
 pub struct SerdeSerializerClient {
     interface0: exports::serde::serde::serde_serialize::Guest,
 }
@@ -30,17 +9,19 @@ const _: () = {
     use wasmtime::component::__internal::anyhow;
 
     impl SerdeSerializerClient {
-        // pub fn add_to_linker<T, U>(
-        //     linker: &mut wasmtime::component::Linker<T>,
-        //     get: impl Fn(&mut T) -> &mut U + Send + Sync + Copy + 'static,
-        // ) -> wasmtime::Result<()>
-        // where
-        //     U: serde::serde::serde_types::Host /*+ serde::serde::serde_serializer::Host*/,
-        // {
-        //     serde::serde::serde_types::add_to_linker(linker, get)?;
-        //     serde::serde::serde_serializer::add_to_linker(linker, get)?;
-        //     Ok(())
-        // }
+        pub fn add_to_linker<T>(
+            linker: &mut wasmtime::component::Linker<T>,
+            get: impl Fn(
+                    &mut T,
+                )
+                    -> &mut crate::ser::wasmtime_host::provider::HostsideSerializerProviderState
+                + Send
+                + Sync
+                + Copy
+                + 'static,
+        ) -> wasmtime::Result<()> {
+            serde::serde::serde_serializer::add_to_linker(linker, get)
+        }
 
         /// Instantiates the provided `module` using the specified
         /// parameters, wrapping up the result in a structure that
@@ -178,42 +159,6 @@ pub mod serde {
                 assert!(4 == <Usize as wasmtime::component::ComponentType>::SIZE32);
                 assert!(4 == <Usize as wasmtime::component::ComponentType>::ALIGN32);
             };
-            pub trait Host {}
-
-            pub trait GetHost<T>:
-                Fn(T) -> <Self as GetHost<T>>::Host + Send + Sync + Copy + 'static
-            {
-                type Host: Host;
-            }
-
-            impl<F, T, O> GetHost<T> for F
-            where
-                F: Fn(T) -> O + Send + Sync + Copy + 'static,
-                O: Host,
-            {
-                type Host = O;
-            }
-
-            pub fn add_to_linker_get_host<T>(
-                linker: &mut wasmtime::component::Linker<T>,
-                host_getter: impl for<'a> GetHost<&'a mut T>,
-            ) -> wasmtime::Result<()>
-where {
-                let mut inst = linker.instance("serde:serde/serde-types")?;
-                Ok(())
-            }
-
-            pub fn add_to_linker<T, U>(
-                linker: &mut wasmtime::component::Linker<T>,
-                get: impl Fn(&mut T) -> &mut U + Send + Sync + Copy + 'static,
-            ) -> wasmtime::Result<()>
-            where
-                U: Host,
-            {
-                add_to_linker_get_host(linker, get)
-            }
-
-            impl<_T: Host + ?Sized> Host for &mut _T {}
         }
 
         #[allow(clippy::all)]
@@ -267,16 +212,16 @@ where {
             };
             use crate::ser::wasmtime_host::provider::WrapSerResult;
 
-            pub use super::super::super::__with_name0 as SerError;
-            pub use super::super::super::__with_name1 as SerOk;
-            pub use super::super::super::__with_name2 as Serializer;
-            pub use super::super::super::__with_name3 as SerializeSeq;
-            pub use super::super::super::__with_name4 as SerializeTuple;
-            pub use super::super::super::__with_name5 as SerializeTupleStruct;
-            pub use super::super::super::__with_name6 as SerializeTupleVariant;
-            pub use super::super::super::__with_name7 as SerializeMap;
-            pub use super::super::super::__with_name8 as SerializeStruct;
-            pub use super::super::super::__with_name9 as SerializeStructVariant;
+            pub use crate::ser::wasmtime_host::provider::HostsideSerializeMapProvider as SerializeMap;
+            pub use crate::ser::wasmtime_host::provider::HostsideSerializeSeqProvider as SerializeSeq;
+            pub use crate::ser::wasmtime_host::provider::HostsideSerializeStructProvider as SerializeStruct;
+            pub use crate::ser::wasmtime_host::provider::HostsideSerializeStructVariantProvider as SerializeStructVariant;
+            pub use crate::ser::wasmtime_host::provider::HostsideSerializeTupleProvider as SerializeTuple;
+            pub use crate::ser::wasmtime_host::provider::HostsideSerializeTupleStructProvider as SerializeTupleStruct;
+            pub use crate::ser::wasmtime_host::provider::HostsideSerializeTupleVariantProvider as SerializeTupleVariant;
+            pub use crate::ser::wasmtime_host::provider::HostsideSerializerProvider as Serializer;
+            pub use crate::ser::wasmtime_host::provider::SerError;
+            pub use crate::ser::wasmtime_host::provider::SerOk;
 
             pub trait GetHost<T>:
                 for<'a> Fn(&'a mut T) -> &'a mut crate::ser::wasmtime_host::provider::HostsideSerializerProviderState + Send + Sync + Copy + 'static
