@@ -733,6 +733,11 @@ trait ErasedSerializeTupleVariant {
 trait ErasedSerializeMap {
     fn erased_serialize_key(&mut self, key: &SerializableSerialize) -> Result<(), SerError>;
     fn erased_serialize_value(&mut self, value: &SerializableSerialize) -> Result<(), SerError>;
+    fn erased_serialize_entry(
+        &mut self,
+        key: &SerializableSerialize,
+        value: &SerializableSerialize,
+    ) -> Result<(), SerError>;
     fn erased_end(self: Box<Self>) -> Result<SerOk, SerError>;
 }
 
@@ -1087,6 +1092,14 @@ impl<T: SerializeMap> ErasedSerializeMap for T {
         self.serialize_value(value).map_err(SerError::wrap)
     }
 
+    fn erased_serialize_entry(
+        &mut self,
+        key: &SerializableSerialize,
+        value: &SerializableSerialize,
+    ) -> Result<(), SerError> {
+        self.serialize_entry(key, value).map_err(SerError::wrap)
+    }
+
     fn erased_end(self: Box<Self>) -> Result<SerOk, SerError> {
         self.end().map(SerOk::wrap).map_err(SerError::wrap)
     }
@@ -1420,6 +1433,36 @@ impl bindings::exports::serde::serde::serde_serializer::GuestSerializeMap
             .get_mut::<Self>()
             .serialize_map
             .erased_serialize_value(&SerializableSerialize::new(&value))
+            .wrap();
+
+        (this, result)
+    }
+
+    fn serialize_entry(
+        mut this: bindings::exports::serde::serde::serde_serializer::SerializeMap,
+        key: bindings::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
+        value: bindings::exports::serde::serde::serde_serializer::BorrowedSerializeHandle,
+    ) -> (
+        bindings::exports::serde::serde::serde_serializer::SerializeMap,
+        Result<(), bindings::exports::serde::serde::serde_serializer::SerError>,
+    ) {
+        // TODO: Safety
+        let key = unsafe {
+            bindings::serde::serde::serde_serialize::Serialize::from_handle(key.borrowed_handle)
+        };
+
+        // TODO: Safety
+        let value = unsafe {
+            bindings::serde::serde::serde_serialize::Serialize::from_handle(value.borrowed_handle)
+        };
+
+        let result = this
+            .get_mut::<Self>()
+            .serialize_map
+            .erased_serialize_entry(
+                &SerializableSerialize::new(&key),
+                &SerializableSerialize::new(&value),
+            )
             .wrap();
 
         (this, result)

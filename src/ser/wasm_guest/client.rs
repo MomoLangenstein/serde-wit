@@ -776,16 +776,6 @@ impl ::serde::ser::SerializeMap for SerializerableSerializeMap {
         result.wrap()
     }
 
-    fn end(mut self) -> Result<Self::Ok, Self::Error> {
-        let Some(serialize_map) = self.serialize_map.take() else {
-            return Err(::serde::ser::Error::custom(
-                "bug: SerializeMap::end after free",
-            ));
-        };
-
-        bindings::serde::serde::serde_serializer::SerializeMap::end(serialize_map).wrap()
-    }
-
     fn serialize_entry<K: ?Sized + ::serde::Serialize, V: ?Sized + ::serde::Serialize>(
         &mut self,
         key: &K,
@@ -793,7 +783,7 @@ impl ::serde::ser::SerializeMap for SerializerableSerializeMap {
     ) -> Result<(), Self::Error> {
         let Some(serialize_map) = self.serialize_map.take() else {
             return Err(::serde::ser::Error::custom(
-                "bug: SerializeMap::serialize_map after free",
+                "bug: SerializeMap::serialize_entry after free",
             ));
         };
 
@@ -803,31 +793,35 @@ impl ::serde::ser::SerializeMap for SerializerableSerializeMap {
             let key = bindings::serde::serde::serde_serializer::BorrowedSerializeHandle {
                 borrowed_handle,
             };
-            bindings::serde::serde::serde_serializer::SerializeMap::serialize_key(
-                serialize_map,
-                key,
-            )
-        });
 
-        if let Err(err) = result.wrap() {
-            self.serialize_map = Some(serialize_map);
-            return Err(err);
-        }
+            GuestsideSerializerClient::with_new(value, |value| {
+                let borrowed_handle =
+                    unsafe { core::mem::transmute::<&GuestsideSerializerClient, usize>(value) }
+                        as u32;
+                let value = bindings::serde::serde::serde_serializer::BorrowedSerializeHandle {
+                    borrowed_handle,
+                };
 
-        let (serialize_map, result) = GuestsideSerializerClient::with_new(value, |value| {
-            let borrowed_handle =
-                unsafe { core::mem::transmute::<&GuestsideSerializerClient, usize>(value) } as u32;
-            let value = bindings::serde::serde::serde_serializer::BorrowedSerializeHandle {
-                borrowed_handle,
-            };
-            bindings::serde::serde::serde_serializer::SerializeMap::serialize_value(
-                serialize_map,
-                value,
-            )
+                bindings::serde::serde::serde_serializer::SerializeMap::serialize_entry(
+                    serialize_map,
+                    key,
+                    value,
+                )
+            })
         });
         self.serialize_map = Some(serialize_map);
 
         result.wrap()
+    }
+
+    fn end(mut self) -> Result<Self::Ok, Self::Error> {
+        let Some(serialize_map) = self.serialize_map.take() else {
+            return Err(::serde::ser::Error::custom(
+                "bug: SerializeMap::end after free",
+            ));
+        };
+
+        bindings::serde::serde::serde_serializer::SerializeMap::end(serialize_map).wrap()
     }
 }
 

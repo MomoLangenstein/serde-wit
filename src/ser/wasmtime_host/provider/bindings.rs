@@ -3,7 +3,13 @@
 #![allow(clippy::todo)] // FIXME
 
 #[doc(hidden)]
+pub use super::HostsideSerializeMapProvider as __with_name7;
+#[doc(hidden)]
 pub use super::HostsideSerializeSeqProvider as __with_name3;
+#[doc(hidden)]
+pub use super::HostsideSerializeStructProvider as __with_name8;
+#[doc(hidden)]
+pub use super::HostsideSerializeStructVariantProvider as __with_name9;
 #[doc(hidden)]
 pub use super::HostsideSerializeTupleProvider as __with_name4;
 #[doc(hidden)]
@@ -212,6 +218,8 @@ where {
 
         #[allow(clippy::all)]
         pub mod serde_serializer {
+            use std::sync::Mutex;
+
             use send_wrapper::SendWrapper;
             #[allow(unused_imports)]
             use wasmtime::component::__internal::anyhow;
@@ -266,251 +274,23 @@ where {
             pub use super::super::super::__with_name4 as SerializeTuple;
             pub use super::super::super::__with_name5 as SerializeTupleStruct;
             pub use super::super::super::__with_name6 as SerializeTupleVariant;
-            pub enum SerializeMap {}
-            pub trait HostSerializeMap {
-                fn serialize_key(
-                    &mut self,
-                    self_: wasmtime::component::Resource<SerializeMap>,
-                    key: BorrowedSerializeHandle,
-                ) -> wasmtime::Result<(
-                    wasmtime::component::Resource<SerializeMap>,
-                    Result<(), wasmtime::component::Resource<SerError>>,
-                )>;
-                fn serialize_value(
-                    &mut self,
-                    self_: wasmtime::component::Resource<SerializeMap>,
-                    value: BorrowedSerializeHandle,
-                ) -> wasmtime::Result<(
-                    wasmtime::component::Resource<SerializeMap>,
-                    Result<(), wasmtime::component::Resource<SerError>>,
-                )>;
-                fn end(
-                    &mut self,
-                    self_: wasmtime::component::Resource<SerializeMap>,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn drop(
-                    &mut self,
-                    rep: wasmtime::component::Resource<SerializeMap>,
-                ) -> wasmtime::Result<()>;
-            }
-            impl<_T: HostSerializeMap + ?Sized> HostSerializeMap for &mut _T {
-                fn serialize_key(
-                    &mut self,
-                    self_: wasmtime::component::Resource<SerializeMap>,
-                    key: BorrowedSerializeHandle,
-                ) -> wasmtime::Result<(
-                    wasmtime::component::Resource<SerializeMap>,
-                    Result<(), wasmtime::component::Resource<SerError>>,
-                )> {
-                    HostSerializeMap::serialize_key(*self, self_, key)
-                }
-                fn serialize_value(
-                    &mut self,
-                    self_: wasmtime::component::Resource<SerializeMap>,
-                    value: BorrowedSerializeHandle,
-                ) -> wasmtime::Result<(
-                    wasmtime::component::Resource<SerializeMap>,
-                    Result<(), wasmtime::component::Resource<SerError>>,
-                )> {
-                    HostSerializeMap::serialize_value(*self, self_, value)
-                }
-                fn end(
-                    &mut self,
-                    self_: wasmtime::component::Resource<SerializeMap>,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializeMap::end(*self, self_)
-                }
-
-                fn drop(
-                    &mut self,
-                    rep: wasmtime::component::Resource<SerializeMap>,
-                ) -> wasmtime::Result<()> {
-                    HostSerializeMap::drop(*self, rep)
-                }
-            }
-            pub enum SerializeStruct {}
-            pub trait HostSerializeStruct {
-                fn serialize_field(
-                    &mut self,
-                    self_: wasmtime::component::Resource<SerializeStruct>,
-                    key: wasmtime::component::__internal::String,
-                    value: BorrowedSerializeHandle,
-                ) -> wasmtime::Result<(
-                    wasmtime::component::Resource<SerializeStruct>,
-                    Result<(), wasmtime::component::Resource<SerError>>,
-                )>;
-                fn end(
-                    &mut self,
-                    self_: wasmtime::component::Resource<SerializeStruct>,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn skip_field(
-                    &mut self,
-                    self_: wasmtime::component::Resource<SerializeStruct>,
-                    key: wasmtime::component::__internal::String,
-                ) -> wasmtime::Result<(
-                    wasmtime::component::Resource<SerializeStruct>,
-                    Result<(), wasmtime::component::Resource<SerError>>,
-                )>;
-                fn drop(
-                    &mut self,
-                    rep: wasmtime::component::Resource<SerializeStruct>,
-                ) -> wasmtime::Result<()>;
-            }
-            impl<_T: HostSerializeStruct + ?Sized> HostSerializeStruct for &mut _T {
-                fn serialize_field(
-                    &mut self,
-                    self_: wasmtime::component::Resource<SerializeStruct>,
-                    key: wasmtime::component::__internal::String,
-                    value: BorrowedSerializeHandle,
-                ) -> wasmtime::Result<(
-                    wasmtime::component::Resource<SerializeStruct>,
-                    Result<(), wasmtime::component::Resource<SerError>>,
-                )> {
-                    HostSerializeStruct::serialize_field(*self, self_, key, value)
-                }
-                fn end(
-                    &mut self,
-                    self_: wasmtime::component::Resource<SerializeStruct>,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializeStruct::end(*self, self_)
-                }
-                fn skip_field(
-                    &mut self,
-                    self_: wasmtime::component::Resource<SerializeStruct>,
-                    key: wasmtime::component::__internal::String,
-                ) -> wasmtime::Result<(
-                    wasmtime::component::Resource<SerializeStruct>,
-                    Result<(), wasmtime::component::Resource<SerError>>,
-                )> {
-                    HostSerializeStruct::skip_field(*self, self_, key)
-                }
-
-                fn drop(
-                    &mut self,
-                    rep: wasmtime::component::Resource<SerializeStruct>,
-                ) -> wasmtime::Result<()> {
-                    HostSerializeStruct::drop(*self, rep)
-                }
-            }
-            pub enum SerializeStructVariant {}
-            pub trait HostSerializeStructVariant {
-                fn serialize_field(
-                    &mut self,
-                    self_: wasmtime::component::Resource<SerializeStructVariant>,
-                    key: wasmtime::component::__internal::String,
-                    value: BorrowedSerializeHandle,
-                ) -> wasmtime::Result<(
-                    wasmtime::component::Resource<SerializeStructVariant>,
-                    Result<(), wasmtime::component::Resource<SerError>>,
-                )>;
-                fn end(
-                    &mut self,
-                    self_: wasmtime::component::Resource<SerializeStructVariant>,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                >;
-                fn skip_field(
-                    &mut self,
-                    self_: wasmtime::component::Resource<SerializeStructVariant>,
-                    key: wasmtime::component::__internal::String,
-                ) -> wasmtime::Result<(
-                    wasmtime::component::Resource<SerializeStructVariant>,
-                    Result<(), wasmtime::component::Resource<SerError>>,
-                )>;
-                fn drop(
-                    &mut self,
-                    rep: wasmtime::component::Resource<SerializeStructVariant>,
-                ) -> wasmtime::Result<()>;
-            }
-            impl<_T: HostSerializeStructVariant + ?Sized> HostSerializeStructVariant for &mut _T {
-                fn serialize_field(
-                    &mut self,
-                    self_: wasmtime::component::Resource<SerializeStructVariant>,
-                    key: wasmtime::component::__internal::String,
-                    value: BorrowedSerializeHandle,
-                ) -> wasmtime::Result<(
-                    wasmtime::component::Resource<SerializeStructVariant>,
-                    Result<(), wasmtime::component::Resource<SerError>>,
-                )> {
-                    HostSerializeStructVariant::serialize_field(*self, self_, key, value)
-                }
-                fn end(
-                    &mut self,
-                    self_: wasmtime::component::Resource<SerializeStructVariant>,
-                ) -> wasmtime::Result<
-                    Result<
-                        wasmtime::component::Resource<SerOk>,
-                        wasmtime::component::Resource<SerError>,
-                    >,
-                > {
-                    HostSerializeStructVariant::end(*self, self_)
-                }
-                fn skip_field(
-                    &mut self,
-                    self_: wasmtime::component::Resource<SerializeStructVariant>,
-                    key: wasmtime::component::__internal::String,
-                ) -> wasmtime::Result<(
-                    wasmtime::component::Resource<SerializeStructVariant>,
-                    Result<(), wasmtime::component::Resource<SerError>>,
-                )> {
-                    HostSerializeStructVariant::skip_field(*self, self_, key)
-                }
-
-                fn drop(
-                    &mut self,
-                    rep: wasmtime::component::Resource<SerializeStructVariant>,
-                ) -> wasmtime::Result<()> {
-                    HostSerializeStructVariant::drop(*self, rep)
-                }
-            }
-            /*pub trait Host:
-                HostSerializeMap
-                + HostSerializeStruct
-                + HostSerializeStructVariant
-            {
-            }*/
+            pub use super::super::super::__with_name7 as SerializeMap;
+            pub use super::super::super::__with_name8 as SerializeStruct;
+            pub use super::super::super::__with_name9 as SerializeStructVariant;
 
             pub trait GetHost<T>:
-                for<'a> Fn(&'a mut T) -> /*<Self as GetHost<T>>::Host*/&'a mut crate::ser::wasmtime_host::provider::HostsideSerializerProviderState + Send + Sync + Copy + 'static
-            {
-                // type Host: Host;
-            }
+                for<'a> Fn(&'a mut T) -> &'a mut crate::ser::wasmtime_host::provider::HostsideSerializerProviderState + Send + Sync + Copy + 'static
+            {}
 
-            impl<F, T/*, O*/> GetHost<T> for F
+            impl<F, T> GetHost<T> for F
             where
-                F: for<'a> Fn(&'a mut T) -> /*O*/&'a mut crate::ser::wasmtime_host::provider::HostsideSerializerProviderState + Send + Sync + Copy + 'static,
-                // O: Host,
-            {
-                // type Host = O;
-            }
+                F: for<'a> Fn(&'a mut T) -> &'a mut crate::ser::wasmtime_host::provider::HostsideSerializerProviderState + Send + Sync + Copy + 'static,
+            {}
 
             #[allow(clippy::too_many_lines)] // FIXME
             pub fn add_to_linker_get_host<T>(
                 linker: &mut wasmtime::component::Linker<T>,
-                host_getter: impl GetHost</*&'a mut*/ T>,
+                host_getter: impl GetHost<T>,
             ) -> wasmtime::Result<()>
 where {
                 let mut inst = linker.instance("serde:serde/serde-serializer")?;
@@ -586,36 +366,37 @@ where {
                         Ok(())
                     },
                 )?;
-                // inst.resource(
-                //     "serialize-map",
-                //     wasmtime::component::ResourceType::host::<SerializeMap>(),
-                //     move |mut store, rep| -> wasmtime::Result<()> {
-                //         HostSerializeMap::drop(
-                //             host_getter(store.data_mut()),
-                //             wasmtime::component::Resource::new_own(rep),
-                //         )
-                //     },
-                // )?;
-                // inst.resource(
-                //     "serialize-struct",
-                //     wasmtime::component::ResourceType::host::<SerializeStruct>(),
-                //     move |mut store, rep| -> wasmtime::Result<()> {
-                //         HostSerializeStruct::drop(
-                //             host_getter(store.data_mut()),
-                //             wasmtime::component::Resource::new_own(rep),
-                //         )
-                //     },
-                // )?;
-                // inst.resource(
-                //     "serialize-struct-variant",
-                //     wasmtime::component::ResourceType::host::<SerializeStructVariant>(),
-                //     move |mut store, rep| -> wasmtime::Result<()> {
-                //         HostSerializeStructVariant::drop(
-                //             host_getter(store.data_mut()),
-                //             wasmtime::component::Resource::new_own(rep),
-                //         )
-                //     },
-                // )?;
+                inst.resource(
+                    "serialize-map",
+                    wasmtime::component::ResourceType::host::<SerializeMap>(),
+                    move |mut store, rep| -> wasmtime::Result<()> {
+                        let host = host_getter(store.data_mut());
+                        let this = wasmtime::component::Resource::<SerializeMap>::new_own(rep);
+                        let _map = host.table.delete(this)?;
+                        Ok(())
+                    },
+                )?;
+                inst.resource(
+                    "serialize-struct",
+                    wasmtime::component::ResourceType::host::<SerializeStruct>(),
+                    move |mut store, rep| -> wasmtime::Result<()> {
+                        let host = host_getter(store.data_mut());
+                        let this = wasmtime::component::Resource::<SerializeStruct>::new_own(rep);
+                        let _struct = host.table.delete(this)?;
+                        Ok(())
+                    },
+                )?;
+                inst.resource(
+                    "serialize-struct-variant",
+                    wasmtime::component::ResourceType::host::<SerializeStructVariant>(),
+                    move |mut store, rep| -> wasmtime::Result<()> {
+                        let host = host_getter(store.data_mut());
+                        let this =
+                            wasmtime::component::Resource::<SerializeStructVariant>::new_own(rep);
+                        let _struct_variant = host.table.delete(this)?;
+                        Ok(())
+                    },
+                )?;
                 inst.func_wrap("[static]serializer.serialize-bool", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,arg1,) : (wasmtime::component::Resource<Serializer>, bool, ) | { 
                     let host = host_getter(caller.data_mut());
                     let (this, v) = (arg0, arg1);
@@ -807,9 +588,10 @@ where {
                             let host = host_getter(caller.data_mut());
                             host.table.delete(this)
                         }?;
+                        let caller = Mutex::new(caller);
                         let r = serializer.serializer.take().erased_serialize_some(
                             &crate::ser::wasmtime_host::provider::SerializableSerialize::new(
-                                &mut caller,
+                                &caller,
                                 host_getter,
                                 move |mut ctx, guest, serialize, serializer| {
                                     let serialize = serialize.try_into_resource_any(&mut ctx)?;
@@ -818,6 +600,9 @@ where {
                                 &value,
                             ),
                         );
+                        let mut caller = caller.into_inner().map_err(|_| {
+                            anyhow::anyhow!("SerializableSerialize should not be poisoned")
+                        })?;
                         let r = {
                             let host = host_getter(caller.data_mut());
                             r.wrap(host)
@@ -891,13 +676,14 @@ where {
                             let host = host_getter(caller.data_mut());
                             host.table.delete(this)
                         }?;
+                        let caller = Mutex::new(caller);
                         let r = serializer
                             .serializer
                             .take()
                             .erased_serialize_newtype_struct(
                                 crate::intern::intern_string(name),
                                 &crate::ser::wasmtime_host::provider::SerializableSerialize::new(
-                                    &mut caller,
+                                    &caller,
                                     host_getter,
                                     move |mut ctx, guest, serialize, serializer| {
                                         let serialize =
@@ -907,6 +693,9 @@ where {
                                     &value,
                                 ),
                             );
+                        let mut caller = caller.into_inner().map_err(|_| {
+                            anyhow::anyhow!("SerializableSerialize should not be poisoned")
+                        })?;
                         let r = {
                             let host = host_getter(caller.data_mut());
                             r.wrap(host)
@@ -931,6 +720,7 @@ where {
                             let host = host_getter(caller.data_mut());
                             host.table.delete(this)
                         }?;
+                        let caller = Mutex::new(caller);
                         let r = serializer
                             .serializer
                             .take()
@@ -939,7 +729,7 @@ where {
                                 variant_index,
                                 crate::intern::intern_string(variant),
                                 &crate::ser::wasmtime_host::provider::SerializableSerialize::new(
-                                    &mut caller,
+                                    &caller,
                                     host_getter,
                                     move |mut ctx, guest, serialize, serializer| {
                                         let serialize =
@@ -949,6 +739,9 @@ where {
                                     &value,
                                 ),
                             );
+                        let mut caller = caller.into_inner().map_err(|_| {
+                            anyhow::anyhow!("SerializableSerialize should not be poisoned")
+                        })?;
                         let r = {
                             let host = host_getter(caller.data_mut());
                             r.wrap(host)
@@ -972,9 +765,7 @@ where {
                         let host = host_getter(caller.data_mut());
                         let (this, len) = (arg0, arg1);
                         anyhow::ensure!(this.owned());
-                        let Serializer {
-                            serializer, scope,
-                        } = host.table.delete(this)?;
+                        let Serializer { serializer, scope } = host.table.delete(this)?;
                         let r = match serializer
                             .take()
                             .erased_serialize_seq(len.map(|len| crate::wit_to_usize(len.val)))
@@ -1022,9 +813,7 @@ where {
                         let host = host_getter(caller.data_mut());
                         let (this, name, len) = (arg0, arg1, arg2);
                         anyhow::ensure!(this.owned());
-                        let Serializer {
-                            serializer, scope,
-                        } = host.table.delete(this)?;
+                        let Serializer { serializer, scope } = host.table.delete(this)?;
                         let r = match serializer.take().erased_serialize_tuple_struct(
                             crate::intern::intern_string(name),
                             crate::wit_to_usize(len.val),
@@ -1051,20 +840,12 @@ where {
                         u32,
                         wasmtime::component::__internal::String,
                         Usize,
-                    )|
-                          -> anyhow::Result<(
-                        Result<
-                            wasmtime::component::Resource<SerializeTupleVariant>,
-                            wasmtime::component::Resource<SerError>,
-                        >,
-                    )> {
+                    )| {
                         let host = host_getter(caller.data_mut());
                         let (this, name, variant_index, variant, len) =
                             (arg0, arg1, arg2, arg3, arg4);
                         anyhow::ensure!(this.owned());
-                        let Serializer {
-                            serializer, scope,
-                        } = host.table.delete(this)?;
+                        let Serializer { serializer, scope } = host.table.delete(this)?;
                         let r = match serializer.take().erased_serialize_tuple_variant(
                             crate::intern::intern_string(name),
                             variant_index,
@@ -1090,17 +871,22 @@ where {
                           (arg0, arg1): (
                         wasmtime::component::Resource<Serializer>,
                         Option<Usize>,
-                    )|
-                          -> anyhow::Result<(
-                        Result<
-                            wasmtime::component::Resource<SerializeMap>,
-                            wasmtime::component::Resource<SerError>,
-                        >,
-                    )> {
-                        // let host = host_getter(caller.data_mut());
-                        // let r = HostSerializer::serialize_map(host, arg0, arg1);
-                        // Ok((r?,))
-                        todo!()
+                    )| {
+                        let host = host_getter(caller.data_mut());
+                        let (this, len) = (arg0, arg1);
+                        anyhow::ensure!(this.owned());
+                        let Serializer { serializer, scope } = host.table.delete(this)?;
+                        let r = match serializer
+                            .take()
+                            .erased_serialize_map(len.map(|len| crate::wit_to_usize(len.val)))
+                        {
+                            Ok(serialize_map) => Ok(host.table.push(SerializeMap {
+                                serialize_map: SendWrapper::new(serialize_map),
+                                _scope: scope,
+                            })?),
+                            Err(error) => Err(host.table.push(error)?),
+                        };
+                        Ok((r,))
                     },
                 )?;
                 inst.func_wrap(
@@ -1110,17 +896,22 @@ where {
                         wasmtime::component::Resource<Serializer>,
                         wasmtime::component::__internal::String,
                         Usize,
-                    )|
-                          -> anyhow::Result<(
-                        Result<
-                            wasmtime::component::Resource<SerializeStruct>,
-                            wasmtime::component::Resource<SerError>,
-                        >,
-                    )> {
-                        // let host = host_getter(caller.data_mut());
-                        // let r = HostSerializer::serialize_struct(host, arg0, arg1, arg2);
-                        // Ok((r?,))
-                        todo!()
+                    )| {
+                        let host = host_getter(caller.data_mut());
+                        let (this, name, len) = (arg0, arg1, arg2);
+                        anyhow::ensure!(this.owned());
+                        let Serializer { serializer, scope } = host.table.delete(this)?;
+                        let r = match serializer.take().erased_serialize_struct(
+                            crate::intern::intern_string(name),
+                            crate::wit_to_usize(len.val),
+                        ) {
+                            Ok(serialize_struct) => Ok(host.table.push(SerializeStruct {
+                                serialize_struct: SendWrapper::new(serialize_struct),
+                                _scope: scope,
+                            })?),
+                            Err(error) => Err(host.table.push(error)?),
+                        };
+                        Ok((r,))
                     },
                 )?;
                 inst.func_wrap(
@@ -1132,19 +923,29 @@ where {
                         u32,
                         wasmtime::component::__internal::String,
                         Usize,
-                    )|
-                          -> anyhow::Result<(
-                        Result<
-                            wasmtime::component::Resource<SerializeStructVariant>,
-                            wasmtime::component::Resource<SerError>,
-                        >,
-                    )> {
-                        // let host = host_getter(caller.data_mut());
-                        // let r = HostSerializer::serialize_struct_variant(
-                        //     host, arg0, arg1, arg2, arg3, arg4,
-                        // );
-                        // Ok((r?,))
-                        todo!()
+                    )| {
+                        let host = host_getter(caller.data_mut());
+                        let (this, name, variant_index, variant, len) =
+                            (arg0, arg1, arg2, arg3, arg4);
+                        anyhow::ensure!(this.owned());
+                        let Serializer { serializer, scope } = host.table.delete(this)?;
+                        let r = match serializer.take().erased_serialize_struct_variant(
+                            crate::intern::intern_string(name),
+                            variant_index,
+                            crate::intern::intern_string(variant),
+                            crate::wit_to_usize(len.val),
+                        ) {
+                            Ok(serialize_struct_variant) => {
+                                Ok(host.table.push(SerializeStructVariant {
+                                    serialize_struct_variant: SendWrapper::new(
+                                        serialize_struct_variant,
+                                    ),
+                                    _scope: scope,
+                                })?)
+                            }
+                            Err(error) => Err(host.table.push(error)?),
+                        };
+                        Ok((r,))
                     },
                 )?;
                 inst.func_wrap("[static]serializer.is-human-readable", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<Serializer>, ) | { 
@@ -1225,9 +1026,10 @@ where {
                             let host = host_getter(caller.data_mut());
                             host.table.delete(this)
                         }?;
+                        let caller = Mutex::new(caller);
                         let r = seq.serialize_seq.erased_serialize_element(
                             &crate::ser::wasmtime_host::provider::SerializableSerialize::new(
-                                &mut caller,
+                                &caller,
                                 host_getter,
                                 move |mut ctx, guest, serialize, serializer| {
                                     let serialize = serialize.try_into_resource_any(&mut ctx)?;
@@ -1236,6 +1038,9 @@ where {
                                 &value,
                             ),
                         );
+                        let mut caller = caller.into_inner().map_err(|_| {
+                            anyhow::anyhow!("SerializableSerialize should not be poisoned")
+                        })?;
                         let host = host_getter(caller.data_mut());
                         let r = r.wrap(host);
                         let this = host.table.push(seq)?;
@@ -1263,9 +1068,10 @@ where {
                             let host = host_getter(caller.data_mut());
                             host.table.delete(this)
                         }?;
+                        let caller = Mutex::new(caller);
                         let r = tuple.serialize_tuple.erased_serialize_element(
                             &crate::ser::wasmtime_host::provider::SerializableSerialize::new(
-                                &mut caller,
+                                &caller,
                                 host_getter,
                                 move |mut ctx, guest, serialize, serializer| {
                                     let serialize = serialize.try_into_resource_any(&mut ctx)?;
@@ -1274,6 +1080,9 @@ where {
                                 &value,
                             ),
                         );
+                        let mut caller = caller.into_inner().map_err(|_| {
+                            anyhow::anyhow!("SerializableSerialize should not be poisoned")
+                        })?;
                         let host = host_getter(caller.data_mut());
                         let r = r.wrap(host);
                         let this = host.table.push(tuple)?;
@@ -1301,9 +1110,10 @@ where {
                             let host = host_getter(caller.data_mut());
                             host.table.delete(this)
                         }?;
+                        let caller = Mutex::new(caller);
                         let r = tuple_struct.serialize_tuple_struct.erased_serialize_field(
                             &crate::ser::wasmtime_host::provider::SerializableSerialize::new(
-                                &mut caller,
+                                &caller,
                                 host_getter,
                                 move |mut ctx, guest, serialize, serializer| {
                                     let serialize = serialize.try_into_resource_any(&mut ctx)?;
@@ -1312,6 +1122,9 @@ where {
                                 &value,
                             ),
                         );
+                        let mut caller = caller.into_inner().map_err(|_| {
+                            anyhow::anyhow!("SerializableSerialize should not be poisoned")
+                        })?;
                         let host = host_getter(caller.data_mut());
                         let r = r.wrap(host);
                         let this = host.table.push(tuple_struct)?;
@@ -1339,11 +1152,12 @@ where {
                             let host = host_getter(caller.data_mut());
                             host.table.delete(this)
                         }?;
+                        let caller = Mutex::new(caller);
                         let r = tuple_variant
                             .serialize_tuple_variant
                             .erased_serialize_field(
                                 &crate::ser::wasmtime_host::provider::SerializableSerialize::new(
-                                    &mut caller,
+                                    &caller,
                                     host_getter,
                                     move |mut ctx, guest, serialize, serializer| {
                                         let serialize =
@@ -1353,6 +1167,9 @@ where {
                                     &value,
                                 ),
                             );
+                        let mut caller = caller.into_inner().map_err(|_| {
+                            anyhow::anyhow!("SerializableSerialize should not be poisoned")
+                        })?;
                         let host = host_getter(caller.data_mut());
                         let r = r.wrap(host);
                         let this = host.table.push(tuple_variant)?;
@@ -1367,116 +1184,268 @@ where {
                     let r = tuple_variant.serialize_tuple_variant.take().erased_end().wrap(host);
                     Ok((r?,))
                 })?;
-                // inst.func_wrap(
-                //     "[static]serialize-map.serialize-key",
-                //     move |mut caller: wasmtime::StoreContextMut<'_, T>,
-                //           (arg0, arg1): (
-                //         wasmtime::component::Resource<SerializeMap>,
-                //         BorrowedSerializeHandle,
-                //     )| {
-                //         let host = host_getter(caller.data_mut());
-                //         let r = HostSerializeMap::serialize_key(host, arg0, arg1);
-                //         Ok((r?,))
-                //     },
-                // )?;
-                // inst.func_wrap(
-                //     "[static]serialize-map.serialize-value",
-                //     move |mut caller: wasmtime::StoreContextMut<'_, T>,
-                //           (arg0, arg1): (
-                //         wasmtime::component::Resource<SerializeMap>,
-                //         BorrowedSerializeHandle,
-                //     )| {
-                //         let host = host_getter(caller.data_mut());
-                //         let r = HostSerializeMap::serialize_value(host, arg0, arg1);
-                //         Ok((r?,))
-                //     },
-                // )?;
-                // inst.func_wrap("[static]serialize-map.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeMap>, ) | {
-                //               let host = host_getter(caller.data_mut());
-                //               let r = HostSerializeMap::end(host, arg0,);
-                //               Ok((r?,))
-                //             })?;
-                // inst.func_wrap(
-                //     "[static]serialize-struct.serialize-field",
-                //     move |mut caller: wasmtime::StoreContextMut<'_, T>,
-                //           (arg0, arg1, arg2): (
-                //         wasmtime::component::Resource<SerializeStruct>,
-                //         wasmtime::component::__internal::String,
-                //         BorrowedSerializeHandle,
-                //     )| {
-                //         let host = host_getter(caller.data_mut());
-                //         let r = HostSerializeStruct::serialize_field(host, arg0, arg1, arg2);
-                //         Ok((r?,))
-                //     },
-                // )?;
-                // inst.func_wrap("[static]serialize-struct.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeStruct>, ) | {
-                //               let host = host_getter(caller.data_mut());
-                //               let r = HostSerializeStruct::end(host, arg0,);
-                //               Ok((r?,))
-                //             })?;
-                // inst.func_wrap(
-                //     "[static]serialize-struct.skip-field",
-                //     move |mut caller: wasmtime::StoreContextMut<'_, T>,
-                //           (arg0, arg1): (
-                //         wasmtime::component::Resource<SerializeStruct>,
-                //         wasmtime::component::__internal::String,
-                //     )| {
-                //         let host = host_getter(caller.data_mut());
-                //         let r = HostSerializeStruct::skip_field(host, arg0, arg1);
-                //         Ok((r?,))
-                //     },
-                // )?;
-                // inst.func_wrap(
-                //     "[static]serialize-struct-variant.serialize-field",
-                //     move |mut caller: wasmtime::StoreContextMut<'_, T>,
-                //           (arg0, arg1, arg2): (
-                //         wasmtime::component::Resource<SerializeStructVariant>,
-                //         wasmtime::component::__internal::String,
-                //         BorrowedSerializeHandle,
-                //     )| {
-                //         let host = host_getter(caller.data_mut());
-                //         let r = HostSerializeStructVariant::serialize_field(host, arg0, arg1, arg2);
-                //         Ok((r?,))
-                //     },
-                // )?;
-                // inst.func_wrap("[static]serialize-struct-variant.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeStructVariant>, ) | {
-                //               let host = host_getter(caller.data_mut());
-                //               let r = HostSerializeStructVariant::end(host, arg0,);
-                //               Ok((r?,))
-                //             })?;
-                // inst.func_wrap(
-                //     "[static]serialize-struct-variant.skip-field",
-                //     move |mut caller: wasmtime::StoreContextMut<'_, T>,
-                //           (arg0, arg1): (
-                //         wasmtime::component::Resource<SerializeStructVariant>,
-                //         wasmtime::component::__internal::String,
-                //     )| {
-                //         let host = host_getter(caller.data_mut());
-                //         let r = HostSerializeStructVariant::skip_field(host, arg0, arg1);
-                //         Ok((r?,))
-                //     },
-                // )?;
+                inst.func_wrap(
+                    "[static]serialize-map.serialize-key",
+                    move |mut caller: wasmtime::StoreContextMut<'_, T>,
+                          (arg0, arg1): (
+                        wasmtime::component::Resource<SerializeMap>,
+                        BorrowedSerializeHandle,
+                    )| {
+                        let (this, key) = (arg0, arg1);
+                        anyhow::ensure!(this.owned());
+                        let mut map = {
+                            let host = host_getter(caller.data_mut());
+                            host.table.delete(this)
+                        }?;
+                        let caller = Mutex::new(caller);
+                        let r = map.serialize_map.erased_serialize_key(
+                            &crate::ser::wasmtime_host::provider::SerializableSerialize::new(
+                                &caller,
+                                host_getter,
+                                move |mut ctx, guest, serialize, serializer| {
+                                    let serialize = serialize.try_into_resource_any(&mut ctx)?;
+                                    guest.call_serialize(ctx, serialize, serializer)
+                                },
+                                &key,
+                            ),
+                        );
+                        let mut caller = caller.into_inner().map_err(|_| {
+                            anyhow::anyhow!("SerializableSerialize should not be poisoned")
+                        })?;
+                        let host = host_getter(caller.data_mut());
+                        let r = r.wrap(host);
+                        let this = host.table.push(map)?;
+                        Ok((this, r?))
+                    },
+                )?;
+                inst.func_wrap(
+                    "[static]serialize-map.serialize-value",
+                    move |mut caller: wasmtime::StoreContextMut<'_, T>,
+                          (arg0, arg1): (
+                        wasmtime::component::Resource<SerializeMap>,
+                        BorrowedSerializeHandle,
+                    )| {
+                        let (this, value) = (arg0, arg1);
+                        anyhow::ensure!(this.owned());
+                        let mut map = {
+                            let host = host_getter(caller.data_mut());
+                            host.table.delete(this)
+                        }?;
+                        let caller = Mutex::new(caller);
+                        let r = map.serialize_map.erased_serialize_value(
+                            &crate::ser::wasmtime_host::provider::SerializableSerialize::new(
+                                &caller,
+                                host_getter,
+                                move |mut ctx, guest, serialize, serializer| {
+                                    let serialize = serialize.try_into_resource_any(&mut ctx)?;
+                                    guest.call_serialize(ctx, serialize, serializer)
+                                },
+                                &value,
+                            ),
+                        );
+                        let mut caller = caller.into_inner().map_err(|_| {
+                            anyhow::anyhow!("SerializableSerialize should not be poisoned")
+                        })?;
+                        let host = host_getter(caller.data_mut());
+                        let r = r.wrap(host);
+                        let this = host.table.push(map)?;
+                        Ok((this, r?))
+                    },
+                )?;
+                inst.func_wrap(
+                    "[static]serialize-map.serialize-entry",
+                    move |mut caller: wasmtime::StoreContextMut<'_, T>,
+                          (arg0, arg1, arg2): (
+                        wasmtime::component::Resource<SerializeMap>,
+                        BorrowedSerializeHandle,
+                        BorrowedSerializeHandle,
+                    )| {
+                        let (this, key, value) = (arg0, arg1, arg2);
+                        anyhow::ensure!(this.owned());
+                        let mut map = {
+                            let host = host_getter(caller.data_mut());
+                            host.table.delete(this)
+                        }?;
+                        let caller = Mutex::new(caller);
+                        let r = map.serialize_map.erased_serialize_entry(
+                            &crate::ser::wasmtime_host::provider::SerializableSerialize::new(
+                                &caller,
+                                host_getter,
+                                move |mut ctx, guest, serialize, serializer| {
+                                    let serialize = serialize.try_into_resource_any(&mut ctx)?;
+                                    guest.call_serialize(ctx, serialize, serializer)
+                                },
+                                &key,
+                            ),
+                            &crate::ser::wasmtime_host::provider::SerializableSerialize::new(
+                                &caller,
+                                host_getter,
+                                move |mut ctx, guest, serialize, serializer| {
+                                    let serialize = serialize.try_into_resource_any(&mut ctx)?;
+                                    guest.call_serialize(ctx, serialize, serializer)
+                                },
+                                &value,
+                            ),
+                        );
+                        let mut caller = caller.into_inner().map_err(|_| {
+                            anyhow::anyhow!("SerializableSerialize should not be poisoned")
+                        })?;
+                        let host = host_getter(caller.data_mut());
+                        let r = r.wrap(host);
+                        let this = host.table.push(map)?;
+                        Ok((this, r?))
+                    },
+                )?;
+                inst.func_wrap("[static]serialize-map.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeMap>, ) | {
+                    let host = host_getter(caller.data_mut());
+                    let this = arg0;
+                    anyhow::ensure!(this.owned());
+                    let map = host.table.delete(this)?;
+                    let r = map.serialize_map.take().erased_end().wrap(host);
+                    Ok((r?,))
+                })?;
+                inst.func_wrap(
+                    "[static]serialize-struct.serialize-field",
+                    move |mut caller: wasmtime::StoreContextMut<'_, T>,
+                          (arg0, arg1, arg2): (
+                        wasmtime::component::Resource<SerializeStruct>,
+                        wasmtime::component::__internal::String,
+                        BorrowedSerializeHandle,
+                    )| {
+                        let (this, key, value) = (arg0, arg1, arg2);
+                        anyhow::ensure!(this.owned());
+                        let mut r#struct = {
+                            let host = host_getter(caller.data_mut());
+                            host.table.delete(this)
+                        }?;
+                        let caller = Mutex::new(caller);
+                        let r = r#struct.serialize_struct.erased_serialize_field(
+                            crate::intern::intern_string(key),
+                            &crate::ser::wasmtime_host::provider::SerializableSerialize::new(
+                                &caller,
+                                host_getter,
+                                move |mut ctx, guest, serialize, serializer| {
+                                    let serialize = serialize.try_into_resource_any(&mut ctx)?;
+                                    guest.call_serialize(ctx, serialize, serializer)
+                                },
+                                &value,
+                            ),
+                        );
+                        let mut caller = caller.into_inner().map_err(|_| {
+                            anyhow::anyhow!("SerializableSerialize should not be poisoned")
+                        })?;
+                        let host = host_getter(caller.data_mut());
+                        let r = r.wrap(host);
+                        let this = host.table.push(r#struct)?;
+                        Ok((this, r?))
+                    },
+                )?;
+                inst.func_wrap("[static]serialize-struct.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeStruct>, ) | {
+                    let host = host_getter(caller.data_mut());
+                    let this = arg0;
+                    anyhow::ensure!(this.owned());
+                    let r#struct = host.table.delete(this)?;
+                    let r = r#struct.serialize_struct.take().erased_end().wrap(host);
+                    Ok((r?,))
+                })?;
+                inst.func_wrap(
+                    "[static]serialize-struct.skip-field",
+                    move |mut caller: wasmtime::StoreContextMut<'_, T>,
+                          (arg0, arg1): (
+                        wasmtime::component::Resource<SerializeStruct>,
+                        wasmtime::component::__internal::String,
+                    )| {
+                        let host = host_getter(caller.data_mut());
+                        let (this, field) = (arg0, arg1);
+                        anyhow::ensure!(this.owned());
+                        let r#struct = host.table.get_mut(&this)?;
+                        let r = r#struct
+                            .serialize_struct
+                            .erased_skip_field(crate::intern::intern_string(field))
+                            .wrap(host);
+                        Ok((this, r?))
+                    },
+                )?;
+                inst.func_wrap(
+                    "[static]serialize-struct-variant.serialize-field",
+                    move |mut caller: wasmtime::StoreContextMut<'_, T>,
+                          (arg0, arg1, arg2): (
+                        wasmtime::component::Resource<SerializeStructVariant>,
+                        wasmtime::component::__internal::String,
+                        BorrowedSerializeHandle,
+                    )| {
+                        let (this, key, value) = (arg0, arg1, arg2);
+                        anyhow::ensure!(this.owned());
+                        let mut struct_variant = {
+                            let host = host_getter(caller.data_mut());
+                            host.table.delete(this)
+                        }?;
+                        let caller = Mutex::new(caller);
+                        let r = struct_variant
+                            .serialize_struct_variant
+                            .erased_serialize_field(
+                                crate::intern::intern_string(key),
+                                &crate::ser::wasmtime_host::provider::SerializableSerialize::new(
+                                    &caller,
+                                    host_getter,
+                                    move |mut ctx, guest, serialize, serializer| {
+                                        let serialize =
+                                            serialize.try_into_resource_any(&mut ctx)?;
+                                        guest.call_serialize(ctx, serialize, serializer)
+                                    },
+                                    &value,
+                                ),
+                            );
+                        let mut caller = caller.into_inner().map_err(|_| {
+                            anyhow::anyhow!("SerializableSerialize should not be poisoned")
+                        })?;
+                        let host = host_getter(caller.data_mut());
+                        let r = r.wrap(host);
+                        let this = host.table.push(struct_variant)?;
+                        Ok((this, r?))
+                    },
+                )?;
+                inst.func_wrap("[static]serialize-struct-variant.end", move |mut caller: wasmtime::StoreContextMut<'_, T>, (arg0,) : (wasmtime::component::Resource<SerializeStructVariant>, ) | {
+                    let host = host_getter(caller.data_mut());
+                    let this = arg0;
+                    anyhow::ensure!(this.owned());
+                    let struct_variant = host.table.delete(this)?;
+                    let r = struct_variant.serialize_struct_variant.take().erased_end().wrap(host);
+                    Ok((r?,))
+                })?;
+                inst.func_wrap(
+                    "[static]serialize-struct-variant.skip-field",
+                    move |mut caller: wasmtime::StoreContextMut<'_, T>,
+                          (arg0, arg1): (
+                        wasmtime::component::Resource<SerializeStructVariant>,
+                        wasmtime::component::__internal::String,
+                    )| {
+                        let host = host_getter(caller.data_mut());
+                        let (this, field) = (arg0, arg1);
+                        anyhow::ensure!(this.owned());
+                        let struct_variant = host.table.get_mut(&this)?;
+                        let r = struct_variant
+                            .serialize_struct_variant
+                            .erased_skip_field(crate::intern::intern_string(field))
+                            .wrap(host);
+                        Ok((this, r?))
+                    },
+                )?;
                 Ok(())
             }
 
-            pub fn add_to_linker<T, U>(
+            pub fn add_to_linker<T>(
                 linker: &mut wasmtime::component::Linker<T>,
                 get: impl Fn(
                         &mut T,
-                    ) -> &mut /*U*/
-                    crate::ser::wasmtime_host::provider::HostsideSerializerProviderState
+                    ) -> &mut crate::ser::wasmtime_host::provider::HostsideSerializerProviderState
                     + Send
                     + Sync
                     + Copy
                     + 'static,
-            ) -> wasmtime::Result<()>
-where
-                // U: Host,
-            {
+            ) -> wasmtime::Result<()> {
                 add_to_linker_get_host(linker, get)
             }
-
-            // impl<_T: Host + ?Sized> Host for &mut _T {}
         }
     }
 }

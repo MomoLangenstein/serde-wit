@@ -95,6 +95,7 @@ interface serde-serializer {
     resource serialize-map {
         serialize-key: static func(%self: serialize-map, key: borrowed-serialize-handle) -> tuple<serialize-map, result<_, ser-error>>;
         serialize-value: static func(%self: serialize-map, value: borrowed-serialize-handle) -> tuple<serialize-map, result<_, ser-error>>;
+        serialize-entry: static func(%self: serialize-map, key: borrowed-serialize-handle, value: borrowed-serialize-handle) -> tuple<serialize-map, result<_, ser-error>>;
         end: static func(%self: serialize-map) -> result<ser-ok, ser-error>;
     }
 
