@@ -212,16 +212,16 @@ pub mod serde {
             };
             use crate::ser::wasmtime_host::provider::WrapSerResult;
 
-            pub use crate::ser::wasmtime_host::provider::HostsideSerializeMapProvider as SerializeMap;
-            pub use crate::ser::wasmtime_host::provider::HostsideSerializeSeqProvider as SerializeSeq;
-            pub use crate::ser::wasmtime_host::provider::HostsideSerializeStructProvider as SerializeStruct;
-            pub use crate::ser::wasmtime_host::provider::HostsideSerializeStructVariantProvider as SerializeStructVariant;
-            pub use crate::ser::wasmtime_host::provider::HostsideSerializeTupleProvider as SerializeTuple;
-            pub use crate::ser::wasmtime_host::provider::HostsideSerializeTupleStructProvider as SerializeTupleStruct;
-            pub use crate::ser::wasmtime_host::provider::HostsideSerializeTupleVariantProvider as SerializeTupleVariant;
-            pub use crate::ser::wasmtime_host::provider::HostsideSerializerProvider as Serializer;
-            pub use crate::ser::wasmtime_host::provider::SerError;
-            pub use crate::ser::wasmtime_host::provider::SerOk;
+            use crate::ser::wasmtime_host::provider::HostsideSerializeMapProvider as SerializeMap;
+            use crate::ser::wasmtime_host::provider::HostsideSerializeSeqProvider as SerializeSeq;
+            use crate::ser::wasmtime_host::provider::HostsideSerializeStructProvider as SerializeStruct;
+            use crate::ser::wasmtime_host::provider::HostsideSerializeStructVariantProvider as SerializeStructVariant;
+            use crate::ser::wasmtime_host::provider::HostsideSerializeTupleProvider as SerializeTuple;
+            use crate::ser::wasmtime_host::provider::HostsideSerializeTupleStructProvider as SerializeTupleStruct;
+            use crate::ser::wasmtime_host::provider::HostsideSerializeTupleVariantProvider as SerializeTupleVariant;
+            use crate::ser::wasmtime_host::provider::HostsideSerializerProvider as Serializer;
+            use crate::ser::wasmtime_host::provider::SerError;
+            use crate::ser::wasmtime_host::provider::SerOk;
 
             pub trait GetHost<T>:
                 for<'a> Fn(&'a mut T) -> &'a mut crate::ser::wasmtime_host::provider::HostsideSerializerProviderState + Send + Sync + Copy + 'static
@@ -233,6 +233,7 @@ pub mod serde {
             {}
 
             #[allow(clippy::too_many_lines)] // FIXME
+            #[allow(clippy::missing_errors_doc)] // FIXME
             pub fn add_to_linker_get_host<T>(
                 linker: &mut wasmtime::component::Linker<T>,
                 host_getter: impl GetHost<T>,
@@ -1379,6 +1380,7 @@ where {
                 Ok(())
             }
 
+            #[allow(clippy::missing_errors_doc)] // FIXME
             pub fn add_to_linker<T>(
                 linker: &mut wasmtime::component::Linker<T>,
                 get: impl Fn(

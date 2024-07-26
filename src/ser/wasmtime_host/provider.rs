@@ -16,10 +16,20 @@ mod bindings;
 //     });
 // }
 
+pub use bindings::serde::serde::serde_serializer::{add_to_linker, add_to_linker_get_host};
+
 use crate::any::Any;
 
+#[derive(Default)]
 pub struct HostsideSerializerProviderState {
     table: wasmtime::component::ResourceTable,
+}
+
+impl HostsideSerializerProviderState {
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
 }
 
 pub struct HostsideSerializerProvider {
@@ -33,25 +43,17 @@ trait WrapSerResult {
     fn wrap(
         self,
         state: &mut HostsideSerializerProviderState,
-    ) -> anyhow::Result<
-        Result<
-            Self::Ok,
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
-        >,
-    >;
+    ) -> anyhow::Result<Result<Self::Ok, wasmtime::component::Resource<SerError>>>;
 }
 
 impl WrapSerResult for Result<SerOk, SerError> {
-    type Ok = wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>;
+    type Ok = wasmtime::component::Resource<SerOk>;
 
     fn wrap(
         self,
         state: &mut HostsideSerializerProviderState,
     ) -> anyhow::Result<
-        Result<
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerOk>,
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
-        >,
+        Result<wasmtime::component::Resource<SerOk>, wasmtime::component::Resource<SerError>>,
     > {
         match self {
             Ok(ok) => Ok(Ok(state.table.push(ok)?)),
@@ -66,12 +68,7 @@ impl WrapSerResult for Result<(), SerError> {
     fn wrap(
         self,
         state: &mut HostsideSerializerProviderState,
-    ) -> anyhow::Result<
-        Result<
-            (),
-            wasmtime::component::Resource<bindings::serde::serde::serde_serializer::SerError>,
-        >,
-    > {
+    ) -> anyhow::Result<Result<(), wasmtime::component::Resource<SerError>>> {
         match self {
             Ok(()) => Ok(Ok(())),
             Err(error) => Ok(Err(state.table.push(error)?)),
@@ -632,7 +629,7 @@ impl<T: SerializeStructVariant> ErasedSerializeStructVariant for T {
     }
 }
 
-pub struct SerOk {
+struct SerOk {
     value: SendWrapper<Any>,
 }
 
@@ -645,7 +642,7 @@ impl SerOk {
     }
 }
 
-pub struct SerError {
+struct SerError {
     inner: SerErrorOrCustom,
 }
 
@@ -674,37 +671,37 @@ impl SerError {
     }
 }
 
-pub struct HostsideSerializeSeqProvider {
+struct HostsideSerializeSeqProvider {
     serialize_seq: SendWrapper<Box<dyn ErasedSerializeSeq>>,
     _scope: ScopedBorrowMut<()>,
 }
 
-pub struct HostsideSerializeTupleProvider {
+struct HostsideSerializeTupleProvider {
     serialize_tuple: SendWrapper<Box<dyn ErasedSerializeTuple>>,
     _scope: ScopedBorrowMut<()>,
 }
 
-pub struct HostsideSerializeTupleStructProvider {
+struct HostsideSerializeTupleStructProvider {
     serialize_tuple_struct: SendWrapper<Box<dyn ErasedSerializeTupleStruct>>,
     _scope: ScopedBorrowMut<()>,
 }
 
-pub struct HostsideSerializeTupleVariantProvider {
+struct HostsideSerializeTupleVariantProvider {
     serialize_tuple_variant: SendWrapper<Box<dyn ErasedSerializeTupleVariant>>,
     _scope: ScopedBorrowMut<()>,
 }
 
-pub struct HostsideSerializeMapProvider {
+struct HostsideSerializeMapProvider {
     serialize_map: SendWrapper<Box<dyn ErasedSerializeMap>>,
     _scope: ScopedBorrowMut<()>,
 }
 
-pub struct HostsideSerializeStructProvider {
+struct HostsideSerializeStructProvider {
     serialize_struct: SendWrapper<Box<dyn ErasedSerializeStruct>>,
     _scope: ScopedBorrowMut<()>,
 }
 
-pub struct HostsideSerializeStructVariantProvider {
+struct HostsideSerializeStructVariantProvider {
     serialize_struct_variant: SendWrapper<Box<dyn ErasedSerializeStructVariant>>,
     _scope: ScopedBorrowMut<()>,
 }

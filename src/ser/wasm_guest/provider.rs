@@ -1141,7 +1141,7 @@ impl<T: SerializeStructVariant> ErasedSerializeStructVariant for T {
     }
 }
 
-pub struct SerOk {
+struct SerOk {
     value: Any,
 }
 
@@ -1156,7 +1156,7 @@ impl SerOk {
 
 impl bindings::exports::serde::serde::serde_serializer::GuestSerOk for SerOk {}
 
-pub struct SerError {
+struct SerError {
     inner: SerErrorOrCustom,
 }
 
@@ -1213,37 +1213,37 @@ impl SerError {
     }
 }
 
-pub struct GuestsideSerializeSeqProvider {
+struct GuestsideSerializeSeqProvider {
     serialize_seq: Box<dyn ErasedSerializeSeq>,
     _scope: ScopedBorrowMut<()>,
 }
 
-pub struct GuestsideSerializeTupleProvider {
+struct GuestsideSerializeTupleProvider {
     serialize_tuple: Box<dyn ErasedSerializeTuple>,
     _scope: ScopedBorrowMut<()>,
 }
 
-pub struct GuestsideSerializeTupleStructProvider {
+struct GuestsideSerializeTupleStructProvider {
     serialize_tuple_struct: Box<dyn ErasedSerializeTupleStruct>,
     _scope: ScopedBorrowMut<()>,
 }
 
-pub struct GuestsideSerializeTupleVariantProvider {
+struct GuestsideSerializeTupleVariantProvider {
     serialize_tuple_variant: Box<dyn ErasedSerializeTupleVariant>,
     _scope: ScopedBorrowMut<()>,
 }
 
-pub struct GuestsideSerializeMapProvider {
+struct GuestsideSerializeMapProvider {
     serialize_map: Box<dyn ErasedSerializeMap>,
     _scope: ScopedBorrowMut<()>,
 }
 
-pub struct GuestsideSerializeStructProvider {
+struct GuestsideSerializeStructProvider {
     serialize_struct: Box<dyn ErasedSerializeStruct>,
     _scope: ScopedBorrowMut<()>,
 }
 
-pub struct GuestsideSerializeStructVariantProvider {
+struct GuestsideSerializeStructVariantProvider {
     serialize_struct_variant: Box<dyn ErasedSerializeStructVariant>,
     _scope: ScopedBorrowMut<()>,
 }

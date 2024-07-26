@@ -1111,14 +1111,14 @@ impl<'de, T: ::serde::de::SeqAccess<'de>> ErasedSeqAccess for T {
     }
 }
 
-pub struct GuestsideSeqAccessProvider {
+struct GuestsideSeqAccessProvider {
     seq_access: Box<dyn ErasedSeqAccess>,
     _scope: ScopedBorrowMut<()>,
 }
 
 impl GuestsideSeqAccessProvider {
     #[must_use]
-    pub fn with_new<'a, 'de, D: ::serde::de::SeqAccess<'de> + 'a, F: FnOnce(Self) -> Q, Q>(
+    fn with_new<'a, 'de, D: ::serde::de::SeqAccess<'de> + 'a, F: FnOnce(Self) -> Q, Q>(
         seq_access: D,
         inner: F,
     ) -> Q {
@@ -1218,14 +1218,14 @@ impl<'de, T: ::serde::de::MapAccess<'de>> ErasedMapAccess for T {
     }
 }
 
-pub struct GuestsideMapAccessProvider {
+struct GuestsideMapAccessProvider {
     map_access: Box<dyn ErasedMapAccess>,
     _scope: ScopedBorrowMut<()>,
 }
 
 impl GuestsideMapAccessProvider {
     #[must_use]
-    pub fn with_new<'a, 'de, D: ::serde::de::MapAccess<'de> + 'a, F: FnOnce(Self) -> Q, Q>(
+    fn with_new<'a, 'de, D: ::serde::de::MapAccess<'de> + 'a, F: FnOnce(Self) -> Q, Q>(
         map_access: D,
         inner: F,
     ) -> Q {
@@ -1353,14 +1353,14 @@ impl<'de, T: ::serde::de::EnumAccess<'de>> ErasedEnumAccess for T {
     }
 }
 
-pub struct GuestsideEnumAccessProvider {
+struct GuestsideEnumAccessProvider {
     enum_access: Box<dyn ErasedEnumAccess>,
     scope: ScopedBorrowMut<()>,
 }
 
 impl GuestsideEnumAccessProvider {
     #[must_use]
-    pub fn with_new<'a, 'de, D: ::serde::de::EnumAccess<'de> + 'a, F: FnOnce(Self) -> Q, Q>(
+    fn with_new<'a, 'de, D: ::serde::de::EnumAccess<'de> + 'a, F: FnOnce(Self) -> Q, Q>(
         enum_access: D,
         inner: F,
     ) -> Q {
@@ -1476,7 +1476,7 @@ impl<'de, T: ::serde::de::VariantAccess<'de>> ErasedVariantAccess for T {
     }
 }
 
-pub struct GuestsideVariantAccessProvider {
+struct GuestsideVariantAccessProvider {
     variant_access: Box<dyn ErasedVariantAccess>,
     _scope: ScopedBorrowMut<()>,
 }
@@ -1914,7 +1914,7 @@ struct DeValue {
     value: bindings::serde::serde::serde_deserialize::DeValue,
 }
 
-pub struct DeError {
+struct DeError {
     inner: DeErrorVariants,
 }
 

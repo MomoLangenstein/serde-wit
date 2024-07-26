@@ -1295,7 +1295,8 @@ impl<'de> ::serde::Deserializer<'de> for DeserializerableDeserializer {
     }
 }
 
-pub struct Visitor {
+struct Visitor {
+    #[allow(clippy::struct_field_names)]
     visitor: Box<dyn ErasedVisitor>,
     expecting: String,
     _scope: ScopedBorrowMut<()>,
@@ -1606,7 +1607,7 @@ impl<'de> ::serde::de::VariantAccess<'de> for DeserializerableVariantAccess {
     }
 }
 
-pub struct DeValue {
+struct DeValue {
     value: Any,
 }
 
