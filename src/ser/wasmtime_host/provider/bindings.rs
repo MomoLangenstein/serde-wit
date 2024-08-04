@@ -1493,13 +1493,16 @@ pub mod exports {
                 }
 
                 pub struct Guest {
-                    method_serialize_serialize: wasmtime::component::Func,
+                    method_serialize_serialize: wasmtime::component::TypedFunc<
+                        (wasmtime::component::ResourceAny, OwnedSerializerHandle),
+                        (Result<OwnedSerOkHandle, OwnedSerErrorHandle>,),
+                    >,
                 }
                 impl Guest {
                     pub fn new(
                         __exports: &mut wasmtime::component::ExportInstance<'_, '_>,
                     ) -> wasmtime::Result<Guest> {
-                        let method_serialize_serialize = *__exports.typed_func::<(wasmtime::component::ResourceAny, OwnedSerializerHandle, ), (Result<OwnedSerOkHandle,OwnedSerErrorHandle>, )>("[method]serialize.serialize")?.func();
+                        let method_serialize_serialize = __exports.typed_func("[method]serialize.serialize")?;
                         Ok(Guest {
                             method_serialize_serialize,
                         })
@@ -1516,14 +1519,7 @@ pub mod exports {
                         arg1: OwnedSerializerHandle,
                     ) -> wasmtime::Result<Result<OwnedSerOkHandle, OwnedSerErrorHandle>>
                     {
-                        let callee = unsafe {
-                            wasmtime::component::TypedFunc::<
-                                (wasmtime::component::ResourceAny, OwnedSerializerHandle),
-                                (Result<OwnedSerOkHandle, OwnedSerErrorHandle>,),
-                            >::new_unchecked(
-                                self.funcs.method_serialize_serialize
-                            )
-                        };
+                        let callee = self.funcs.method_serialize_serialize;
                         let (ret0,) = callee.call(store.as_context_mut(), (arg0, arg1))?;
                         callee.post_return(store.as_context_mut())?;
                         Ok(ret0)

@@ -20,15 +20,49 @@ pub use bindings::serde::serde::serde_serializer::{add_to_linker, add_to_linker_
 
 use crate::any::Any;
 
+pub struct GuestsideSerializeProvider {
+    guest: bindings::SerdeSerializerClient,
+}
+
+impl GuestsideSerializeProvider {
+    /// Import the guest-side `Serialize` provider that is
+    /// exported from the `instance` defined within `store`.
+    /// 
+    /// # Errors
+    /// 
+    /// Errors if `instance` does not export the required bindings.
+    pub fn new(
+        store: impl wasmtime::AsContextMut,
+        instance: &wasmtime::component::Instance,
+    ) -> Result<Self, anyhow::Error> {
+        Ok(Self {
+            guest: bindings::SerdeSerializerClient::new(store, instance)?,
+        })
+    }
+}
+
 #[derive(Default)]
 pub struct HostsideSerializerProviderState {
     table: wasmtime::component::ResourceTable,
+    guest: Option<GuestsideSerializeProvider>,
 }
 
 impl HostsideSerializerProviderState {
     #[must_use]
     pub fn new() -> Self {
         Self::default()
+    }
+
+    #[allow(clippy::missing_panics_doc)]
+    pub fn with_serialize<T>(&mut self, serialize: GuestsideSerializeProvider, inner: impl FnOnce() -> T) -> (T, GuestsideSerializeProvider) {
+        let before = self.guest.replace(serialize);
+
+        let result = inner();
+
+        #[allow(clippy::unwrap_used)]
+        let serialize = std::mem::replace(&mut self.guest, before).unwrap();
+
+        (result, serialize)
     }
 }
 
